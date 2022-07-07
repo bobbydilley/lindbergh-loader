@@ -1,16 +1,6 @@
 # SEGA Lindbergh Loader
 
-## Supported Titles
-
-The loader can currently run the following titles:
-
-- The House Of The Dead 4
-- The House Of The Dead 4 Special
-- SEGA Race TV
-- The House Of The Dead EX
-- Outrun 2 SP SDX
-- 2Spicy
-- Rambo
+This project aims to hook and emulate the various different parts of the SEGA Lindbergh allowing the games to run on modern versions of Linux.
 
 ## Building & Running
 
