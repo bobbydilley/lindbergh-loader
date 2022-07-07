@@ -5,6 +5,7 @@
 #include <math.h>
 #include <errno.h>
 #include <linux/sockios.h>
+#include <signal.h>
 
 #include "hook.h"
 
@@ -178,6 +179,93 @@ int select(int nfds, fd_set *restrict readfds, fd_set *restrict writefds, fd_set
     return _select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
+#include <ucontext.h>
+
+static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
+{
+    ucontext_t *ctx = ptr;
+
+    uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
+
+    switch (*code)
+    {
+    case 0xED:
+    {
+        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+
+        switch (port)
+        {
+	case 0x38:
+            ctx->uc_mcontext.gregs[REG_EAX] = 0xFFFFFFFF;
+            break;
+        default:
+            break;
+        }
+        // printf("Warning: IO READ Port %X\n", port);
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        return;
+    }
+    break;
+
+    case 0xE7:
+    {
+        //printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
+        ctx->uc_mcontext.gregs[REG_EIP] += 2;
+        return;
+    }
+    break;
+
+    case 0xE6:
+    {
+        //printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
+        ctx->uc_mcontext.gregs[REG_EIP] += 2;
+        return;
+    }
+    break;
+
+    case 0xEE:
+    {
+        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+        uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
+        //printf("Warning: IO WRITE Port %X Data %X\n", port, data);
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        return;
+    }
+    break;
+
+    case 0xEF:
+    {
+        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+        //printf("Warning: IO WRITE Port %X\n", port);
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        return;
+    }
+    break;
+
+    default:
+        printf("Error: Unknown segfault %X\n", *code);
+        abort();
+    }
+}
+
+int iopl(int level)
+{
+    static int hasRunAlready = 0;
+
+    if (hasRunAlready == 0)
+    {
+        struct sigaction act;
+
+        act.sa_sigaction = exceptionTrampoline;
+        act.sa_flags = SA_SIGINFO;
+
+        sigaction(SIGSEGV, &act, NULL);
+
+        hasRunAlready = 1;
+    }
+
+    return 0;
+}
 
 /**
  * Hook for the only function provided by kswapapi.so
