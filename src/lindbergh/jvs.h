@@ -223,7 +223,7 @@ typedef enum
 
 int initJVS();
 
-JVSStatus processPacket(JVSIO *jvsIO);
+JVSStatus processPacket();
 
 JVSStatus readPacket(JVSPacket *packet);
 JVSStatus writePacket(JVSPacket *packet);
@@ -239,9 +239,9 @@ int getSenseLine();
 JVSCapabilities *getCapabilities();
 JVSState *getState();
 
-int initIO(JVSIO *io);
-int setSwitch(JVSIO *io, JVSPlayer player, JVSInput switchNumber, int value);
-int incrementCoin(JVSIO *io, JVSPlayer player, int amount);
-int setAnalogue(JVSIO *io, JVSInput channel, int value);
+int initIO();
+int setSwitch(JVSPlayer player, JVSInput switchNumber, int value);
+int incrementCoin(JVSPlayer player, int amount);
+int setAnalogue(JVSInput channel, int value);
 
 #endif // JVS_H_

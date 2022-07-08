@@ -160,12 +160,12 @@ void writeFeatures(JVSPacket *outputPacket, JVSCapabilities *capabilities)
  *
  * @returns The status of the entire operation
  */
-JVSStatus processPacket(JVSIO *jvsIO)
+JVSStatus processPacket()
 {
     readPacket(&inputPacket);
 
     /* Check if the packet is for us */
-    if (inputPacket.destination != BROADCAST && inputPacket.destination != jvsIO->deviceID)
+    if (inputPacket.destination != BROADCAST && inputPacket.destination != io.deviceID)
         return JVS_STATUS_NOT_FOR_US;
 
     /* Setup the output packet */
@@ -209,8 +209,8 @@ JVSStatus processPacket(JVSIO *jvsIO)
         {
             // printf("CMD_REQUEST_ID\n");
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
-            memcpy(&outputPacket.data[outputPacket.length + 1], jvsIO->capabilities.name, strlen(jvsIO->capabilities.name) + 1);
-            outputPacket.length += strlen(jvsIO->capabilities.name) + 2;
+            memcpy(&outputPacket.data[outputPacket.length + 1], io.capabilities.name, strlen(io.capabilities.name) + 1);
+            outputPacket.length += strlen(io.capabilities.name) + 2;
         }
         break;
 
@@ -219,7 +219,7 @@ JVSStatus processPacket(JVSIO *jvsIO)
         {
             // printf("CMD_COMMAND_VERSION\n");
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
-            outputPacket.data[outputPacket.length + 1] = jvsIO->capabilities.commandVersion;
+            outputPacket.data[outputPacket.length + 1] = io.capabilities.commandVersion;
             outputPacket.length += 2;
         }
         break;
@@ -227,9 +227,9 @@ JVSStatus processPacket(JVSIO *jvsIO)
         /* Asks for version information */
         case CMD_JVS_VERSION:
         {
-            ////printf("CMD_JVS_VERSION\n");
+            // printf("CMD_JVS_VERSION\n");
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
-            outputPacket.data[outputPacket.length + 1] = jvsIO->capabilities.jvsVersion;
+            outputPacket.data[outputPacket.length + 1] = io.capabilities.jvsVersion;
             outputPacket.length += 2;
         }
         break;
@@ -237,9 +237,9 @@ JVSStatus processPacket(JVSIO *jvsIO)
         /* Asks for version information */
         case CMD_COMMS_VERSION:
         {
-            ////printf("CMD_COMMS_VERSION\n");
+            // printf("CMD_COMMS_VERSION\n");
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
-            outputPacket.data[outputPacket.length + 1] = jvsIO->capabilities.commsVersion;
+            outputPacket.data[outputPacket.length + 1] = io.capabilities.commsVersion;
             outputPacket.length += 2;
         }
         break;
@@ -248,7 +248,7 @@ JVSStatus processPacket(JVSIO *jvsIO)
         case CMD_CAPABILITIES:
         {
             // printf("CMD_CAPABILITIES\n");
-            writeFeatures(&outputPacket, &jvsIO->capabilities);
+            writeFeatures(&outputPacket, &io.capabilities);
         }
         break;
 
@@ -258,13 +258,13 @@ JVSStatus processPacket(JVSIO *jvsIO)
             // printf("CMD_READ_SWITCHES\n");
             size = 3;
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
-            outputPacket.data[outputPacket.length + 1] = jvsIO->state.inputSwitch[0];
+            outputPacket.data[outputPacket.length + 1] = io.state.inputSwitch[0];
             outputPacket.length += 2;
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
                 for (int j = 0; j < inputPacket.data[index + 2]; j++)
                 {
-                    outputPacket.data[outputPacket.length++] = jvsIO->state.inputSwitch[i + 1] >> (8 - (j * 8));
+                    outputPacket.data[outputPacket.length++] = io.state.inputSwitch[i + 1] >> (8 - (j * 8));
                 }
             }
         }
@@ -279,8 +279,8 @@ JVSStatus processPacket(JVSIO *jvsIO)
 
             for (int i = 0; i < numberCoinSlots; i++)
             {
-                outputPacket.data[outputPacket.length] = (jvsIO->state.coinCount[i] << 8) & 0x1F;
-                outputPacket.data[outputPacket.length + 1] = jvsIO->state.coinCount[i] & 0xFF;
+                outputPacket.data[outputPacket.length] = (io.state.coinCount[i] << 8) & 0x1F;
+                outputPacket.data[outputPacket.length + 1] = io.state.coinCount[i] & 0xFF;
                 outputPacket.length += 2;
             }
         }
@@ -296,7 +296,7 @@ JVSStatus processPacket(JVSIO *jvsIO)
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
                 /* By default left align the data */
-                int analogueData = jvsIO->state.analogueChannel[i] << jvsIO->analogueRestBits;
+                int analogueData = io.state.analogueChannel[i] << io.analogueRestBits;
                 outputPacket.data[outputPacket.length] = analogueData >> 8;
                 outputPacket.data[outputPacket.length + 1] = analogueData;
                 outputPacket.length += 2;
@@ -313,8 +313,8 @@ JVSStatus processPacket(JVSIO *jvsIO)
 
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
-                outputPacket.data[outputPacket.length] = jvsIO->state.rotaryChannel[i] >> 8;
-                outputPacket.data[outputPacket.length + 1] = jvsIO->state.rotaryChannel[i];
+                outputPacket.data[outputPacket.length] = io.state.rotaryChannel[i] >> 8;
+                outputPacket.data[outputPacket.length + 1] = io.state.rotaryChannel[i];
                 outputPacket.length += 2;
             }
         }
@@ -414,9 +414,9 @@ JVSStatus processPacket(JVSIO *jvsIO)
             outputPacket.data[outputPacket.length++] = REPORT_SUCCESS;
 
             /* Prevent overflow of coins */
-            if (coin_increment + jvsIO->state.coinCount[slot_index] > 16383)
-                coin_increment = 16383 - jvsIO->state.coinCount[slot_index];
-            jvsIO->state.coinCount[slot_index] += coin_increment;
+            if (coin_increment + io.state.coinCount[slot_index] > 16383)
+                coin_increment = 16383 - io.state.coinCount[slot_index];
+            io.state.coinCount[slot_index] += coin_increment;
         }
         break;
 
@@ -439,9 +439,9 @@ JVSStatus processPacket(JVSIO *jvsIO)
             outputPacket.data[outputPacket.length++] = REPORT_SUCCESS;
 
             /* Prevent underflow of coins */
-            if (coin_decrement > jvsIO->state.coinCount[slot_index])
-                coin_decrement = jvsIO->state.coinCount[slot_index];
-            jvsIO->state.coinCount[slot_index] -= coin_decrement;
+            if (coin_decrement > io.state.coinCount[slot_index])
+                coin_decrement = io.state.coinCount[slot_index];
+            io.state.coinCount[slot_index] -= coin_decrement;
         }
         break;
 
@@ -459,23 +459,6 @@ JVSStatus processPacket(JVSIO *jvsIO)
                     break;
             }
             printf("CMD_CONVEY_ID = %s\n", idData);
-        }
-        break;
-
-        /* The touch screen and light gun input, simply using analogue channels */
-        case CMD_READ_LIGHTGUN:
-        {
-            ////printf("CMD_READ_LIGHTGUN\n");
-            size = 2;
-
-            int analogueXData = jvsIO->state.gunChannel[0] << jvsIO->gunXRestBits;
-            int analogueYData = jvsIO->state.gunChannel[1] << jvsIO->gunYRestBits;
-            outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
-            outputPacket.data[outputPacket.length + 1] = analogueXData >> 8;
-            outputPacket.data[outputPacket.length + 2] = analogueXData;
-            outputPacket.data[outputPacket.length + 3] = analogueYData >> 8;
-            outputPacket.data[outputPacket.length + 4] = analogueYData;
-            outputPacket.length += 5;
         }
         break;
 
@@ -624,34 +607,34 @@ int getSenseLine()
     return senseLine;
 }
 
-int setSwitch(JVSIO *io, JVSPlayer player, JVSInput switchNumber, int value)
+int setSwitch(JVSPlayer player, JVSInput switchNumber, int value)
 {
-    if (player > io->capabilities.players)
+    if (player > io.capabilities.players)
         return 0;
 
     if (value)
     {
-        io->state.inputSwitch[player] |= switchNumber;
+        io.state.inputSwitch[player] |= switchNumber;
     }
     else
     {
-        io->state.inputSwitch[player] &= ~switchNumber;
+        io.state.inputSwitch[player] &= ~switchNumber;
     }
 
     return 1;
 }
 
-int incrementCoin(JVSIO *io, JVSPlayer player, int amount)
+int incrementCoin(JVSPlayer player, int amount)
 {
     if (player == SYSTEM)
         return 0;
 
-    io->state.coinCount[player - 1] = io->state.coinCount[player - 1] + amount;
+    io.state.coinCount[player - 1] = io.state.coinCount[player - 1] + amount;
     return 1;
 }
 
-int setAnalogue(JVSIO *io, JVSInput channel, int value)
+int setAnalogue(JVSInput channel, int value)
 {
-    io->state.analogueChannel[channel] = value;
+    io.state.analogueChannel[channel] = value;
     return 1;
 }

@@ -154,14 +154,14 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
     switch (_data[0])
     {
 
-    case BASEBOARD_GET_SERIAL:
+    case BASEBOARD_GET_SERIAL: // bcCmdSysInfoGetReq
     {
       serialCommand.destAddress = _data[1];
       serialCommand.destSize = _data[2];
     }
     break;
 
-    case BASEBOARD_WRITE_FLASH:
+    case BASEBOARD_WRITE_FLASH: // bcCmdSysFlashWrite
     {
       printf("Warning: The game attempted to write to the baseboard flash\n");
     }
@@ -173,8 +173,8 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       jvsCommand.srcSize = _data[2];
       jvsCommand.destAddress = _data[3];
       jvsCommand.destSize = _data[4];
-      // memcpy(inputBuffer, &shm[jvsCommand.srcAddress], jvsCommand.srcSize);
-      // processPacket(&io);
+      memcpy(inputBuffer, &sharedMemory[jvsCommand.srcAddress], jvsCommand.srcSize);
+      processPacket();
     }
     break;
 
@@ -207,16 +207,15 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
     case BASEBOARD_GET_SENSE_LINE:
     {
-      // _data[2] = getSenseLine();
-      _data[2] = 3;
+      _data[2] = getSenseLine();
     }
     break;
 
     case BASEBOARD_PROCESS_JVS:
     {
-      // memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
+      memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
       _data[2] = jvsCommand.destAddress;
-      // dp[3] = outputPacket.length + 3;
+      _data[3] = outputPacket.length + 3;
     }
     break;
 

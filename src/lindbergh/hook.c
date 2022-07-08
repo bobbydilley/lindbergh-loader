@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <linux/sockios.h>
 #include <signal.h>
+#include <ucontext.h>
 
 #include "hook.h"
 
@@ -14,6 +15,7 @@
 #include "rideboard.h"
 #include "eeprom.h"
 #include "jvs.h"
+#include "securityboard.h"
 
 #define HOOK_FILE_NAME "/dev/zero"
 
@@ -23,6 +25,8 @@
 #define SERIAL1 3
 
 int hooks[4] = {-1, -1, -1, -1};
+
+uint16_t basePortAddress = 0xFFFF;
 
 void __attribute__((constructor)) hook_init()
 {
@@ -37,6 +41,11 @@ void __attribute__((constructor)) hook_init()
 
     if (initJVS() != 0)
         exit(1);
+
+    if(initSecurityBoard() != 0)
+        exit(1);
+
+    printf("Loader init success\n");
 }
 
 int open(const char *pathname, int flags)
@@ -179,9 +188,26 @@ int select(int nfds, fd_set *restrict readfds, fd_set *restrict writefds, fd_set
     return _select(nfds, readfds, writefds, exceptfds, timeout);
 }
 
-#include <ucontext.h>
+int system(const char *command)
+{
+    int (*_system)(const char *command) = dlsym(RTLD_NEXT, "system");
 
-static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
+    if (strcmp(command, "lsmod | grep basebd > /dev/null") == 0)
+        return 0;
+    /*
+      if (strcmp(command, "lspci | grep \"Multimedia audio controller: %Creative\" > /dev/null") == 0)
+        return 0;
+
+      if (strcmp(command, "lsmod | grep ctaud") == 0)
+        return 0;
+
+      if (strcmp(command, "lspci | grep MPC8272 > /dev/null") == 0)
+        return 0;
+    */
+    return _system(command);
+}
+
+static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 {
     ucontext_t *ctx = ptr;
 
@@ -193,15 +219,14 @@ static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
 
-        switch (port)
-        {
-	case 0x38:
-            ctx->uc_mcontext.gregs[REG_EAX] = 0xFFFFFFFF;
-            break;
-        default:
-            break;
-        }
-        // printf("Warning: IO READ Port %X\n", port);
+        if(basePortAddress == 0xFFFF)
+            basePortAddress = port;
+
+        if(port > 0x38)
+            port = port - basePortAddress;
+
+        securityBoardIn(port, (uint32_t *) &(ctx->uc_mcontext.gregs[REG_EAX]));
+
         ctx->uc_mcontext.gregs[REG_EIP]++;
         return;
     }
@@ -209,7 +234,7 @@ static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
 
     case 0xE7:
     {
-        //printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
+        // printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
         return;
     }
@@ -217,7 +242,7 @@ static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
 
     case 0xE6:
     {
-        //printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
+        // printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
         return;
     }
@@ -227,7 +252,7 @@ static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
         uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
-        //printf("Warning: IO WRITE Port %X Data %X\n", port, data);
+        // printf("Warning: IO WRITE Port %X Data %X\n", port, data);
         ctx->uc_mcontext.gregs[REG_EIP]++;
         return;
     }
@@ -236,7 +261,7 @@ static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
     case 0xEF:
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
-        //printf("Warning: IO WRITE Port %X\n", port);
+        // printf("Warning: IO WRITE Port %X\n", port);
         ctx->uc_mcontext.gregs[REG_EIP]++;
         return;
     }
@@ -250,19 +275,12 @@ static void exceptionTrampoline(int signum, siginfo_t *info, void *ptr)
 
 int iopl(int level)
 {
-    static int hasRunAlready = 0;
+    struct sigaction act;
 
-    if (hasRunAlready == 0)
-    {
-        struct sigaction act;
+    act.sa_sigaction = handleSegfault;
+    act.sa_flags = SA_SIGINFO;
 
-        act.sa_sigaction = exceptionTrampoline;
-        act.sa_flags = SA_SIGINFO;
-
-        sigaction(SIGSEGV, &act, NULL);
-
-        hasRunAlready = 1;
-    }
+    sigaction(SIGSEGV, &act, NULL);
 
     return 0;
 }
