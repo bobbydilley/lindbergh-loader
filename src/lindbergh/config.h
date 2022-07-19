@@ -5,7 +5,8 @@
 typedef enum {
   UNKNOWN,
   SEGABOOT,
-  THE_HOUSE_OF_THE_DEAD_4
+  THE_HOUSE_OF_THE_DEAD_4,
+  OUTRUN
 } Game;
 
 typedef struct

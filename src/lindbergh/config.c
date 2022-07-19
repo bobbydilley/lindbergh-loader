@@ -26,6 +26,14 @@ static int detectGame()
         return 0;
     }
 
+    if (strstr(program_invocation_name, "Jennifer") || strstr(program_invocation_name, "JenTest"))
+    {
+        config.game = OUTRUN;
+        config.emulateDriveboard = 1;
+        config.emulateMotionboard = 1;
+        return 0;
+    }
+
     config.game = UNKNOWN;
     return 1;
 }
@@ -36,6 +44,8 @@ char *getGameName()
     {
     case SEGABOOT:
         return "SEGABOOT";
+    case OUTRUN:
+        return "Outrun 2 SP";
     case THE_HOUSE_OF_THE_DEAD_4:
         return "The House of the Dead 4";
     default:
