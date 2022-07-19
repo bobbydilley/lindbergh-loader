@@ -1,7 +1,8 @@
 #include <GL/freeglut.h>
-#include <dlfcn.h>
 #include <GL/glx.h>
+#include <dlfcn.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "config.h"
 #include "jvs.h"
@@ -12,7 +13,10 @@ int gameModeHeight = -1;
 
 FGAPI int FGAPIENTRY glutEnterGameMode()
 {
-  glutCreateWindow("SEGA Lindbergh (GLUT)");
+  char gameTitle[256] = {0};
+  strcat(gameTitle, getGameName());
+  strcat(gameTitle, " (GLUT)");
+  glutCreateWindow(gameTitle);
   return 1;
 }
 
@@ -120,6 +124,9 @@ int XNextEvent(Display *display, XEvent *event_return)
 
 int XSetStandardProperties(Display *display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints)
 {
-    int (*_XSetStandardProperties)(Display * display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
-    return _XSetStandardProperties(display, window, "SEGA Lindbergh (X11)", icon_name, icon_pixmap, argv, argc, hints);
+  int (*_XSetStandardProperties)(Display * display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
+  char gameTitle[256] = {0};
+  strcat(gameTitle, getGameName());
+  strcat(gameTitle, " (X11)");
+  return _XSetStandardProperties(display, window, gameTitle, icon_name, icon_pixmap, argv, argc, hints);
 }

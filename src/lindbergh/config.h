@@ -2,17 +2,27 @@
 
 #define MAX_PATH_LENGTH 1024
 
+typedef enum {
+  UNKNOWN,
+  SEGABOOT,
+  THE_HOUSE_OF_THE_DEAD_4
+} Game;
+
 typedef struct
 {
   int emulateRideboard;
+  int emulateDriveboard;
+  int emulateMotionboard;
   char eepromPath[MAX_PATH_LENGTH];
   char sramPath[MAX_PATH_LENGTH];
   int width;
   int height;
+  Game game;
 } EmulatorConfig;
 
 int initConfig();
 EmulatorConfig *getConfig();
+char *getGameName();
 
 
 

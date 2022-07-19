@@ -14,9 +14,10 @@
 
 #include "baseboard.h"
 #include "config.h"
-#include "rideboard.h"
+#include "driveboard.h"
 #include "eeprom.h"
 #include "jvs.h"
+#include "rideboard.h"
 #include "securityboard.h"
 
 #define HOOK_FILE_NAME "/dev/zero"
@@ -33,6 +34,7 @@ uint16_t basePortAddress = 0xFFFF;
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2022\nNot for public consumption\n\n");
+
     initConfig();
 
     if (initEeprom() != 0)
@@ -46,6 +48,12 @@ void __attribute__((constructor)) hook_init()
 
     if (initSecurityBoard() != 0)
         exit(1);
+
+    if (getConfig()->emulateDriveboard)
+    {
+        if (initDriveboard() != 0)
+            exit(1);
+    }
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
@@ -143,6 +151,11 @@ ssize_t read(int fd, void *buf, size_t count)
         return rideboardRead(fd, buf, count);
     }
 
+    if (fd == hooks[SERIAL0] && getConfig()->emulateDriveboard)
+    {
+        return driveboardRead(fd, buf, count);
+    }
+
     return _read(fd, buf, count);
 }
 
@@ -158,6 +171,11 @@ ssize_t write(int fd, const void *buf, size_t count)
     if (fd == hooks[SERIAL1] && getConfig()->emulateRideboard)
     {
         return rideboardWrite(fd, buf, count);
+    }
+
+    if (fd == hooks[SERIAL0] && getConfig()->emulateDriveboard)
+    {
+        return driveboardWrite(fd, buf, count);
     }
 
     return _write(fd, buf, count);
@@ -248,7 +266,7 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
 
-        // The first port called is usually random, but everything after that 
+        // The first port called is usually random, but everything after that
         // is a constant offset, so this is a hack to fix that.
         // When run as sudo it works fine!?
 
