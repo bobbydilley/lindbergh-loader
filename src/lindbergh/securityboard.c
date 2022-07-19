@@ -102,13 +102,12 @@ int securityBoardIn(uint16_t port, uint32_t *data)
     switch (port)
     {
     case SECURITY_BOARD_FRONT_PANEL:
+    {
         uint32_t result = 0xFFFFFFFF;
-
         if (securityBoard.serviceSwitch)
             result &= ~0x08;
         if (securityBoard.testSwitch)
             result &= ~0x04;
-
         if (securityBoard.dipSwitch[6])
             result &= ~0x800; // DIP 6
         if (securityBoard.dipSwitch[5])
@@ -125,9 +124,10 @@ int securityBoardIn(uint16_t port, uint32_t *data)
             result &= ~0x20;
         if (securityBoard.dipSwitch[7])
             result &= ~0x10;
-
         *data = result;
-        break;
+    }
+    break;
+    
     default:
         break;
     }
