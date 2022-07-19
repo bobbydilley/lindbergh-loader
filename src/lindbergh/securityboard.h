@@ -8,3 +8,4 @@ int securityBoardIn(uint16_t port, uint32_t *data);
 int securityBoardSetSwitch(JVSInput switchNumber, int value);
 int securityBoardSetRotation(int rotation);
 int securityBoardSetDipSwitch(int switchNumber, int value);
+int securityBoardSetDipResolution(int width, int height);

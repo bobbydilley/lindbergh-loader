@@ -8,6 +8,8 @@ int initConfig() {
     config.emulateRideboard = 0;
     strcpy(config.eepromPath, "eeprom.bin");
     strcpy(config.sramPath, "sram.bin");
+    config.width = 1024;
+    config.height = 768;
     return 0;
 }
 

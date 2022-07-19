@@ -2,17 +2,18 @@
 #include <string.h>
 
 #include "securityboard.h"
+#include "config.h"
 
 #define SECURITY_BOARD_FRONT_PANEL 0x38
 #define SECURITY_BOARD_KEYCHIP 0xFF
 
-#define DIP_SWITCH_ROTATION 2
+#define DIP_SWITCH_ROTATION 3
 
 typedef struct
 {
     int serviceSwitch;
     int testSwitch;
-    int dipSwitch[8];
+    int dipSwitch[8 + 1]; // Start index at 1
     int led[2];
 } SecurityBoard;
 
@@ -21,12 +22,55 @@ SecurityBoard securityBoard = {0};
 int initSecurityBoard()
 {
     securityBoard.dipSwitch[DIP_SWITCH_ROTATION] = 0;
+
+    return 0;
+}
+
+static void setResolutionDips(int dip4, int dip5, int dip6)
+{
+    securityBoard.dipSwitch[4] = dip4;
+    securityBoard.dipSwitch[5] = dip5;
+    securityBoard.dipSwitch[6] = dip6;
+}
+
+int securityBoardSetDipResolution(int width, int height)
+{
+    if (width == 640 && height == 480)
+        setResolutionDips(0, 0, 0);
+    else if (width == 800 && height == 600)
+        setResolutionDips(0, 0, 1);
+    else if (width == 1024 && height == 768)
+        setResolutionDips(0, 1, 0);
+    else if (width == 1280 && height == 1024)
+        setResolutionDips(0, 1, 1);
+    else if (width == 800 && height == 480)
+        setResolutionDips(1, 0, 0);
+    else if (width == 1024 && height == 600)
+        setResolutionDips(1, 0, 1);
+    else if (width == 1280 && height == 768)
+        setResolutionDips(1, 1, 0);
+    else if (width == 1360 && height == 768)
+        setResolutionDips(1, 1, 1);
+    else
+        printf("Warning: Resolution not compatible, using 640 x 480\n");
+
     return 0;
 }
 
 int securityBoardSetRotation(int rotation)
 {
     securityBoard.dipSwitch[DIP_SWITCH_ROTATION] = rotation;
+    return 0;
+}
+
+int securityBoardSetDipSwitch(int switchNumber, int value)
+{
+    if (switchNumber == 0)
+    {
+        printf("Error: Dip Switch index starts at 1\n");
+        return 1;
+    }
+    securityBoard.dipSwitch[switchNumber] = value;
     return 0;
 }
 
@@ -64,21 +108,22 @@ int securityBoardIn(uint16_t port, uint32_t *data)
             result &= ~0x08;
         if (securityBoard.testSwitch)
             result &= ~0x04;
-        if (securityBoard.dipSwitch[7])
-            result &= ~0x800;
-        if (securityBoard.dipSwitch[0])
-            result &= ~0x400;
-        if (securityBoard.dipSwitch[1])
-            result &= ~0x200;
-        if (securityBoard.dipSwitch[2])
-            result &= ~0x100;
-        if (securityBoard.dipSwitch[3])
-            result &= ~0x80;
-        if (securityBoard.dipSwitch[4])
-            result &= ~0x40;
-        if (securityBoard.dipSwitch[5])
-            result &= ~0x20;
+
         if (securityBoard.dipSwitch[6])
+            result &= ~0x800; // DIP 6
+        if (securityBoard.dipSwitch[5])
+            result &= ~0x400; // DIP 5
+        if (securityBoard.dipSwitch[4])
+            result &= ~0x200; //  DIP 4
+        if (securityBoard.dipSwitch[3])
+            result &= ~0x100; //  DIP 3
+        if (securityBoard.dipSwitch[2])
+            result &= ~0x80; // DIP 2
+        if (securityBoard.dipSwitch[1])
+            result &= ~0x40; // DIP 1
+        if (securityBoard.dipSwitch[8])
+            result &= ~0x20;
+        if (securityBoard.dipSwitch[7])
             result &= ~0x10;
 
         *data = result;

@@ -7,6 +7,8 @@ typedef struct
   int emulateRideboard;
   char eepromPath[MAX_PATH_LENGTH];
   char sramPath[MAX_PATH_LENGTH];
+  int width;
+  int height;
 } EmulatorConfig;
 
 int initConfig();

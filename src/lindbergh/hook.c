@@ -1,11 +1,13 @@
 #include <dlfcn.h>
+#include <errno.h>
+#include <linux/sockios.h>
+#include <math.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <errno.h>
-#include <linux/sockios.h>
-#include <signal.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <ucontext.h>
 
 #include "hook.h"
@@ -42,8 +44,10 @@ void __attribute__((constructor)) hook_init()
     if (initJVS() != 0)
         exit(1);
 
-    if(initSecurityBoard() != 0)
+    if (initSecurityBoard() != 0)
         exit(1);
+
+    securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
     printf("Loader init success\n");
 }
@@ -76,7 +80,25 @@ int open(const char *pathname, int flags)
         return hooks[SERIAL1];
     }
 
+    if (strncmp(pathname, "/tmp/", 5) == 0)
+    {
+        mkdir("tmp", 0777);
+        return _open(pathname + 1, flags);
+    }
+
     return _open(pathname, flags);
+}
+
+FILE *fopen(const char *restrict pathname, const char *restrict mode)
+{
+    FILE *(*_fopen)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen");
+
+    if (strcmp(pathname, "/root/lindbergrc") == 0)
+    {
+        return _fopen("lindbergrc", mode);
+    }
+
+    return _fopen(pathname, mode);
 }
 
 int openat(int dirfd, const char *pathname, int flags)
@@ -194,6 +216,13 @@ int system(const char *command)
 
     if (strcmp(command, "lsmod | grep basebd > /dev/null") == 0)
         return 0;
+
+    if (strcmp(command, "cd /tmp/segaboot > /dev/null") == 0)
+        return system("cd tmp/segaboot > /dev/null");
+
+    if (strcmp(command, "mkdir /tmp/segaboot > /dev/null") == 0)
+        return system("mkdir tmp/segaboot > /dev/null");
+
     /*
       if (strcmp(command, "lspci | grep \"Multimedia audio controller: %Creative\" > /dev/null") == 0)
         return 0;
@@ -219,49 +248,49 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
 
-        if(basePortAddress == 0xFFFF)
+        // The first port called is usually random, but everything after that 
+        // is a constant offset, so this is a hack to fix that.
+        // When run as sudo it works fine!?
+
+        if (basePortAddress == 0xFFFF)
             basePortAddress = port;
 
-        if(port > 0x38)
+        if (port > 0x38)
             port = port - basePortAddress;
 
-        securityBoardIn(port, (uint32_t *) &(ctx->uc_mcontext.gregs[REG_EAX]));
+        securityBoardIn(port, (uint32_t *)&(ctx->uc_mcontext.gregs[REG_EAX]));
 
         ctx->uc_mcontext.gregs[REG_EIP]++;
         return;
     }
     break;
 
-    case 0xE7:
+    case 0xE7: // OUT IMMIDIATE
     {
-        // printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
         return;
     }
     break;
 
-    case 0xE6:
+    case 0xE6: // OUT IMMIDIATE
     {
-        // printf("Warning: IO WRITE IMMIDIATE %X\n", code[1]);
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
         return;
     }
     break;
 
-    case 0xEE:
+    case 0xEE: // OUT
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
         uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
-        // printf("Warning: IO WRITE Port %X Data %X\n", port, data);
         ctx->uc_mcontext.gregs[REG_EIP]++;
         return;
     }
     break;
 
-    case 0xEF:
+    case 0xEF: // OUT
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
-        // printf("Warning: IO WRITE Port %X\n", port);
         ctx->uc_mcontext.gregs[REG_EIP]++;
         return;
     }
