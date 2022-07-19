@@ -10,7 +10,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Install Dependencies
-        run: sudo apt install -y gcc-multilib
+        run: sudo apt install -y gcc-multilib freeglut3-dev:i386
       - name: Build
         run: make
       - name: Upload artifact
