@@ -42,3 +42,29 @@ This is a high level emulation of the motion control board used in Outrun 2 SP S
 ### libsegaapi.so
 
 This is an emulation of the driver that games use to route sound out of the Creative Labs soundcard. This routes sound using OpenAL.
+
+## Config
+
+### EMULATE_JVS
+
+This turns on the JVS emulation layer, which will use X11s input capabilities to read your mouse/keyboard. When this is turned off the JVS traffic will be passed through to a serial port defined by `JVS_PATH`.
+
+### JVS_PATH
+
+This defines the path of the serial port that is connected to the JVS IO.
+
+### FULLSCREEN
+
+This defines if the game should open in full screen mode.
+
+### EMULATE_RIDEBOARD
+
+This turns on the Rideboard emulation layer used in the games The House Of The Dead 4 Special, and Let's Go Jungle Special!
+
+### EMULATE_DRIVEBOARD
+
+This turns on the Driveboard emulation layer used in the games Outrun 2 SP SDX, SEGA Race TV, Initial D 4 and Initial D 5.
+
+### EMULATE_MOTIONBOARD
+
+This turns on the motionboard emulation layer used in the game Outrun 2 SP SDX in its SDX setting.
