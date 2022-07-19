@@ -2,6 +2,14 @@
 
 This project aims to hook and emulate the various different parts of the SEGA Lindbergh allowing the games to run on modern versions of Linux.
 
+## What this project does
+
+This project provides an emulation layer so for various software & hardware components of hte SEGA Lindbergh system allowing you to run the games on a modern version of linux. The project also aims to provide documentation of the various APIs used in the Lindbergh system which may be useful for further emulation projects, or homebrew.
+
+## What this project does not do
+
+This project does not defeat any security mechanisms of the games, nor does it provide links to roms. You should only use this project to play games if you own the original and removing the security checks form the games is left entierly up to the user. Please do not create issues asking about security bypassing, or have discussions on this github about the subject.
+
 ## Building & Running
 
 To build simply run the makefile, and then copy the contents of the build directory into your game directory and run.
@@ -12,6 +20,8 @@ cp build/* ~/the-house-of-the-dead-4/disk0/elf/.
 cd ~/the-house-of-the-dead-4/disk0/elf
 LD_PRELOAD=$(pwd)/lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
 ```
+
+Although not yet used, you will then want to copy a `game.conf` file form the `docs` directory and place it next to the game you with to use.
 
 ## Components
 

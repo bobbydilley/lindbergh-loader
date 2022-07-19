@@ -1,0 +1,5 @@
+# Turn off JVS emulation and default to JVS Passthrough
+EMULATE_JVS 0
+
+# The path to the real JVS IO you'd like to use
+JVS_PATH /dev/ttyUSB0
