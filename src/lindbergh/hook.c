@@ -94,7 +94,7 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     default:
         printf("Warning: Skipping SEGFAULT %X\n", *code);
         ctx->uc_mcontext.gregs[REG_EIP]++;
-        //abort();
+        // abort();
     }
 }
 
@@ -125,6 +125,12 @@ void __attribute__((constructor)) hook_init()
     if (getConfig()->emulateDriveboard)
     {
         if (initDriveboard() != 0)
+            exit(1);
+    }
+
+    if (getConfig()->emulateRideboard)
+    {
+        if (initRideboard() != 0)
             exit(1);
     }
 
@@ -222,7 +228,7 @@ ssize_t read(int fd, void *buf, size_t count)
         return baseboardRead(fd, buf, count);
     }
 
-    if (fd == hooks[SERIAL1] && getConfig()->emulateRideboard)
+    if (fd == hooks[SERIAL0] && getConfig()->emulateRideboard)
     {
         return rideboardRead(fd, buf, count);
     }
@@ -244,7 +250,7 @@ ssize_t write(int fd, const void *buf, size_t count)
         return baseboardWrite(fd, buf, count);
     }
 
-    if (fd == hooks[SERIAL1] && getConfig()->emulateRideboard)
+    if (fd == hooks[SERIAL0] && getConfig()->emulateRideboard)
     {
         return rideboardWrite(fd, buf, count);
     }

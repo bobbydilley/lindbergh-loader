@@ -1,5 +1,6 @@
 #include <GL/freeglut.h>
 #include <GL/glx.h>
+#include <X11/extensions/xf86vmode.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
@@ -108,7 +109,10 @@ int XDefineCursor(Display *display, Window w, Cursor cursor)
 int XStoreName(Display *display, Window w, const char *window_name)
 {
   int (*_XStoreName)(Display * display, Window w, const char *window_name) = dlsym(RTLD_NEXT, "XStoreName");
-  return _XStoreName(display, w, getGameName());
+  char gameTitle[256] = {0};
+  strcat(gameTitle, getGameName());
+  strcat(gameTitle, " (X11)");
+  return _XStoreName(display, w, gameTitle);
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
@@ -118,32 +122,51 @@ int XNextEvent(Display *display, XEvent *event_return)
   int returnValue = _XNextEvent(display, event_return);
   switch (event_return->type)
   {
-  case KeyPress:
-    switch (event_return->xkey.keycode)
-    {
-    case 28:
-      securityBoardSetSwitch(BUTTON_TEST, 1);
-      break;
-    case 39:
-      securityBoardSetSwitch(BUTTON_SERVICE, 1);
-      break;
-    default:
-      break;
-    }
-    break;
+
   case KeyRelease:
+  case KeyPress:
+  {
     switch (event_return->xkey.keycode)
     {
     case 28:
-      securityBoardSetSwitch(BUTTON_TEST, 0);
+      securityBoardSetSwitch(BUTTON_TEST, event_return->type == KeyPress);
       break;
     case 39:
-      securityBoardSetSwitch(BUTTON_SERVICE, 0);
+      securityBoardSetSwitch(BUTTON_SERVICE, event_return->type == KeyPress);
+      break;
+    case 14:
+      incrementCoin(PLAYER_1, event_return->type == KeyPress);
+      break;
+    case 15:
+      incrementCoin(PLAYER_2, event_return->type == KeyPress);
+      break;
+    case 111:
+      setSwitch(PLAYER_1, BUTTON_UP, event_return->type == KeyPress);
+      break;
+    case 116:
+      setSwitch(PLAYER_1, BUTTON_DOWN, event_return->type == KeyPress);
+      break;
+    case 113:
+      setSwitch(PLAYER_1, BUTTON_LEFT, event_return->type == KeyPress);
+      break;
+    case 114:
+      setSwitch(PLAYER_1, BUTTON_RIGHT, event_return->type == KeyPress);
+      break;
+    case 10:
+      setSwitch(PLAYER_1, BUTTON_START, event_return->type == KeyPress);
       break;
     default:
       break;
     }
-    break;
+  }
+  break;
+
+  case MotionNotify:
+  {
+    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 255.0);
+    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 255.0);
+  }
+  break;
   }
 
   return returnValue;
@@ -156,4 +179,9 @@ int XSetStandardProperties(Display *display, Window window, const char *window_n
   strcat(gameTitle, getGameName());
   strcat(gameTitle, " (X11)");
   return _XSetStandardProperties(display, window, gameTitle, icon_name, icon_pixmap, argv, argc, hints);
+}
+
+Bool XF86VidModeSwitchToMode(Display *display, int screen, XF86VidModeModeInfo *modeline)
+{
+  return 0;
 }
