@@ -111,6 +111,15 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "EMULATE_MOTIONBOARD") == 0)
             config->emulateMotionboard = atoi(getNextToken(NULL, " ", &saveptr));
 
+        else if (strcmp(command, "FULLSCREEN") == 0)
+            config->fullscreen = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "EMULATE_JVS") == 0)
+            config->emulateJVS = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "JVS_PATH") == 0)
+            strcpy(config->jvsPath, getNextToken(NULL, " ", &saveptr));
+
         else
             printf("Error: Unknown settings command %s\n", command);
     }
@@ -123,8 +132,11 @@ int initConfig()
     config.emulateRideboard = 0;
     config.emulateDriveboard = 0;
     config.emulateMotionboard = 0;
+    config.emulateJVS = 1;
+    config.fullscreen = 0;
     strcpy(config.eepromPath, "eeprom.bin");
     strcpy(config.sramPath, "sram.bin");
+    strcpy(config.jvsPath, "/dev/ttyUSB0");
     config.width = 1024;
     config.height = 768;
     if (detectGame() != 0)
@@ -136,7 +148,7 @@ int initConfig()
 
     if (configFile == NULL)
     {
-        printf("Error: Cannot open %s, using default values\n", CONFIG_PATH);
+        printf("Warning: Cannot open %s, using default values\n", CONFIG_PATH);
         return 1;
     }
 

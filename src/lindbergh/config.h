@@ -14,8 +14,11 @@ typedef struct
   int emulateRideboard;
   int emulateDriveboard;
   int emulateMotionboard;
+  int emulateJVS;
+  int fullscreen;
   char eepromPath[MAX_PATH_LENGTH];
   char sramPath[MAX_PATH_LENGTH];
+  char jvsPath[MAX_PATH_LENGTH];
   int width;
   int height;
   Game game;
