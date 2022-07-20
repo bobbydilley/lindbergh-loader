@@ -23,6 +23,14 @@ LD_PRELOAD=$(pwd)/lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
 
 Although not yet used, you will then want to copy a `game.conf` file form the `docs` directory and place it next to the game you with to use.
 
+## Specific Games
+
+Here is how you should run specific games:
+
+### Lets Go Jungle
+
+```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. LD_PRELOAD=lindbergh.so TEA_DIR=`pwd` ./lgj_final```
+
 ## Components
 
 This section lists the components of the emulator and what they do
