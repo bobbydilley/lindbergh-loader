@@ -367,12 +367,6 @@ void printStatus(RideState *state)
         printf("\n");
 }
 
-/**
- * Pretend to be the ride from SEGA's Special games.
- *
- * Communicate with a SEGA Lindbergh via serial to
- * emulate the inner working of a Special ride.
- */
 int initRideboard()
 {
     return 0;

@@ -155,6 +155,18 @@ int XNextEvent(Display *display, XEvent *event_return)
     case 10:
       setSwitch(PLAYER_1, BUTTON_START, event_return->type == KeyPress);
       break;
+    case 24:
+      setSwitch(PLAYER_1, BUTTON_1, event_return->type == KeyPress);
+      break;
+    case 25:
+      setSwitch(PLAYER_1, BUTTON_2, event_return->type == KeyPress);
+      break;
+    case 26:
+      setSwitch(PLAYER_1, BUTTON_3, event_return->type == KeyPress);
+      break;
+    case 27:
+      setSwitch(PLAYER_1, BUTTON_4, event_return->type == KeyPress);
+      break;
     default:
       break;
     }
