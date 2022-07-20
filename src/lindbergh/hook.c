@@ -94,7 +94,7 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     default:
         printf("Warning: Skipping SEGFAULT %X\n", *code);
         ctx->uc_mcontext.gregs[REG_EIP]++;
-        // abort();
+        //abort();
     }
 }
 
@@ -317,16 +317,15 @@ int system(const char *command)
     if (strcmp(command, "mkdir /tmp/segaboot > /dev/null") == 0)
         return system("mkdir tmp/segaboot > /dev/null");
 
-    /*
-      if (strcmp(command, "lspci | grep \"Multimedia audio controller: %Creative\" > /dev/null") == 0)
+    if (strcmp(command, "lspci | grep \"Multimedia audio controller: %Creative\" > /dev/null") == 0)
         return 0;
 
-      if (strcmp(command, "lsmod | grep ctaud") == 0)
+    if (strcmp(command, "lsmod | grep ctaud") == 0)
         return 0;
 
-      if (strcmp(command, "lspci | grep MPC8272 > /dev/null") == 0)
+    if (strcmp(command, "lspci | grep MPC8272 > /dev/null") == 0)
         return 0;
-    */
+
     return _system(command);
 }
 

@@ -5,6 +5,7 @@
 #include "config.h"
 
 #define SECURITY_BOARD_FRONT_PANEL 0x38
+#define SECURITY_BOARD_FRONT_PANEL_NON_ROOT 0x1038
 #define SECURITY_BOARD_KEYCHIP 0xFF
 
 #define DIP_SWITCH_ROTATION 3
@@ -101,6 +102,7 @@ int securityBoardIn(uint16_t port, uint32_t *data)
 {
     switch (port)
     {
+    case SECURITY_BOARD_FRONT_PANEL_NON_ROOT:
     case SECURITY_BOARD_FRONT_PANEL:
     {
         uint32_t result = 0xFFFFFFFF;

@@ -116,7 +116,6 @@ int XNextEvent(Display *display, XEvent *event_return)
 
   int (*_XNextEvent)(Display * display, XEvent * event_return) = dlsym(RTLD_NEXT, "XNextEvent");
   int returnValue = _XNextEvent(display, event_return);
-
   switch (event_return->type)
   {
   case KeyPress:
@@ -124,7 +123,6 @@ int XNextEvent(Display *display, XEvent *event_return)
     {
     case 28:
       securityBoardSetSwitch(BUTTON_TEST, 1);
-      abort();
       break;
     case 39:
       securityBoardSetSwitch(BUTTON_SERVICE, 1);

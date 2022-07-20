@@ -1,10 +1,32 @@
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "config.h"
 
 EmulatorConfig config = {0};
+
+FILE *configFile = NULL;
+
+#define CONFIG_PATH "lindbergh.conf"
+#define MAX_LINE_LENGTH 1024
+
+static char *getNextToken(char *buffer, char *seperator, char **saveptr)
+{
+    char *token = strtok_r(buffer, seperator, saveptr);
+    if (token == NULL)
+        return NULL;
+
+    for (int i = 0; i < (int)strlen(token); i++)
+    {
+        if ((token[i] == '\n') || (token[i] == '\r'))
+        {
+            token[i] = 0;
+        }
+    }
+    return token;
+}
 
 static int detectGame()
 {
@@ -54,6 +76,48 @@ char *getGameName()
     return "Unknown Game";
 }
 
+int readConfig(FILE *configFile, EmulatorConfig *config)
+{
+    char buffer[MAX_LINE_LENGTH];
+    char *saveptr = NULL;
+
+    while (fgets(buffer, MAX_LINE_LENGTH, configFile))
+    {
+
+        /* Check for comments */
+        if (buffer[0] == '#' || buffer[0] == 0 || buffer[0] == ' ' || buffer[0] == '\r' || buffer[0] == '\n')
+            continue;
+
+        char *command = getNextToken(buffer, " ", &saveptr);
+
+        if (strcmp(command, "WIDTH") == 0)
+            config->width = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "HEIGHT") == 0)
+            config->height = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "EEPROM_PATH") == 0)
+            strcpy(config->eepromPath, getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "SRAM_PATH") == 0)
+            strcpy(config->eepromPath, getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "EMULATE_RIDEBOARD") == 0)
+            config->emulateRideboard = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "EMULATE_DRIVEBOARD") == 0)
+            config->emulateDriveboard = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "EMULATE_MOTIONBOARD") == 0)
+            config->emulateMotionboard = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else
+            printf("Error: Unknown settings command %s\n", command);
+    }
+
+    return 0;
+}
+
 int initConfig()
 {
     config.emulateRideboard = 0;
@@ -67,6 +131,19 @@ int initConfig()
     {
         printf("Warning: Unsure what game this is, using default configuration values");
     }
+
+    configFile = fopen(CONFIG_PATH, "r");
+
+    if (configFile == NULL)
+    {
+        printf("Error: Cannot open %s, using default values\n", CONFIG_PATH);
+        return 1;
+    }
+
+    readConfig(configFile, &config);
+
+    fclose(configFile);
+
     return 0;
 }
 
