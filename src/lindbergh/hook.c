@@ -31,9 +31,82 @@ int hooks[4] = {-1, -1, -1, -1};
 
 uint16_t basePortAddress = 0xFFFF;
 
+static void handleSegfault(int signal, siginfo_t *info, void *ptr)
+{
+    ucontext_t *ctx = ptr;
+
+    uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
+
+    switch (*code)
+    {
+    case 0xED:
+    {
+        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+
+        // The first port called is usually random, but everything after that
+        // is a constant offset, so this is a hack to fix that.
+        // When run as sudo it works fine!?
+
+        if (basePortAddress == 0xFFFF)
+            basePortAddress = port;
+
+        if (port > 0x38)
+            port = port - basePortAddress;
+
+        securityBoardIn(port, (uint32_t *)&(ctx->uc_mcontext.gregs[REG_EAX]));
+
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        return;
+    }
+    break;
+
+    case 0xE7: // OUT IMMIDIATE
+    {
+        ctx->uc_mcontext.gregs[REG_EIP] += 2;
+        return;
+    }
+    break;
+
+    case 0xE6: // OUT IMMIDIATE
+    {
+        ctx->uc_mcontext.gregs[REG_EIP] += 2;
+        return;
+    }
+    break;
+
+    case 0xEE: // OUT
+    {
+        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+        uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        return;
+    }
+    break;
+
+    case 0xEF: // OUT
+    {
+        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        return;
+    }
+    break;
+
+    default:
+        printf("Warning: Skipping SEGFAULT %X\n", *code);
+        ctx->uc_mcontext.gregs[REG_EIP]++;
+        // abort();
+    }
+}
+
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2022\nNot for public consumption\n\n");
+
+    // Implement SIGSEGV handler
+    struct sigaction act;
+    act.sa_sigaction = handleSegfault;
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGSEGV, &act, NULL);
 
     initConfig();
 
@@ -63,6 +136,8 @@ void __attribute__((constructor)) hook_init()
 int open(const char *pathname, int flags)
 {
     int (*_open)(const char *pathname, int flags) = dlsym(RTLD_NEXT, "open");
+
+    printf("Open %s\n", pathname);
 
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
@@ -100,6 +175,7 @@ int open(const char *pathname, int flags)
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
 {
     FILE *(*_fopen)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen");
+    printf("FOpen %s\n", pathname);
 
     if (strcmp(pathname, "/root/lindbergrc") == 0)
     {
@@ -254,81 +330,8 @@ int system(const char *command)
     return _system(command);
 }
 
-static void handleSegfault(int signal, siginfo_t *info, void *ptr)
-{
-    ucontext_t *ctx = ptr;
-
-    uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
-
-    switch (*code)
-    {
-    case 0xED:
-    {
-        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
-
-        // The first port called is usually random, but everything after that
-        // is a constant offset, so this is a hack to fix that.
-        // When run as sudo it works fine!?
-
-        if (basePortAddress == 0xFFFF)
-            basePortAddress = port;
-
-        if (port > 0x38)
-            port = port - basePortAddress;
-
-        securityBoardIn(port, (uint32_t *)&(ctx->uc_mcontext.gregs[REG_EAX]));
-
-        ctx->uc_mcontext.gregs[REG_EIP]++;
-        return;
-    }
-    break;
-
-    case 0xE7: // OUT IMMIDIATE
-    {
-        ctx->uc_mcontext.gregs[REG_EIP] += 2;
-        return;
-    }
-    break;
-
-    case 0xE6: // OUT IMMIDIATE
-    {
-        ctx->uc_mcontext.gregs[REG_EIP] += 2;
-        return;
-    }
-    break;
-
-    case 0xEE: // OUT
-    {
-        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
-        uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
-        ctx->uc_mcontext.gregs[REG_EIP]++;
-        return;
-    }
-    break;
-
-    case 0xEF: // OUT
-    {
-        uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
-        ctx->uc_mcontext.gregs[REG_EIP]++;
-        return;
-    }
-    break;
-
-    default:
-        printf("Error: Unknown segfault %X\n", *code);
-        abort();
-    }
-}
-
 int iopl(int level)
 {
-    struct sigaction act;
-
-    act.sa_sigaction = handleSegfault;
-    act.sa_flags = SA_SIGINFO;
-
-    sigaction(SIGSEGV, &act, NULL);
-
     return 0;
 }
 
@@ -351,3 +354,10 @@ float powf(float base, float exponent)
 {
     return (float)pow((double)base, (double)exponent);
 }
+
+/*
+int futex(int *uaddr, int op, int val, const struct timespec *timeout, int *uaddr2, int val3)
+{
+    return 0;
+}
+*/

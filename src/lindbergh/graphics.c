@@ -77,10 +77,38 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
   // Ensure that the windows will respond with keyboard and mouse events
   attributes->event_mask = attributes->event_mask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
+  attributes->override_redirect = 0;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
-
+  printf("%d %d %d %d\n", x, y, width, height);
   return window;
+}
+
+int XGrabPointer(Display *display, Window grab_window, Bool owner_events, unsigned int event_mask, int pointer_mode, int keyboard_mode, Window confine_to, Cursor cursor, Time time)
+{
+  int (*_XGrabPointer)(Display * display, Window grab_window, Bool owner_events, unsigned int event_mask, int pointer_mode, int keyboard_mode, Window confine_to, Cursor cursor, Time time) = dlsym(RTLD_NEXT, "XGrabPointer");
+  int returnValue = _XGrabPointer(display, grab_window, owner_events, event_mask, pointer_mode, keyboard_mode, confine_to, cursor, time);
+  XUngrabPointer(display, time);
+  return returnValue;
+}
+
+int XGrabKeyboard(Display *display, Window grab_window, Bool owner_events, int pointer_mode, int keyboard_mode, Time time)
+{
+  int (*_XGrabKeyboard)(Display * display, Window grab_window, Bool owner_events, int pointer_mode, int keyboard_mode, Time time) = dlsym(RTLD_NEXT, "XGrabKeyboard");
+  int returnValue = _XGrabKeyboard(display, grab_window, owner_events, pointer_mode, keyboard_mode, time);
+  XUngrabKeyboard(display, time);
+  return returnValue;
+}
+
+int XDefineCursor(Display *display, Window w, Cursor cursor)
+{
+  return 0;
+}
+
+int XStoreName(Display *display, Window w, const char *window_name)
+{
+  int (*_XStoreName)(Display * display, Window w, const char *window_name) = dlsym(RTLD_NEXT, "XStoreName");
+  return _XStoreName(display, w, getGameName());
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
@@ -96,6 +124,7 @@ int XNextEvent(Display *display, XEvent *event_return)
     {
     case 28:
       securityBoardSetSwitch(BUTTON_TEST, 1);
+      abort();
       break;
     case 39:
       securityBoardSetSwitch(BUTTON_SERVICE, 1);
