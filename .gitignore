@@ -2,4 +2,4 @@ build/
 test/
 tmp/
 *.bin
-*.conf
+/*.conf
