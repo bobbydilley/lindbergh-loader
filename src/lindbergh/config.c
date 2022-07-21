@@ -136,7 +136,10 @@ int initConfig()
     config.fullscreen = 0;
     strcpy(config.eepromPath, "eeprom.bin");
     strcpy(config.sramPath, "sram.bin");
-    strcpy(config.jvsPath, "/dev/ttyUSB0");
+    strcpy(config.jvsPath, "none");
+    strcpy(config.driveboardPath, "none");
+    strcpy(config.motionboardPath, "none");
+    strcpy(config.rideboardPath, "none");
     config.width = 1024;
     config.height = 768;
     if (detectGame() != 0)

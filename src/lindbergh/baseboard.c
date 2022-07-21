@@ -3,11 +3,25 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <linux/serial.h>
+#include <termios.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
+#include <time.h>
+#include <stdarg.h>
+#include <sys/ioctl.h>
+#include <linux/serial.h>
 
 #include "baseboard.h"
 
 #include "config.h"
 #include "jvs.h"
+#include "serial.h"
 
 #define SERIAL_STRING "FE11-X018012022X"
 
@@ -55,6 +69,7 @@ unsigned int sharedMemoryIndex = 0;
 uint8_t sharedMemory[1024 * 32] = {0};
 
 int selectReply = -1;
+int jvsFileDescriptor = -1;
 
 int initBaseboard()
 {
@@ -74,6 +89,16 @@ int initBaseboard()
   sram = fopen(sramPath, "rb+");
 
   fseek(sram, 0, SEEK_SET);
+
+  if (getConfig()->emulateJVS == 0 && strcmp(getConfig()->jvsPath, "none") != 0)
+  {
+    jvsFileDescriptor = open(getConfig()->jvsPath, O_RDWR | O_NOCTTY | O_SYNC | O_NDELAY);
+    if (jvsFileDescriptor < 0)
+    {
+      printf("Error: Failed to open %s for JVS\n", getConfig()->jvsPath);
+    }
+    setSerialAttributes(jvsFileDescriptor, B115200);
+  }
 
   return 0;
 }
@@ -174,7 +199,31 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       jvsCommand.destAddress = _data[3];
       jvsCommand.destSize = _data[4];
       memcpy(inputBuffer, &sharedMemory[jvsCommand.srcAddress], jvsCommand.srcSize);
-      processPacket();
+      if (getConfig()->emulateJVS)
+      {
+        processPacket();
+      }
+      else if (jvsFileDescriptor >= 0)
+      {
+        write(jvsFileDescriptor, inputBuffer, jvsCommand.srcSize);
+        for (int i = 0; i < jvsCommand.srcSize; i++)
+          printf("%X ", inputBuffer[i]);
+        printf("\n");
+
+        for (int i = 0; i < jvsCommand.srcSize; i++)
+        {
+          if (inputBuffer[i] == 0xF0)
+          {
+            printf("SENSE LINE 3\n");
+            setSenseLine(3);
+          }
+          else if (inputBuffer[i] == 0xF1)
+          {
+            setSenseLine(1);
+            printf("SENSE LINE 1\n");
+          }
+        }
+      }
     }
     break;
 
@@ -213,9 +262,21 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
     case BASEBOARD_PROCESS_JVS:
     {
-      memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
-      _data[2] = jvsCommand.destAddress;
-      _data[3] = outputPacket.length + 3;
+      if (getConfig()->emulateJVS)
+      {
+        memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
+        _data[2] = jvsCommand.destAddress;
+        _data[3] = outputPacket.length + 3;
+      }
+      else if (jvsFileDescriptor >= 0)
+      {
+        int count = read(jvsFileDescriptor, &sharedMemory[jvsCommand.destAddress], 255); 
+        _data[2] = jvsCommand.destAddress;
+        _data[3] = count;
+        for (int i = 0; i < count; i++)
+          printf("%X ", sharedMemory[jvsCommand.destAddress + i]);
+        printf("\n");
+      }
     }
     break;
 

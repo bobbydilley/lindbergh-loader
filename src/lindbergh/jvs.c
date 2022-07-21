@@ -638,3 +638,7 @@ int setAnalogue(JVSInput channel, int value)
     io.state.analogueChannel[channel] = value;
     return 1;
 }
+
+void setSenseLine(int _senseLine) {
+    senseLine = _senseLine;
+}

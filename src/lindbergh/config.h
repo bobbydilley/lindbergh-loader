@@ -19,6 +19,9 @@ typedef struct
   char eepromPath[MAX_PATH_LENGTH];
   char sramPath[MAX_PATH_LENGTH];
   char jvsPath[MAX_PATH_LENGTH];
+  char rideboardPath[MAX_PATH_LENGTH];
+  char motionboardPath[MAX_PATH_LENGTH];
+  char driveboardPath[MAX_PATH_LENGTH];
   int width;
   int height;
   Game game;

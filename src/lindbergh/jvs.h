@@ -235,6 +235,7 @@ extern JVSPacket inputPacket, outputPacket;
 extern unsigned char outputBuffer[JVS_MAX_PACKET_SIZE], inputBuffer[JVS_MAX_PACKET_SIZE];
 
 int getSenseLine();
+void setSenseLine(int senseLine);
 
 JVSCapabilities *getCapabilities();
 JVSState *getState();
