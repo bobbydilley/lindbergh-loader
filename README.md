@@ -1,3 +1,7 @@
+# ATTENTION!
+
+This project contains header files from SEGA. Please DO NOT distrobute this code. The header files will be re-written completely at some point to make the software FOS.
+
 # SEGA Lindbergh Loader
 
 This project aims to hook and emulate the various different parts of the SEGA Lindbergh allowing the games to run on modern versions of Linux.
