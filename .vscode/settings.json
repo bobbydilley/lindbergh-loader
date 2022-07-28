@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "string.h": "c",
+        "rideboard.h": "c",
+        "serial.h": "c",
+        "jvs.h": "c",
+        "time.h": "c",
+        "stdarg.h": "c",
+        "ioctl.h": "c"
+    }
+}
