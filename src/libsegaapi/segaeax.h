@@ -1,29 +1,8 @@
-/**
- * Copyright (C) 2005  Creative Technology Ltd.  All rights reserved.
- *
- ****************************************************************************
- *  \file       segaeax.cpp
- *  \brief
- *  This file contains the definition of Environmental Audio Extensions version 4.0.
- *  It is duplicated here for SEGAAPI_SetGlobalEAXProperty and SEGAAPI_GetGlobalEAXProperty
- *  to use.
- *
- * @author      CW Lim
- * 
- * $Date: 2005/02/02 11:59:54 $
- * 
- ****************************************************************************
- */
-
-
 #ifndef __SEGAEAX_H
 #define __SEGAEAX_H
 
 #include "segadef.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
 
 #pragma pack(push, 4)
@@ -1471,8 +1450,5 @@ typedef struct _EAXRINGMODULATORPROPERTIES
 
 #pragma pack(pop)
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 
 #endif  // __SEGAEAX_H

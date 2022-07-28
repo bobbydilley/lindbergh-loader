@@ -2,6 +2,11 @@
 	Segaapi audio library emulator
 	Parts stolen from Sega, teknogods and jayfoxrox
 	Modified by doozer in 2022 to work with Outrun 2 SP under modern Linux
+
+	https://www.openal.org/documentation/
+	https://github.com/teknogods/OpenSegaAPI/blob/master/Opensegaapi/src/opensegaapi.cpp
+	https://web.archive.org/web/20070218003259/http://www.devmaster.net/articles.php?catID=6
+
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,20 +19,14 @@
 #include <AL/alext.h>
 #include <AL/alut.h>
 
-//#include "eax4.h"
 #include "segadef.h"
 #include "segaerr.h"
 #include "segaeax.h"
-
 #include "segaapi.h"
 
 #define TSF_IMPLEMENTATION
 #include "tsf.h"
 
-// help and info
-// https://www.openal.org/documentation/
-// https://github.com/teknogods/OpenSegaAPI/blob/master/Opensegaapi/src/opensegaapi.cpp
-// https://web.archive.org/web/20070218003259/http://www.devmaster.net/articles.php?catID=6
 
 //#define DEBUG_SAMPLE
 #define DEBUG_OUTPUT
@@ -216,35 +215,63 @@ static void dumpWaveBuffer(const char *path, unsigned int channels, unsigned int
 }
 #endif
 
-
 ALsizei FramesToBytes(ALsizei size, ALenum channels, ALenum type)
 {
-    switch(channels)
-    {
-    case AL_MONO_SOFT:    size *= 1; break;
-    case AL_STEREO_SOFT:  size *= 2; break;
-    case AL_REAR_SOFT:    size *= 2; break;
-    case AL_QUAD_SOFT:    size *= 4; break;
-    case AL_5POINT1_SOFT: size *= 6; break;
-    case AL_6POINT1_SOFT: size *= 7; break;
-    case AL_7POINT1_SOFT: size *= 8; break;
-    }
+	switch (channels)
+	{
+	case AL_MONO_SOFT:
+		size *= 1;
+		break;
+	case AL_STEREO_SOFT:
+		size *= 2;
+		break;
+	case AL_REAR_SOFT:
+		size *= 2;
+		break;
+	case AL_QUAD_SOFT:
+		size *= 4;
+		break;
+	case AL_5POINT1_SOFT:
+		size *= 6;
+		break;
+	case AL_6POINT1_SOFT:
+		size *= 7;
+		break;
+	case AL_7POINT1_SOFT:
+		size *= 8;
+		break;
+	}
 
-    switch(type)
-    {
-    case AL_BYTE_SOFT:           size *= sizeof(ALbyte); break;
-    case AL_UNSIGNED_BYTE_SOFT:  size *= sizeof(ALubyte); break;
-    case AL_SHORT_SOFT:          size *= sizeof(ALshort); break;
-    case AL_UNSIGNED_SHORT_SOFT: size *= sizeof(ALushort); break;
-    case AL_INT_SOFT:            size *= sizeof(ALint); break;
-    case AL_UNSIGNED_INT_SOFT:   size *= sizeof(ALuint); break;
-    case AL_FLOAT_SOFT:          size *= sizeof(ALfloat); break;
-    case AL_DOUBLE_SOFT:         size *= sizeof(ALdouble); break;
-    }
+	switch (type)
+	{
+	case AL_BYTE_SOFT:
+		size *= sizeof(ALbyte);
+		break;
+	case AL_UNSIGNED_BYTE_SOFT:
+		size *= sizeof(ALubyte);
+		break;
+	case AL_SHORT_SOFT:
+		size *= sizeof(ALshort);
+		break;
+	case AL_UNSIGNED_SHORT_SOFT:
+		size *= sizeof(ALushort);
+		break;
+	case AL_INT_SOFT:
+		size *= sizeof(ALint);
+		break;
+	case AL_UNSIGNED_INT_SOFT:
+		size *= sizeof(ALuint);
+		break;
+	case AL_FLOAT_SOFT:
+		size *= sizeof(ALfloat);
+		break;
+	case AL_DOUBLE_SOFT:
+		size *= sizeof(ALdouble);
+		break;
+	}
 
-    return size;
+	return size;
 }
-
 
 static unsigned int bufferSampleSize(segaapiContext_t *context)
 { // printf("%s %d\n", __func__, __LINE__);
@@ -276,7 +303,6 @@ void AL_APIENTRY wrap_BufferSamples(ALuint buffer, ALuint samplerate,
 				 FramesToBytes(samples, channels, type),
 				 samplerate);
 }
-
 
 static void updateBufferData(segaapiContext_t *context, unsigned int offset, size_t length)
 {
@@ -335,18 +361,17 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 	// CHECK();
 	if (offset != -1)
 	{
-		//printf("CANNOT DO IT\n");
-		//exit(1);
+		// printf("CANNOT DO IT\n");
+		// exit(1);
 		wrap_BufferSamples(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize(context), alChannels, alType, &(context->data[offset]));
 
-		//alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset]);
-		// CHECK();
+		// alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset]);
+		//  CHECK();
 		dbgPrint("Soft update in buffer %X at %u (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, offset, length, position, unsafe[0], unsafe[1]);
 	}
 	else
 	{
 
-	
 		alSourcei(context->alSource, AL_BUFFER, AL_NONE);
 		// CHECK();
 		wrap_BufferSamples(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize(context), alChannels, alType, context->data);
@@ -488,30 +513,30 @@ SEGASTATUS SEGAAPI_PlayWithSetup(CTHANDLE hHandle)
 	return SEGAERR_UNSUPPORTED;
 }
 
-HAWOSTATUS SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle)
+PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle)
 {
 	ALint state;
 
 	dbgPrint("SEGAAPI_GetPlaybackStatus() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
 	if (context == NULL)
-		return HAWOSTATUS_INVALID;
+		return PLAYBACK_STATUS_INVALID;
 
 	alGetSourcei(context->alSource, AL_SOURCE_STATE, &state);
 	switch (state)
 	{
 	case AL_PLAYING:
-		return HAWOSTATUS_ACTIVE;
+		return PLAYBACK_STATUS_ACTIVE;
 	case AL_PAUSED:
-		return HAWOSTATUS_PAUSE;
+		return PLAYBACK_STATUS_PAUSE;
 	case AL_INITIAL:
 	case AL_STOPPED:
-		return HAWOSTATUS_STOP;
+		return PLAYBACK_STATUS_STOP;
 	default:
-		return HAWOSTATUS_INVALID;
+		return PLAYBACK_STATUS_INVALID;
 	}
 
-	return HAWOSTATUS_INVALID;
+	return PLAYBACK_STATUS_INVALID;
 }
 
 SEGASTATUS SEGAAPI_SetFormat(CTHANDLE hHandle, HAWOSEFORMAT *pFormat)
@@ -738,6 +763,7 @@ SEGASTATUS SEGAAPI_SetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param, CTLON
 	dbgPrint("SEGAAPI_SetSynthParam() 0x%x 0x%x 0x%x", hHandle, param, lPARWValue);
 
 	segaapiContext_t *context = hHandle;
+
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 
@@ -1115,21 +1141,21 @@ SEGASTATUS SEGAAPI_Init(void)
 	alBufferSamplesSOFT = alGetProcAddress("alBufferSamplesSOFT");
 	if (alBufferSamplesSOFT == NULL)
 	{
-		dbgPrint("Could not resolve AL extension!\n");
-		//exit(1);
+		dbgPrint("Warning: Could not resolve AL extension!\n");
+		// exit(1);
 	}
 
 	alBufferSubSamplesSOFT = alGetProcAddress("alBufferSubSamplesSOFT");
 	if (alBufferSubSamplesSOFT == NULL)
 	{
-		dbgPrint("Could not resolve AL extension!\n");
-		//exit(1);
+		dbgPrint("Warning: Could not resolve AL extension!\n");
+		// exit(1);
 	}
 	alGetBufferSamplesSOFT = alGetProcAddress("alGetBufferSamplesSOFT");
 	if (alGetBufferSamplesSOFT == NULL)
 	{
-		dbgPrint("Could not resolve AL extension!\n");
-		//exit(1);
+		dbgPrint("Warning: Could not resolve AL extension!\n");
+		// exit(1);
 	}
 
 	SEGAAPI_SetGlobalEAXProperty((GUID *)&EAXPROPERTYID_EAX40_FXSlot2, 0, (void *)&EAX_NULL_GUID, 16);

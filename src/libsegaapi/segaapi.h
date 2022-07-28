@@ -120,11 +120,11 @@ typedef enum {
  * The Playback status.
  */
 typedef enum {
-    HAWOSTATUS_STOP,                      /* The voice is stopped */
-    HAWOSTATUS_ACTIVE,                    /* The voice is playing */
-    HAWOSTATUS_PAUSE,                     /* The voice is paused */
-    HAWOSTATUS_INVALID = -1               /* Invalid state */    
-} HAWOSTATUS;
+    PLAYBACK_STATUS_STOP,                      /* The voice is stopped */
+    PLAYBACK_STATUS_ACTIVE,                    /* The voice is playing */
+    PLAYBACK_STATUS_PAUSE,                     /* The voice is paused */
+    PLAYBACK_STATUS_INVALID = -1               /* Invalid state */    
+} PlaybackStatus;
 
 
 /*
@@ -420,10 +420,10 @@ SEGASTATUS SEGAAPI_PlayWithSetup(CTHANDLE hHandle);
  * An opaque identifier obtained from CreateBuffer. 
  *
  * @return 
- * One of the playback status defined in the HAWOSTATUS enumration type.
- * If the returned status is HAWOSTATUS_INVALID, use GetLastStatus() to check the error code.
+ * One of the playback status defined in the PlaybackStatus enumration type.
+ * If the returned status is PLAYBACK_STATUS_INVALID, use GetLastStatus() to check the error code.
  */
-HAWOSTATUS SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle);
+PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle);
 
 
 
@@ -989,7 +989,7 @@ CTDWORD SEGAAPI_GetEndLoopOffset(CTHANDLE hHandle);
  * the buffer will halt.
  *
  * Only change the End offset position when buffer is not at
- * HAWOSTATUS_ACTIVE state.  End Offset must be sample frame aligned.  
+ * PLAYBACK_STATUS_ACTIVE state.  End Offset must be sample frame aligned.  
  * For example, 16-bit 1 channel is WORD aligned, 16-bit 2 channel 
  * is DWORD aligned.
  *

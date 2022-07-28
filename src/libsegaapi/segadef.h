@@ -1,22 +1,7 @@
-/****************************************************************************
- * Copyright (C) 2004  Creative Technology Ltd.  All rights reserved.
- *
- ****************************************************************************
- *  File:		segadef.h
- *
- *  This file contains the types definitions for segaapi.
- *
- ****************************************************************************
- */
-
 #ifndef __CTDEF_H
 
 #ifndef __SEGAAPITYPES_H
 #define __SEGAAPITYPES_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 
 
 /*  8 bit signed value     */
@@ -65,11 +50,6 @@ typedef void *              CTHANDLE;
                 extern const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
     #endif // INITGUID
 #endif // DEFINE_GUID
-
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
 
 #endif /* __SEGAAPITYPES_H */
 
