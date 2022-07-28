@@ -8,25 +8,23 @@
 	https://web.archive.org/web/20070218003259/http://www.devmaster.net/articles.php?catID=6
 
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <unistd.h>
+#define TSF_IMPLEMENTATION
+
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
 #include <AL/alut.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#include "segadef.h"
-#include "segaerr.h"
-#include "segaeax.h"
 #include "segaapi.h"
-
-#define TSF_IMPLEMENTATION
+#include "segadef.h"
+#include "segaeax.h"
 #include "tsf.h"
-
 
 //#define DEBUG_SAMPLE
 #define DEBUG_OUTPUT
@@ -45,7 +43,7 @@
 		}                                                      \
 	}
 
-SEGASTATUS g_LastStatus = SEGA_SUCCESS;
+int g_LastStatus = SEGA_SUCCESS;
 
 // outrun2 will complain if these aren't present
 const GUID EAX_NULL_GUID;
@@ -453,7 +451,7 @@ static void resetBuffer(segaapiContext_t *context)
 	updateBufferData(context, -1, -1);
 }
 
-SEGASTATUS SEGAAPI_Play(CTHANDLE hHandle)
+int SEGAAPI_Play(void* hHandle)
 {
 	dbgPrint("SEGAAPI_Play() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -481,7 +479,7 @@ SEGASTATUS SEGAAPI_Play(CTHANDLE hHandle)
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_Pause(CTHANDLE hHandle)
+int SEGAAPI_Pause(void* hHandle)
 {
 	dbgPrint("SEGAAPI_Pause() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -491,7 +489,7 @@ SEGASTATUS SEGAAPI_Pause(CTHANDLE hHandle)
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_Stop(CTHANDLE hHandle)
+int SEGAAPI_Stop(void* hHandle)
 {
 	dbgPrint("SEGAAPI_Stop() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -501,7 +499,7 @@ SEGASTATUS SEGAAPI_Stop(CTHANDLE hHandle)
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_PlayWithSetup(CTHANDLE hHandle)
+int SEGAAPI_PlayWithSetup(void* hHandle)
 {
 	dbgPrint("SEGAAPI_PlayWithSetup() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -513,7 +511,7 @@ SEGASTATUS SEGAAPI_PlayWithSetup(CTHANDLE hHandle)
 	return SEGAERR_UNSUPPORTED;
 }
 
-PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle)
+PlaybackStatus SEGAAPI_GetPlaybackStatus(void* hHandle)
 {
 	ALint state;
 
@@ -539,19 +537,19 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle)
 	return PLAYBACK_STATUS_INVALID;
 }
 
-SEGASTATUS SEGAAPI_SetFormat(CTHANDLE hHandle, HAWOSEFORMAT *pFormat)
+int SEGAAPI_SetFormat(void* hHandle, HAWOSEFORMAT *pFormat)
 {
 	dbgPrint("SEGAAPI_SetFormat() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_GetFormat(CTHANDLE hHandle, HAWOSEFORMAT *pFormat)
+int SEGAAPI_GetFormat(void* hHandle, HAWOSEFORMAT *pFormat)
 {
 	dbgPrint("SEGAAPI_GetFormat() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetSampleRate(CTHANDLE hHandle, CTDWORD dwSampleRate)
+int SEGAAPI_SetSampleRate(void* hHandle, unsigned int dwSampleRate)
 {
 	dbgPrint("SEGAAPI_SetSampleRate() 0x%x 0x%x", hHandle, dwSampleRate);
 	if (hHandle == NULL)
@@ -564,25 +562,25 @@ SEGASTATUS SEGAAPI_SetSampleRate(CTHANDLE hHandle, CTDWORD dwSampleRate)
 	return SEGA_SUCCESS;
 }
 
-CTDWORD SEGAAPI_GetSampleRate(CTHANDLE hHandle)
+unsigned int SEGAAPI_GetSampleRate(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetSampleRate() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetPriority(CTHANDLE hHandle, CTDWORD dwPriority)
+int SEGAAPI_SetPriority(void* hHandle, unsigned int dwPriority)
 {
 	dbgPrint("SEGAAPI_SetPriority() 0x%x 0x%x", hHandle, dwPriority);
 	return SEGAERR_UNSUPPORTED;
 }
 
-CTDWORD SEGAAPI_GetPriority(CTHANDLE hHandle)
+unsigned int SEGAAPI_GetPriority(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetPriority() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetUserData(CTHANDLE hHandle, CTHANDLE hUserData)
+int SEGAAPI_SetUserData(void* hHandle, void* hUserData)
 {
 	dbgPrint("SEGAAPI_SetUserData() 0x%x 0x%x", hHandle, hUserData);
 	if (hHandle == NULL)
@@ -596,7 +594,7 @@ SEGASTATUS SEGAAPI_SetUserData(CTHANDLE hHandle, CTHANDLE hUserData)
 	return SEGA_SUCCESS;
 }
 
-CTHANDLE SEGAAPI_GetUserData(CTHANDLE hHandle)
+void* SEGAAPI_GetUserData(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetPriority() 0x%x", hHandle);
 	if (hHandle == NULL)
@@ -605,43 +603,43 @@ CTHANDLE SEGAAPI_GetUserData(CTHANDLE hHandle)
 	return context->userData;
 }
 
-SEGASTATUS SEGAAPI_SetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend, HAROUTING dwDest)
+int SEGAAPI_SetSendRouting(void* hHandle, unsigned int dwChannel, unsigned int dwSend, HAROUTING dwDest)
 {
 	dbgPrint("SEGAAPI_SetSendRouting() 0x%x 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend, dwDest);
 	return SEGA_SUCCESS;
 }
 
-HAROUTING SEGAAPI_GetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend)
+HAROUTING SEGAAPI_GetSendRouting(void* hHandle, unsigned int dwChannel, unsigned int dwSend)
 {
 	dbgPrint("SEGAAPI_GetSendRouting() 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend);
 	return HA_UNUSED_PORT;
 }
 
-SEGASTATUS SEGAAPI_SetSendLevel(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend, CTDWORD dwLevel)
+int SEGAAPI_SetSendLevel(void* hHandle, unsigned int dwChannel, unsigned int dwSend, unsigned int dwLevel)
 {
 	dbgPrint("SEGAAPI_SetSendLevel() 0x%x 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend, dwLevel);
 	return SEGA_SUCCESS;
 }
 
-CTDWORD SEGAAPI_GetSendLevel(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend)
+unsigned int SEGAAPI_GetSendLevel(void* hHandle, unsigned int dwChannel, unsigned int dwSend)
 {
 	dbgPrint("SEGAAPI_GetSendLevel() 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetChannelVolume(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwVolume)
+int SEGAAPI_SetChannelVolume(void* hHandle, unsigned int dwChannel, unsigned int dwVolume)
 {
 	dbgPrint("SEGAAPI_SetChannelVolume() 0x%x 0x%x 0x%x", hHandle, dwChannel, dwVolume);
 	return SEGAERR_UNSUPPORTED;
 }
 
-CTDWORD SEGAAPI_GetChannelVolume(CTHANDLE hHandle, CTDWORD dwChannel)
+unsigned int SEGAAPI_GetChannelVolume(void* hHandle, unsigned int dwChannel)
 {
 	dbgPrint("SEGAAPI_GetChannelVolume() 0x%x 0x%x", hHandle, dwChannel);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetPlaybackPosition(CTHANDLE hHandle, CTDWORD dwPlaybackPos)
+int SEGAAPI_SetPlaybackPosition(void* hHandle, unsigned int dwPlaybackPos)
 {
 	dbgPrint("SEGAAPI_SetPlaybackPosition() 0x%x 0x%x", hHandle, dwPlaybackPos);
 	segaapiContext_t *context = hHandle;
@@ -649,7 +647,7 @@ SEGASTATUS SEGAAPI_SetPlaybackPosition(CTHANDLE hHandle, CTDWORD dwPlaybackPos)
 	return SEGA_SUCCESS;
 }
 
-CTDWORD SEGAAPI_GetPlaybackPosition(CTHANDLE hHandle)
+unsigned int SEGAAPI_GetPlaybackPosition(void* hHandle)
 {
 	ALint position;
 	dbgPrint("SEGAAPI_GetPlaybackPosition() 0x%x", hHandle);
@@ -658,25 +656,25 @@ CTDWORD SEGAAPI_GetPlaybackPosition(CTHANDLE hHandle)
 	return position;
 }
 
-SEGASTATUS SEGAAPI_SetNotificationFrequency(CTHANDLE hHandle, CTDWORD dwFrameCount)
+int SEGAAPI_SetNotificationFrequency(void* hHandle, unsigned int dwFrameCount)
 {
 	dbgPrint("SEGAAPI_SetNotificationFrequency() 0x%x 0x%x", hHandle, dwFrameCount);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetNotificationPoint(CTHANDLE hHandle, CTDWORD dwBufferOffset)
+int SEGAAPI_SetNotificationPoint(void* hHandle, unsigned int dwBufferOffset)
 {
 	dbgPrint("SEGAAPI_SetNotificationPoint() 0x%x 0x%x", hHandle, dwBufferOffset);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_ClearNotificationPoint(CTHANDLE hHandle, CTDWORD dwBufferOffset)
+int SEGAAPI_ClearNotificationPoint(void* hHandle, unsigned int dwBufferOffset)
 {
 	dbgPrint("SEGAAPI_ClearNotificationPoint() 0x%x 0x%x", hHandle, dwBufferOffset);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetStartLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset)
+int SEGAAPI_SetStartLoopOffset(void* hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetStartLoopOffset() 0x%x 0x%x", hHandle, dwOffset);
 	if (hHandle == NULL)
@@ -689,13 +687,13 @@ SEGASTATUS SEGAAPI_SetStartLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset)
 	return SEGA_SUCCESS;
 }
 
-CTDWORD SEGAAPI_GetStartLoopOffset(CTHANDLE hHandle)
+unsigned int SEGAAPI_GetStartLoopOffset(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetStartLoopOffset() 0x%x", hHandle);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetEndLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset)
+int SEGAAPI_SetEndLoopOffset(void* hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetEndLoopOffset() 0x%x 0x%x", hHandle, dwOffset);
 	if (hHandle == NULL)
@@ -708,25 +706,25 @@ SEGASTATUS SEGAAPI_SetEndLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset)
 	return SEGA_SUCCESS;
 }
 
-CTDWORD SEGAAPI_GetEndLoopOffset(CTHANDLE hHandle)
+unsigned int SEGAAPI_GetEndLoopOffset(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetEndLoopOffset() 0x%x", hHandle);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetEndOffset(CTHANDLE hHandle, CTDWORD dwOffset)
+int SEGAAPI_SetEndOffset(void* hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetEndOffset() 0x%x 0x%x", hHandle, dwOffset);
 	return SEGAERR_UNSUPPORTED;
 }
 
-CTDWORD SEGAAPI_GetEndOffset(CTHANDLE hHandle)
+unsigned int SEGAAPI_GetEndOffset(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetEndOffset() 0x%x", hHandle);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetLoopState(CTHANDLE hHandle, CTBOOL bDoContinuousLooping)
+int SEGAAPI_SetLoopState(void* hHandle, int bDoContinuousLooping)
 {
 	dbgPrint("SEGAAPI_SetLoopState() 0x%x 0x%x", hHandle, bDoContinuousLooping);
 	segaapiContext_t *context = hHandle;
@@ -735,13 +733,13 @@ SEGASTATUS SEGAAPI_SetLoopState(CTHANDLE hHandle, CTBOOL bDoContinuousLooping)
 	return SEGA_SUCCESS;
 }
 
-CTBOOL SEGAAPI_GetLoopState(CTHANDLE hHandle)
+int SEGAAPI_GetLoopState(void* hHandle)
 {
 	dbgPrint("SEGAAPI_GetLoopState() 0x%x", hHandle);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_UpdateBuffer(CTHANDLE hHandle, CTDWORD dwStartOffset, CTDWORD dwLength)
+int SEGAAPI_UpdateBuffer(void* hHandle, unsigned int dwStartOffset, unsigned int dwLength)
 {
 	dbgPrint("SEGAAPI_UpdateBuffer() 0x%x 0x%x 0x%x", hHandle, dwStartOffset, dwLength);
 	if (hHandle == NULL)
@@ -754,7 +752,7 @@ SEGASTATUS SEGAAPI_UpdateBuffer(CTHANDLE hHandle, CTDWORD dwStartOffset, CTDWORD
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_SetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param, CTLONG lPARWValue)
+int SEGAAPI_SetSynthParam(void* hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
 {
 	float volume;
 	float semiTones;
@@ -888,13 +886,13 @@ SEGASTATUS SEGAAPI_SetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param, CTLON
 	return SEGAERR_UNSUPPORTED;
 }
 
-CTLONG SEGAAPI_GetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param)
+int SEGAAPI_GetSynthParam(void* hHandle, HASYNTHPARAMSEXT param)
 {
 	dbgPrint("SEGAAPI_GetSynthParam() 0x%x 0x%x", hHandle, param);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, SynthParamSet *pSynthParams)
+int SEGAAPI_SetSynthParamMultiple(void* hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
 {
 	dbgPrint("SEGAAPI_SetSynthParamMultiple() 0x%x 0x%x 0x%x", hHandle, dwNumParams, pSynthParams);
 	segaapiContext_t *context = hHandle;
@@ -909,19 +907,19 @@ SEGASTATUS SEGAAPI_SetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, 
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_GetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, SynthParamSet *pSynthParams)
+int SEGAAPI_GetSynthParamMultiple(void* hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
 {
 	dbgPrint("SEGAAPI_GetSynthParamMultiple() 0x%x 0x%x 0x%x", hHandle, dwNumParams, pSynthParams);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetReleaseState(CTHANDLE hHandle, CTBOOL bSet)
+int SEGAAPI_SetReleaseState(void* hHandle, int bSet)
 {
 	dbgPrint("SEGAAPI_SetReleaseState() 0x%x 0x%x", hHandle, bSet);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCallback, CTDWORD dwFlags, CTHANDLE *phHandle)
+int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCallback, unsigned int dwFlags, void* *phHandle)
 {
 	dbgPrint("SEGAAPI_CreateBuffer() 0x%x 0x%x 0x%x 0x%x", pConfig, pCallback, dwFlags, phHandle);
 	if ((phHandle == NULL) || (pConfig == NULL))
@@ -1027,7 +1025,7 @@ SEGASTATUS SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLB
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_DestroyBuffer(CTHANDLE hHandle)
+int SEGAAPI_DestroyBuffer(void* hHandle)
 {
 	dbgPrint("SEGAAPI_DestroyBuffer() 0x%x", hHandle);
 	if (hHandle == NULL)
@@ -1036,31 +1034,31 @@ SEGASTATUS SEGAAPI_DestroyBuffer(CTHANDLE hHandle)
 	return SEGA_SUCCESS;
 }
 
-CTBOOL SEGAAPI_SetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize)
+int SEGAAPI_SetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize)
 {
 	dbgPrint("SEGAAPI_SetGlobalEAXProperty() 0x%x 0x%x 0x%x 0x%x", guid, ulProperty, pData, ulDataSize);
 	return 0;
 }
 
-CTBOOL SEGAAPI_GetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize)
+int SEGAAPI_GetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize)
 {
 	dbgPrint("SEGAAPI_GetGlobalEAXProperty() 0x%x 0x%x 0x%x 0x%x", guid, ulProperty, pData, ulDataSize);
 	return 0;
 }
 
-SEGASTATUS SEGAAPI_SetSPDIFOutChannelStatus(CTDWORD dwChannelStatus, CTDWORD dwExtChannelStatus)
+int SEGAAPI_SetSPDIFOutChannelStatus(unsigned int dwChannelStatus, unsigned int dwExtChannelStatus)
 {
 	dbgPrint("SEGAAPI_SetSPDIFOutChannelStatus() 0x%x 0x%x", dwChannelStatus, dwExtChannelStatus);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_GetSPDIFOutChannelStatus(CTDWORD *pdwChannelStatus, CTDWORD *pdwExtChannelStatus)
+int SEGAAPI_GetSPDIFOutChannelStatus(unsigned int *pdwChannelStatus, unsigned int *pdwExtChannelStatus)
 {
 	dbgPrint("SEGAAPI_GetSPDIFOutChannelStatus() 0x%x 0x%x", pdwChannelStatus, pdwExtChannelStatus);
 	return SEGAERR_UNSUPPORTED;
 }
 
-SEGASTATUS SEGAAPI_SetSPDIFOutSampleRate(HASPDIFOUTRATE dwSamplingRate)
+int SEGAAPI_SetSPDIFOutSampleRate(HASPDIFOUTRATE dwSamplingRate)
 {
 	dbgPrint("SEGAAPI_SetSPDIFOutSampleRate() 0x%x", dwSamplingRate);
 	return SEGAERR_UNSUPPORTED;
@@ -1072,7 +1070,7 @@ HASPDIFOUTRATE SEGAAPI_GetSPDIFOutSampleRate(void)
 	return HASPDIFOUT_48KHZ;
 }
 
-SEGASTATUS SEGAAPI_SetSPDIFOutChannelRouting(CTDWORD dwChannel, HAROUTING dwSource)
+int SEGAAPI_SetSPDIFOutChannelRouting(unsigned int dwChannel, HAROUTING dwSource)
 {
 	switch (dwChannel)
 	{
@@ -1089,13 +1087,13 @@ SEGASTATUS SEGAAPI_SetSPDIFOutChannelRouting(CTDWORD dwChannel, HAROUTING dwSour
 	return SEGAERR_UNSUPPORTED;
 }
 
-HAROUTING SEGAAPI_GetSPDIFOutChannelRouting(CTDWORD dwChannel)
+HAROUTING SEGAAPI_GetSPDIFOutChannelRouting(unsigned int dwChannel)
 {
 	dbgPrint("SEGAAPI_GetSPDIFOutChannelRouting() 0x%x", dwChannel);
 	return HA_UNUSED_PORT;
 }
 
-SEGASTATUS SEGAAPI_SetIOVolume(HAPHYSICALIO dwPhysIO, CTDWORD dwVolume)
+int SEGAAPI_SetIOVolume(HAPHYSICALIO dwPhysIO, unsigned int dwVolume)
 {
 	// float v = (dwVolume >> 16) & 0xffff;
 	dbgPrint("SEGAAPI_SetIOVolume() 0x%x 0x%x", dwPhysIO, dwVolume);
@@ -1103,31 +1101,31 @@ SEGASTATUS SEGAAPI_SetIOVolume(HAPHYSICALIO dwPhysIO, CTDWORD dwVolume)
 	return SEGA_SUCCESS;
 }
 
-CTDWORD SEGAAPI_GetIOVolume(HAPHYSICALIO dwPhysIO)
+unsigned int SEGAAPI_GetIOVolume(HAPHYSICALIO dwPhysIO)
 {
 	dbgPrint("SEGAAPI_GetIOVolume() 0x%x", dwPhysIO);
 	return 0xffffffff;
 }
 
-void SEGAAPI_SetLastStatus(SEGASTATUS LastStatus)
+void SEGAAPI_SetLastStatus(int LastStatus)
 {
 	dbgPrint("SEGAAPI_SetLastStatus() 0x%x", LastStatus);
 	return;
 }
 
-SEGASTATUS SEGAAPI_GetLastStatus(void)
+int SEGAAPI_GetLastStatus(void)
 {
 	dbgPrint("SEGAAPI_GetLastStatus()");
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_Reset(void)
+int SEGAAPI_Reset(void)
 {
 	dbgPrint("SEGAAPI_Reset()");
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_Init(void)
+int SEGAAPI_Init(void)
 {
 	dbgPrint("SEGAAPI_Init()");
 
@@ -1166,7 +1164,7 @@ SEGASTATUS SEGAAPI_Init(void)
 	return SEGA_SUCCESS;
 }
 
-SEGASTATUS SEGAAPI_Exit(void)
+int SEGAAPI_Exit(void)
 {
 	dbgPrint("SEGAAPI_Exit()");
 	alutExit();

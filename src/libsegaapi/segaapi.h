@@ -9,13 +9,13 @@
  *
  *
  * @author      Creative
- * 
+ *
  * $Date: 2006/01/03 06:54:39 $
- * 
+ *
  ****************************************************************************
  * Revision History:
  *
- * 0.5  
+ * 0.5
  * 1st release to SEGA for review.
  *
  * 0.51
@@ -35,36 +35,36 @@
  * Added more documentation.
  *
  * 0.80
- * Added SetLastStatus and GetLastStatus functions.  
- * Change version to 0.80 to indicate close to final. 
+ * Added SetLastStatus and GetLastStatus functions.
+ * Change version to 0.80 to indicate close to final.
  *
  * 0.9
- * Made the header file both gcc and g++ compliance as per request. 
- * 
+ * Made the header file both gcc and g++ compliance as per request.
+ *
  * 0.91
- * Updated voice priority description.  
+ * Updated voice priority description.
  *
  * 0.92
- * Added SEGAAPI_Reset, and updated CreateBuffer() to support synthesizer buffer.  
- * 
+ * Added SEGAAPI_Reset, and updated CreateBuffer() to support synthesizer buffer.
+ *
  * 0.93
- * Added SEGAAPI_GetSendRouting and SEGAAPI_GetSetLevel per request.  
- * 
+ * Added SEGAAPI_GetSendRouting and SEGAAPI_GetSetLevel per request.
+ *
  * 0.94
- * Changed default send levels in SEGAAPI_CreateBuffer to 0.  
+ * Changed default send levels in SEGAAPI_CreateBuffer to 0.
  *
  * 1.00
  * Added SEGAAPI_Init() and SEGAAPI_Exit() per request.
  *
  * 1.01
- * Updated SEGAAPI_SetReleaseState() document. 
+ * Updated SEGAAPI_SetReleaseState() document.
  *
  * 1.02
-*  Added SEGAAPI_SetSynthParamMultiple(0 and SEGAAPI_GetSynthParamMultiple().
+ *  Added SEGAAPI_SetSynthParamMultiple(0 and SEGAAPI_GetSynthParamMultiple().
  * Updated SEGAAPI_CreateBuffer() for user-mode buffer support.
  *
  ****************************************************************************
- * Released under NDA. 
+ * Released under NDA.
  *
  * This document has been reviewed by SEGA.
  ****************************************************************************
@@ -75,190 +75,195 @@
 
 // INCLUDES
 #include "segadef.h"
-#include "segaerr.h"
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define SEGARESULT_FAILURE(_x) ((1 << 31) | 0xA000 | (_x))
+#define SEGA_SUCCESS 0L
+#define SEGAERR_FAIL SEGARESULT_FAILURE(0)
+#define SEGAERR_BAD_POINTER SEGARESULT_FAILURE(3)
+#define SEGAERR_UNSUPPORTED SEGARESULT_FAILURE(5)
+#define SEGAERR_BAD_PARAM SEGARESULT_FAILURE(9)
+#define SEGAERR_INVALID_CHANNEL SEGARESULT_FAILURE(10)
+#define SEGAERR_INVALID_SEND SEGARESULT_FAILURE(11)
+#define SEGAERR_PLAYING SEGARESULT_FAILURE(12)
+#define SEGAERR_NO_RESOURCES SEGARESULT_FAILURE(13)
+#define SEGAERR_BAD_CONFIG SEGARESULT_FAILURE(14)
+#define SEGAERR_BAD_HANDLE SEGARESULT_FAILURE(18)
+#define SEGAERR_BAD_SAMPLERATE SEGARESULT_FAILURE(28)
+#define SEGAERR_OUT_OF_MEMORY SEGARESULT_FAILURE(31)
+#define SEGAERR_INIT_FAILED SEGARESULT_FAILURE(39)
 
 /**
  * The following defines SEGA custom EAX40 properties.
  */
 
 // {A7FEEC3F-2BFD-4a40-891F-7423E38BAC1F}
-DEFINE_GUID(EAXPROPERTYID_EAX40_SEGA_Custom, 
-0xa7feec3f, 0x2bfd, 0x4a40, 0x89, 0x1f, 0x74, 0x23, 0xe3, 0x8b, 0xac, 0x1f);
+DEFINE_GUID(EAXPROPERTYID_EAX40_SEGA_Custom,
+            0xa7feec3f, 0x2bfd, 0x4a40, 0x89, 0x1f, 0x74, 0x23, 0xe3, 0x8b, 0xac, 0x1f);
 
 // SEGA custom EAX40 properties
 /*
- * The only property now is to switch the FX returns for 
+ * The only property now is to switch the FX returns for
  * FXSlot2 and FXSlot3 when non-reverb is loaded to these slots.
  *
  * EAXSEGA_STEREO_RETURN
- *    ulDataSize = CTDWORD
+ *    ulDataSize = unsigned int
  *      value = 0 denotes route to front L/R (default)
- *      value = 1 denotes route to Rear L/R 
+ *      value = 1 denotes route to Rear L/R
  */
 typedef enum
 {
-    EAXSEGA_STEREO_RETURN_FX2 = 0,   
-    EAXSEGA_STEREO_RETURN_FX3 = 1  
+    EAXSEGA_STEREO_RETURN_FX2 = 0,
+    EAXSEGA_STEREO_RETURN_FX3 = 1
 } EAXSEGA_PROPERTY;
 
 /**
  * The following defines all of the messages wave output clients
  * can receive as part of their callback routines.
  */
-typedef enum {
+typedef enum
+{
     HAWOS_RESOURCE_STOLEN = 0,
     HAWOS_NOTIFY = 2
 } HAWOSMESSAGETYPE;
 
-
 /*
  * The Playback status.
  */
-typedef enum {
-    PLAYBACK_STATUS_STOP,                      /* The voice is stopped */
-    PLAYBACK_STATUS_ACTIVE,                    /* The voice is playing */
-    PLAYBACK_STATUS_PAUSE,                     /* The voice is paused */
-    PLAYBACK_STATUS_INVALID = -1               /* Invalid state */    
+typedef enum
+{
+    PLAYBACK_STATUS_STOP,        /* The voice is stopped */
+    PLAYBACK_STATUS_ACTIVE,      /* The voice is playing */
+    PLAYBACK_STATUS_PAUSE,       /* The voice is paused */
+    PLAYBACK_STATUS_INVALID = -1 /* Invalid state */
 } PlaybackStatus;
-
 
 /*
  * dwFlags use in CreateBuffer.
  */
-#define HABUF_SYNTH_BUFFER		0x00000001	// indiate to create a synth buffer
-#define HABUF_ALLOC_USER_MEM    0x00000002	// indiate that caller allocate memory
-#define HABUF_USE_MAPPED_MEM    0x00000003	// indiate that caller allocate memory
+#define HABUF_SYNTH_BUFFER 0x00000001   // indiate to create a synth buffer
+#define HABUF_ALLOC_USER_MEM 0x00000002 // indiate that caller allocate memory
+#define HABUF_USE_MAPPED_MEM 0x00000003 // indiate that caller allocate memory
 
 /*
  * The HAWOSEFORMAT structure is used to change the format of an output client.
  */
 
-#ifndef __HAWAVE_H 
-#define HASF_UNSIGNED_8PCM      0x0004      /* Unsigned (offset 128) 8-bit PCM */
-#define HASF_SIGNED_16PCM       0x0020      /* Signed 16-bit PCM */ 
+#ifndef __HAWAVE_H
+#define HASF_UNSIGNED_8PCM 0x0004 /* Unsigned (offset 128) 8-bit PCM */
+#define HASF_SIGNED_16PCM 0x0020  /* Signed 16-bit PCM */
 #endif
- 
-typedef struct {
-    CTDWORD     dwSampleRate;           /* The sample rate the client desires (in Hz) */
-    CTDWORD     dwSampleFormat;         /* The sample format the client will use */
-    CTDWORD     byNumChans;             /* The number of samples in the sample
-                                         *  frame (1 = mono, 2 = stereo).  */
+
+typedef struct
+{
+    unsigned int dwSampleRate;   /* The sample rate the client desires (in Hz) */
+    unsigned int dwSampleFormat; /* The sample format the client will use */
+    unsigned int byNumChans;     /* The number of samples in the sample
+                                  *  frame (1 = mono, 2 = stereo).  */
 } HAWOSEFORMAT;
-
-
 
 /*
  * HAWOSEMAPDATA contains
  */
-typedef struct {
-    CTDWORD     dwSize;       /* Supply by caller. Size (in bytes) of the valid sample data */
-    CTDWORD     dwOffset;     /* Return by driver. Offset of buffer where the the first valid sample should be written to */
-    CTHANDLE    hBufferHdr;   /* Return by driver. Memory address that user-space application can access. */
+typedef struct
+{
+    unsigned int dwSize;   /* Supply by caller. Size (in bytes) of the valid sample data */
+    unsigned int dwOffset; /* Return by driver. Offset of buffer where the the first valid sample should be written to */
+    void *hBufferHdr;      /* Return by driver. Memory address that user-space application can access. */
 } HAWOSEMAPDATA;
-
 
 /*
  * The HAWOSEBUFFERCONFIG structure is used to describe how an input or
  * output buffer client wishes to configure the device when it opens it.
  */
-typedef struct {
-    CTDWORD     dwPriority;         /* The priority with which the voices
-                                     *  should be allocated.  This is used
-                                     *  when voices need to be ripped off. */
-    CTDWORD     dwSampleRate;       /* The sample rate the voice desires */
-    CTDWORD     dwSampleFormat;     /* The sample format the voice will use */
-    CTDWORD     byNumChans;         /* The number of samples in the sample
-                                     *  frame. (1 = mono, 2 = stereo). */
-    CTDWORD     dwReserved;         /* Reserved field */
-    CTHANDLE    hUserData;          /* User data */
-    HAWOSEMAPDATA mapData;          /* The sample memory mapping for the buffer. */
+typedef struct
+{
+    unsigned int dwPriority;     /* The priority with which the voices
+                                  *  should be allocated.  This is used
+                                  *  when voices need to be ripped off. */
+    unsigned int dwSampleRate;   /* The sample rate the voice desires */
+    unsigned int dwSampleFormat; /* The sample format the voice will use */
+    unsigned int byNumChans;     /* The number of samples in the sample
+                                  *  frame. (1 = mono, 2 = stereo). */
+    unsigned int dwReserved;     /* Reserved field */
+    void *hUserData;             /* User data */
+    HAWOSEMAPDATA mapData;       /* The sample memory mapping for the buffer. */
 } HAWOSEBUFFERCONFIG;
-
-
 
 /**
  * Default values
  */
-#define HAWOSEVOL_MAX      0xFFFFFFFF  /* Maximum volume; no attenuation */
-
+#define HAWOSEVOL_MAX 0xFFFFFFFF /* Maximum volume; no attenuation */
 
 /**
- * Since Tina has up to 64- voices, voice priorities typically ranging 
+ * Since Tina has up to 64- voices, voice priorities typically ranging
  * from 0 to 63, where 0 is lower priority (more likely to get ripped off)
  * than 63.
  *
  * Set voice priority to HAWOSEP_MAXIMUM if a voice must never get ripped
  * off under any circumstances.
  */
-#define HAWOSEP_MINIMUM    0
-#define HAWOSEP_MAXIMUM    0xFFFFFFFF
-
+#define HAWOSEP_MINIMUM 0
+#define HAWOSEP_MAXIMUM 0xFFFFFFFF
 
 /** @brief Routing List
- * 
+ *
  * voice sends routing to speakers or effects ports.
  *
  */
 #define HAWOSE_UNUSED_SEND 0xFFFF0001
 
-
-typedef enum HAROUTING{
-    HA_UNUSED_PORT=HAWOSE_UNUSED_SEND,
+typedef enum HAROUTING
+{
+    HA_UNUSED_PORT = HAWOSE_UNUSED_SEND,
 
     // Dry multi-channel outputs
-    HA_FRONT_LEFT_PORT =0,
-    HA_FRONT_RIGHT_PORT=1,
-    HA_FRONT_CENTER_PORT=2,
-    HA_LFE_PORT=3,
-    HA_REAR_LEFT_PORT=4,
-    HA_REAR_RIGHT_PORT=5,
+    HA_FRONT_LEFT_PORT = 0,
+    HA_FRONT_RIGHT_PORT = 1,
+    HA_FRONT_CENTER_PORT = 2,
+    HA_LFE_PORT = 3,
+    HA_REAR_LEFT_PORT = 4,
+    HA_REAR_RIGHT_PORT = 5,
 
     // effect outputs
-    HA_FXSLOT0_PORT=10,
-    HA_FXSLOT1_PORT=11,
-    HA_FXSLOT2_PORT=12,
-    HA_FXSLOT3_PORT=13
+    HA_FXSLOT0_PORT = 10,
+    HA_FXSLOT1_PORT = 11,
+    HA_FXSLOT2_PORT = 12,
+    HA_FXSLOT3_PORT = 13
 
-} HAROUTING;  
-
+} HAROUTING;
 
 /**
  * The following defines SPDIF-Out sampling rate.
  */
-typedef enum {
-    HASPDIFOUT_44_1KHZ=0,
+typedef enum
+{
+    HASPDIFOUT_44_1KHZ = 0,
     HASPDIFOUT_48KHZ,
     HASPDIFOUT_96KHZ
 } HASPDIFOUTRATE;
 
-
 /**
  * The following defines inputs and outputs of SEGA sound board.
  */
-typedef enum HAPHYSICALIO {
+typedef enum HAPHYSICALIO
+{
     // analog outputs
-    HA_OUT_FRONT_LEFT =0,
-    HA_OUT_FRONT_RIGHT=1,
-    HA_OUT_FRONT_CENTER=2,
-    HA_OUT_LFE_PORT=3,
-    HA_OUT_REAR_LEFT=4,
-    HA_OUT_REAR_RIGHT=5,
+    HA_OUT_FRONT_LEFT = 0,
+    HA_OUT_FRONT_RIGHT = 1,
+    HA_OUT_FRONT_CENTER = 2,
+    HA_OUT_LFE_PORT = 3,
+    HA_OUT_REAR_LEFT = 4,
+    HA_OUT_REAR_RIGHT = 5,
 
     // optical Outputs
-    HA_OUT_OPTICAL_LEFT=10,
-    HA_OUT_OPTICAL_RIGHT=11,
+    HA_OUT_OPTICAL_LEFT = 10,
+    HA_OUT_OPTICAL_RIGHT = 11,
 
     // Line In
-    HA_IN_LINEIN_LEFT=20,
-    HA_IN_LINEIN_RIGHT=21
+    HA_IN_LINEIN_LEFT = 20,
+    HA_IN_LINEIN_RIGHT = 21
 
-}HAPHYSICALIO ;  
-
+} HAPHYSICALIO;
 
 /** @brief Synth parameters enumeration list
  *
@@ -268,130 +273,126 @@ typedef enum HAPHYSICALIO {
  * Refers to DLS spec or SoundFont spec for details of these Parameters,
  * their units and their ranges.
  */
-typedef enum HASYNTHPARAMSEXT {
-    HAVP_ATTENUATION,                           ///< 0,         0x00,  initialAttenuation
-    HAVP_PITCH,                                 ///< 1,         0x01,  fineTune + coarseTune * 100
-    HAVP_FILTER_CUTOFF,                         ///< 2,         0x02,  initialFilterFc
-    HAVP_FILTER_Q,                              ///< 3,         0x03,  initialFilterQ
-    HAVP_DELAY_VOL_ENV,                         ///< 4,         0x04,  delayVolEnv
-    HAVP_ATTACK_VOL_ENV,                        ///< 5,         0x05,  attackVolEnv
-    HAVP_HOLD_VOL_ENV,                          ///< 6,         0x06,  holdVolEnv
-    HAVP_DECAY_VOL_ENV,                         ///< 7,         0x07,  decayVolEnv
-    HAVP_SUSTAIN_VOL_ENV,                       ///< 8,         0x08,  sustainVolEnv
-    HAVP_RELEASE_VOL_ENV,                       ///< 9,         0x09,  releaseVolEnv
-    HAVP_DELAY_MOD_ENV,                         ///< 10,        0x0A,  delayModEnv
-    HAVP_ATTACK_MOD_ENV,                        ///< 11,        0x0B,  attackModEnv
-    HAVP_HOLD_MOD_ENV,                          ///< 12,        0x0C,  holdModEnv
-    HAVP_DECAY_MOD_ENV,                         ///< 13,        0x0D,  decayModEnv
-    HAVP_SUSTAIN_MOD_ENV,                       ///< 14,        0x0E,  sustainModEnv
-    HAVP_RELEASE_MOD_ENV,                       ///< 15,        0x0F,  releaseModEnv
-    HAVP_DELAY_MOD_LFO,                         ///< 16,        0x10,  delayModLFO
-    HAVP_FREQ_MOD_LFO,                          ///< 17,        0x11,  freqModLFO
-    HAVP_DELAY_VIB_LFO,                         ///< 18,        0x12,  delayVibLFO
-    HAVP_FREQ_VIB_LFO,                          ///< 19,        0x13,  freqVibLFO
-    HAVP_MOD_LFO_TO_PITCH,                      ///< 20,        0x14,  modLfoToPitch
-    HAVP_VIB_LFO_TO_PITCH,                      ///< 21,        0x15,  vibLfoToPitch
-    HAVP_MOD_LFO_TO_FILTER_CUTOFF,              ///< 22,        0x16,  modLfoToFilterFc
-    HAVP_MOD_LFO_TO_ATTENUATION,                ///< 23,        0x17,  modLfoToVolume
-    HAVP_MOD_ENV_TO_PITCH,                      ///< 24,        0x18,  modEnvToPitch
-    HAVP_MOD_ENV_TO_FILTER_CUTOFF               ///< 25,        0x19,  modEnvToFilterFc
+typedef enum HASYNTHPARAMSEXT
+{
+    HAVP_ATTENUATION,              ///< 0,         0x00,  initialAttenuation
+    HAVP_PITCH,                    ///< 1,         0x01,  fineTune + coarseTune * 100
+    HAVP_FILTER_CUTOFF,            ///< 2,         0x02,  initialFilterFc
+    HAVP_FILTER_Q,                 ///< 3,         0x03,  initialFilterQ
+    HAVP_DELAY_VOL_ENV,            ///< 4,         0x04,  delayVolEnv
+    HAVP_ATTACK_VOL_ENV,           ///< 5,         0x05,  attackVolEnv
+    HAVP_HOLD_VOL_ENV,             ///< 6,         0x06,  holdVolEnv
+    HAVP_DECAY_VOL_ENV,            ///< 7,         0x07,  decayVolEnv
+    HAVP_SUSTAIN_VOL_ENV,          ///< 8,         0x08,  sustainVolEnv
+    HAVP_RELEASE_VOL_ENV,          ///< 9,         0x09,  releaseVolEnv
+    HAVP_DELAY_MOD_ENV,            ///< 10,        0x0A,  delayModEnv
+    HAVP_ATTACK_MOD_ENV,           ///< 11,        0x0B,  attackModEnv
+    HAVP_HOLD_MOD_ENV,             ///< 12,        0x0C,  holdModEnv
+    HAVP_DECAY_MOD_ENV,            ///< 13,        0x0D,  decayModEnv
+    HAVP_SUSTAIN_MOD_ENV,          ///< 14,        0x0E,  sustainModEnv
+    HAVP_RELEASE_MOD_ENV,          ///< 15,        0x0F,  releaseModEnv
+    HAVP_DELAY_MOD_LFO,            ///< 16,        0x10,  delayModLFO
+    HAVP_FREQ_MOD_LFO,             ///< 17,        0x11,  freqModLFO
+    HAVP_DELAY_VIB_LFO,            ///< 18,        0x12,  delayVibLFO
+    HAVP_FREQ_VIB_LFO,             ///< 19,        0x13,  freqVibLFO
+    HAVP_MOD_LFO_TO_PITCH,         ///< 20,        0x14,  modLfoToPitch
+    HAVP_VIB_LFO_TO_PITCH,         ///< 21,        0x15,  vibLfoToPitch
+    HAVP_MOD_LFO_TO_FILTER_CUTOFF, ///< 22,        0x16,  modLfoToFilterFc
+    HAVP_MOD_LFO_TO_ATTENUATION,   ///< 23,        0x17,  modLfoToVolume
+    HAVP_MOD_ENV_TO_PITCH,         ///< 24,        0x18,  modEnvToPitch
+    HAVP_MOD_ENV_TO_FILTER_CUTOFF  ///< 25,        0x19,  modEnvToFilterFc
 
 } HASYNTHPARAMSEXT;
 
 #ifndef __SYNTHPARAMSET_
-#   define __SYNTHPARAMSET_
-typedef struct SynthParamSetExt {
+#define __SYNTHPARAMSET_
+typedef struct SynthParamSetExt
+{
     HASYNTHPARAMSEXT param;
-    CTLONG  lPARWValue;
+    int lPARWValue;
 } SynthParamSet;
 #endif
 
-
-/*  
+/*
 How this SYNTH PARAMS EXT maps to Sega API requests:
 
-    HAVP_ATTENUATION,                           SetVolume()                     
-    HAVP_PITCH,                                 SetPitch()                              
-    HAVP_FILTER_CUTOFF,                         SetFilter()                     
-    HAVP_FILTER_Q,                              SetFilter()     
-    HAVP_DELAY_VOL_ENV,                         SetEG()                 
-    HAVP_ATTACK_VOL_ENV,                        SetEG()         
-    HAVP_HOLD_VOL_ENV,                          SetEG()                 
-    HAVP_DECAY_VOL_ENV,                         SetEG()         
-    HAVP_SUSTAIN_VOL_ENV,                       SetEG()         
-    HAVP_RELEASE_VOL_ENV,                       SetEG()                 
-    HAVP_DELAY_MOD_ENV,                         SetEG()         
-    HAVP_ATTACK_MOD_ENV,                        SetEG() 
-    HAVP_HOLD_MOD_ENV,                          SetEG()                 
-    HAVP_DECAY_MOD_ENV,                         SetEG()         
-    HAVP_SUSTAIN_MOD_ENV,                       SetEG()         
-    HAVP_RELEASE_MOD_ENV,                       SetEG()         
-    HAVP_DELAY_MOD_LFO,                         SetLFO()                        
-    HAVP_FREQ_MOD_LFO,                          SetLFO()                
-    HAVP_DELAY_VIB_LFO,                         SetLFO()                
-    HAVP_FREQ_VIB_LFO,                          SetLFO()                
-    HAVP_MOD_LFO_TO_PITCH,                      SetLFO()                
-    HAVP_VIB_LFO_TO_PITCH,                      SetLFO()        
+    HAVP_ATTENUATION,                           SetVolume()
+    HAVP_PITCH,                                 SetPitch()
+    HAVP_FILTER_CUTOFF,                         SetFilter()
+    HAVP_FILTER_Q,                              SetFilter()
+    HAVP_DELAY_VOL_ENV,                         SetEG()
+    HAVP_ATTACK_VOL_ENV,                        SetEG()
+    HAVP_HOLD_VOL_ENV,                          SetEG()
+    HAVP_DECAY_VOL_ENV,                         SetEG()
+    HAVP_SUSTAIN_VOL_ENV,                       SetEG()
+    HAVP_RELEASE_VOL_ENV,                       SetEG()
+    HAVP_DELAY_MOD_ENV,                         SetEG()
+    HAVP_ATTACK_MOD_ENV,                        SetEG()
+    HAVP_HOLD_MOD_ENV,                          SetEG()
+    HAVP_DECAY_MOD_ENV,                         SetEG()
+    HAVP_SUSTAIN_MOD_ENV,                       SetEG()
+    HAVP_RELEASE_MOD_ENV,                       SetEG()
+    HAVP_DELAY_MOD_LFO,                         SetLFO()
+    HAVP_FREQ_MOD_LFO,                          SetLFO()
+    HAVP_DELAY_VIB_LFO,                         SetLFO()
+    HAVP_FREQ_VIB_LFO,                          SetLFO()
+    HAVP_MOD_LFO_TO_PITCH,                      SetLFO()
+    HAVP_VIB_LFO_TO_PITCH,                      SetLFO()
     HAVP_MOD_LFO_TO_FILTER_CUTOFF,              SetLFO()
-    HAVP_MOD_LFO_TO_ATTENUATION,                SetLFO()        
-    HAVP_MOD_ENV_TO_PITCH,                      SetEG()         
-    HAVP_MOD_ENV_TO_FILTER_CUTOFF,              SetEG() 
+    HAVP_MOD_LFO_TO_ATTENUATION,                SetLFO()
+    HAVP_MOD_ENV_TO_PITCH,                      SetEG()
+    HAVP_MOD_ENV_TO_FILTER_CUTOFF,              SetEG()
 
 */
 
-
-
 /*
  * Interfaces expose.  These interfaces will be exposed in user mode.
- * 
+ *
  * Note:
- * 1. hHandle that passes into these functions is An opaque identifier 
+ * 1. hHandle that passes into these functions is An opaque identifier
  *    obtained from CreateBuffer.
  *
  * 2. A mono buffer uses one voice.  A stereo buffer uses two voices.
  *
  */
 
-
 /***********************************************************
- * @section 
+ * @section
  * API for playback operation controls.
- * 
+ *
  */
-  
+
 /**
  * Starts sample playback of a buffer.
- * Playback position is not modified when Play is called and will 
+ * Playback position is not modified when Play is called and will
  * start incrementing from its previous value at the sample
  * rate.
  *
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
- * @return 
- * Returns SEGA_SUCCESS if playback can start.  Otherwise, returns an appropriate 
+ * @return
+ * Returns SEGA_SUCCESS if playback can start.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_Play(CTHANDLE hHandle);
-
+int SEGAAPI_Play(void *hHandle);
 
 /**
  * Halts playback and freezes the current counter at its last
  * value.
- * 
+ *
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
- * @return 
- * Returns SEGA_SUCCESS if playback was successfully paused. 
+ * @return
+ * Returns SEGA_SUCCESS if playback was successfully paused.
  * Otherwise, returns an appropriate error code.
  */
-SEGASTATUS SEGAAPI_Pause(CTHANDLE hHandle);
-
+int SEGAAPI_Pause(void *hHandle);
 
 /**
  * Stops playback and resets the sample counter.
@@ -400,16 +401,16 @@ SEGASTATUS SEGAAPI_Pause(CTHANDLE hHandle);
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
- * 
- * @return 
- * Returns SEGA_SUCCESS if playback was successfully paused. 
+ * An opaque identifier obtained from CreateBuffer.
+ *
+ * @return
+ * Returns SEGA_SUCCESS if playback was successfully paused.
  * Otherwise, returns an appropriate error code.
  *
  */
-SEGASTATUS SEGAAPI_Stop(CTHANDLE hHandle);
+int SEGAAPI_Stop(void *hHandle);
 
-SEGASTATUS SEGAAPI_PlayWithSetup(CTHANDLE hHandle);
+int SEGAAPI_PlayWithSetup(void *hHandle);
 
 /**
  * Returns a current playback status of a buffer.
@@ -417,21 +418,18 @@ SEGASTATUS SEGAAPI_PlayWithSetup(CTHANDLE hHandle);
  * CALL LEVELS: DPC, PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
- * @return 
+ * @return
  * One of the playback status defined in the PlaybackStatus enumration type.
  * If the returned status is PLAYBACK_STATUS_INVALID, use GetLastStatus() to check the error code.
  */
-PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle);
-
-
-
+PlaybackStatus SEGAAPI_GetPlaybackStatus(void *hHandle);
 
 /***********************************************************
- * @section 
+ * @section
  * API for playback format controls.
- * 
+ *
  */
 
 /**
@@ -446,13 +444,13 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle);
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
- * 
- * @param pFormat 
+ * An opaque identifier obtained from CreateBuffer.
+ *
+ * @param pFormat
  * The new format to change to.
- * 
+ *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  *
  * @retval SEGAERR_PLAYING if the buffer is currently playing
@@ -461,47 +459,44 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(CTHANDLE hHandle);
  * @retval SEGAERR_BAD_CONFIG if something in the given configuration is
  * invalid.
  */
-SEGASTATUS SEGAAPI_SetFormat(CTHANDLE hHandle, HAWOSEFORMAT *pFormat);
-
+int SEGAAPI_SetFormat(void *hHandle, HAWOSEFORMAT *pFormat);
 
 /**
  * Returns the current format of the buffer.
- * 
+ *
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   pFormat
  * Pointer to an address where the current format to return to.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_GetFormat(CTHANDLE hHandle, HAWOSEFORMAT *pFormat);
-
+int SEGAAPI_GetFormat(void *hHandle, HAWOSEFORMAT *pFormat);
 
 /**
  * Changes the playback sample rate for the current client to the
  * value specified.  The new value only pertains to this buffer.
  * If hardware cannot support changing sample rates for individual
  * buffers, it can return an error in response to this routine.
- * 
+ *
  * CALL LEVELS: PASSIVE
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param  dwSampleRate
  * The desired sample rate.
- * 
+ *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetSampleRate(CTHANDLE hHandle, CTDWORD dwSampleRate);
-
+int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate);
 
 /**
  * Returns the current sample rate.
@@ -509,42 +504,39 @@ SEGASTATUS SEGAAPI_SetSampleRate(CTHANDLE hHandle, CTDWORD dwSampleRate);
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
- * @return 
+ * @return
  * Returns the current sample rate.
  * If the returned value is 0, use GetLastStatus() to check the error code.
  */
-CTDWORD SEGAAPI_GetSampleRate(CTHANDLE hHandle);
-
-
+unsigned int SEGAAPI_GetSampleRate(void *hHandle);
 
 /***********************************************************
- * @section 
+ * @section
  * API for Voice priority management.
  *
  */
 
- /**
+/**
  * Changes the buffer's priority to the specified value.
  *
- * If all the voices are set to HAWOSEP_MAXIMUM (0xFFFFFFFF) priority, 
+ * If all the voices are set to HAWOSEP_MAXIMUM (0xFFFFFFFF) priority,
  * CreateBuffer() call will return failure when running out of voices.
  *
  * CALL LEVEL: DPC, PASSIVE
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param dwPriority
  * The new priority for the buffer.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetPriority(CTHANDLE hHandle, CTDWORD dwPriority);
-
+int SEGAAPI_SetPriority(void *hHandle, unsigned int dwPriority);
 
 /**
  * Returns the buffer's current priority.
@@ -552,19 +544,18 @@ SEGASTATUS SEGAAPI_SetPriority(CTHANDLE hHandle, CTDWORD dwPriority);
  * CALL LEVEL: DPC, PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
  * Returns the buffer's current priority.
  * Note that returned value is also set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetPriority(CTHANDLE hHandle);
-
+unsigned int SEGAAPI_GetPriority(void *hHandle);
 
 /***********************************************************
- * @section 
+ * @section
  * API for storing an User-defined data.
- * 
+ *
  */
 
 /**
@@ -578,17 +569,16 @@ CTDWORD SEGAAPI_GetPriority(CTHANDLE hHandle);
  * CALL LEVELS: DPC, PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
- * @param  hUserData   
+ * @param  hUserData
  * A handle to user-defined data.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetUserData(CTHANDLE hHandle, CTHANDLE hUserData);
-
+int SEGAAPI_SetUserData(void *hHandle, void *hUserData);
 
 /**
  * Returns the last user-defined data set by the caller.
@@ -596,36 +586,35 @@ SEGASTATUS SEGAAPI_SetUserData(CTHANDLE hHandle, CTHANDLE hUserData);
  * CALL LEVELS: DPC, PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
  * Returns the user-defined data.
  * Note that returned value is set to 0 if error invoked this function.
  */
-CTHANDLE SEGAAPI_GetUserData(CTHANDLE hHandle);
-
+void *SEGAAPI_GetUserData(void *hHandle);
 
 /***********************************************************
- * @section 
+ * @section
  * API for Send routing and Send Level controls.
- * 
+ *
  */
 
 /**
  * Changes the destination to which a channel send is connected.
  * Each channel has the possibility of supporting multiple sends.
  * For Tina chip, each channel has seven sends.
- * Each of these sends can be connected to a destination.  
+ * Each of these sends can be connected to a destination.
  *
  * Note that it is invalid to have more than one sends routed to
  * a same destination.  For example, if send 0 is previously routed
  * to front-left, send 0 will need to be disconnected before another
- * send can route to front-left. 
+ * send can route to front-left.
  *
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwChannel
  *  The channel to reroute.
@@ -640,23 +629,23 @@ CTHANDLE SEGAAPI_GetUserData(CTHANDLE hHandle);
  *  of the destination enumeration list.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  *
  * @retval  SEGAERR_UNSUPPORTED if channels can't be rerouted.
  * @retval  SEGAERR_INVALID_CHANNEL if the specified channel isn't in use.
  * @retval  SEGAERR_INVALID_SEND if the specified send isn't supported.
  */
-SEGASTATUS SEGAAPI_SetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend,
+int SEGAAPI_SetSendRouting(void *hHandle, unsigned int dwChannel, unsigned int dwSend,
                            HAROUTING dwDest);
 
 /**
  * Returns the destination of which a channel send is connected to.
  *
  * CALL LEVELS: PASSIVE
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwChannel
  *  The channel requested.
@@ -664,12 +653,12 @@ SEGASTATUS SEGAAPI_SetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD d
  * @param   dwSend
  *  The send number being addressed.
  *
- * @return  
+ * @return
  * Returns the current destination.
- * Note that returned value is set to HA_UNUSED_PORT if error invoked this function.  
+ * Note that returned value is set to HA_UNUSED_PORT if error invoked this function.
  */
-HAROUTING SEGAAPI_GetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend); 
-                           
+HAROUTING SEGAAPI_GetSendRouting(void *hHandle, unsigned int dwChannel, unsigned int dwSend);
+
 /**
  * Sets the output level of a particular send on a channel to the specified
  * level.
@@ -677,8 +666,8 @@ HAROUTING SEGAAPI_GetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dw
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
- * 
+ * An opaque identifier obtained from CreateBuffer.
+ *
  * @param dwChannel
  * The channel whose output level is to be set.
  *
@@ -692,16 +681,16 @@ HAROUTING SEGAAPI_GetSendRouting(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dw
  * infinite attenuation.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
- * 
+ *
  * @retval   SEGAERR_UNSUPPORTED if the device doesn't support channel levels in
  * general.
  * @retval   SEGAERR_INVALID_CHANNEL if the specified channel isn't valid.
  * @retval   SEGAERR_INVALID_SEND if the specified send isn't valid.
  */
-SEGASTATUS SEGAAPI_SetSendLevel(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend,
-                       CTDWORD dwLevel);
+int SEGAAPI_SetSendLevel(void *hHandle, unsigned int dwChannel, unsigned int dwSend,
+                         unsigned int dwLevel);
 
 /**
  * Returns the output level of a particular send on a channel.
@@ -709,41 +698,39 @@ SEGASTATUS SEGAAPI_SetSendLevel(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwS
  * CALL LEVELS: PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
- * 
+ * An opaque identifier obtained from CreateBuffer.
+ *
  * @param   dwChannel
  *  The channel requested.
  *
  * @param   dwSend
  *  The send number being addressed.
  *
- * @return  
+ * @return
  * Returns the current send level.
- * Note that returned value is set to 0 if error invoked this function. 
+ * Note that returned value is set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetSendLevel(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend); 
-
-
+unsigned int SEGAAPI_GetSendLevel(void *hHandle, unsigned int dwChannel, unsigned int dwSend);
 
 /***********************************************************
- * @section 
+ * @section
  * API for volume level controls.
- * 
+ *
  */
 
 /**
  * Sets the volume to a specific linear value.  Volumes are specified
  * as fractional fixed-point linear values between HAWOSEVOL_MAX (0xFFFFFFFF)
- * and 0x0. The dwVolume is specified in linear increments from 0 to 1 
- * (actually to 65535 divided by 65536).  A 0 value represents 96db of attenuation, 
+ * and 0x0. The dwVolume is specified in linear increments from 0 to 1
+ * (actually to 65535 divided by 65536).  A 0 value represents 96db of attenuation,
  * while a 1 value represents full volume. Default is full volume.
  *
  * Volume is a global value and is applied pre-send.
  *
  * CALL LEVELS: PASSIVE
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param dwChannel
  * The channel to change.
@@ -752,36 +739,34 @@ CTDWORD SEGAAPI_GetSendLevel(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwSend
  * The new volume level to change to.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  *
  * @retval   SEGAERR_UNSUPPORTED if the device can't change volume.
  * @retval   SEGAERR_INVALID_CHANNEL if the given send isn't valid.
  */
-SEGASTATUS SEGAAPI_SetChannelVolume(CTHANDLE hHandle, CTDWORD dwChannel, CTDWORD dwVolume);
+int SEGAAPI_SetChannelVolume(void *hHandle, unsigned int dwChannel, unsigned int dwVolume);
 
 /**
  * Returns the current volume level for the requested channel.
  *
  * CALL LEVELS: PASSIVE
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwChannel
  * The channel requested.
  *
- * @return  
+ * @return
  * Returns the current volume.
  * Note that returned value is set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetChannelVolume(CTHANDLE hHandle, CTDWORD dwChannel);
-
-
+unsigned int SEGAAPI_GetChannelVolume(void *hHandle, unsigned int dwChannel);
 
 /***********************************************************
  * @section * API for playback position controls.
- * 
+ *
  */
 
 /**
@@ -792,18 +777,17 @@ CTDWORD SEGAAPI_GetChannelVolume(CTHANDLE hHandle, CTDWORD dwChannel);
  * CALL LEVELS: DPC, PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param  dwPlaybackPos
  * The buffer position (IN BYTES) where the playback
  * pointer should be moved.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetPlaybackPosition(CTHANDLE hHandle, CTDWORD dwPlaybackPos);
-
+int SEGAAPI_SetPlaybackPosition(void *hHandle, unsigned int dwPlaybackPos);
 
 /**
  * Returns the position in the buffer (IN BYTES) where the
@@ -812,48 +796,47 @@ SEGASTATUS SEGAAPI_SetPlaybackPosition(CTHANDLE hHandle, CTDWORD dwPlaybackPos);
  * CALL LEVELS: DPC, PASSIVE
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
  * Returns the current playback position.
  * Note that returned value is set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetPlaybackPosition(CTHANDLE hHandle);
-
+unsigned int SEGAAPI_GetPlaybackPosition(void *hHandle);
 
 /***********************************************************
- * @section 
+ * @section
  * API for buffer update, loop regions and notification controls.
- * 
+ *
  */
 
 /**
  * This function sets the frequency at which a callback will be generated.
  * The callback will be invoked periodically at a fixed interval
- * specified by the dwFrameCount.  dwFrameCount is in the units of 
+ * specified by the dwFrameCount.  dwFrameCount is in the units of
  * sample frames.
  *
- * This notification method is typically used for ring buffer that need 
+ * This notification method is typically used for ring buffer that need
  * periodic notification to update the ring buffer data.
  *
- * Note that callback execution is scheduled at the later time (DPC), not at   
+ * Note that callback execution is scheduled at the later time (DPC), not at
  * the interrupt time.
  *
  *
  * CALL LEVELS: PASSIVE
  *
  * @param   hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwFrameCount
  * The frequency, in sample frames, at which the the notification is invoked.
  * Specifying a value of zero cancels the callback.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetNotificationFrequency(CTHANDLE hHandle, CTDWORD dwFrameCount);
+int SEGAAPI_SetNotificationFrequency(void *hHandle, unsigned int dwFrameCount);
 
 /**
  * This function can be used to set a notification point in the ring
@@ -861,23 +844,23 @@ SEGASTATUS SEGAAPI_SetNotificationFrequency(CTHANDLE hHandle, CTDWORD dwFrameCou
  * the device will schedule a callback to the function indicated when
  * the ring buffer was created.
  *
- * Note that callback execution is scheduled at the later time (DPC), not at   
+ * Note that callback execution is scheduled at the later time (DPC), not at
  * the interrupt time.
  *
  * CALL LEVELS: PASSIVE, DPC
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwBufferOffset
  * The offset (in bytes) in the buffer where the notification
  * point is to be set.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetNotificationPoint(CTHANDLE hHandle, CTDWORD dwBufferOffset);
+int SEGAAPI_SetNotificationPoint(void *hHandle, unsigned int dwBufferOffset);
 
 /**
  * Removes a previously set notification point.
@@ -885,18 +868,17 @@ SEGASTATUS SEGAAPI_SetNotificationPoint(CTHANDLE hHandle, CTDWORD dwBufferOffset
  * CALL LEVELS: PASSIVE, DPC
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwBufferOffset
  * The offset (in bytes) of the notification point to
  * remove.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_ClearNotificationPoint(CTHANDLE hHandle, CTDWORD dwBufferOffset);
-
+int SEGAAPI_ClearNotificationPoint(void *hHandle, unsigned int dwBufferOffset);
 
 /**
  * Sets the start loop offset.  The start loop offset controls where
@@ -913,18 +895,17 @@ SEGASTATUS SEGAAPI_ClearNotificationPoint(CTHANDLE hHandle, CTDWORD dwBufferOffs
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwOffset
  * The offset in bytes from the beginning of the buffer of
  * the loop start point.
  *
  * @return
- * Returns SEGA_SUCCESS if the loop offset is changed successful.  
+ * Returns SEGA_SUCCESS if the loop offset is changed successful.
  * Otherwise, returns an appropriate error code.
  */
-SEGASTATUS SEGAAPI_SetStartLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset);
-
+int SEGAAPI_SetStartLoopOffset(void *hHandle, unsigned int dwOffset);
 
 /**
  * Returns the current start loop offest.
@@ -932,14 +913,13 @@ SEGASTATUS SEGAAPI_SetStartLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset);
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
  * Returns the current start loop offset.
  * Note that returned value is set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetStartLoopOffset(CTHANDLE hHandle);
-
+unsigned int SEGAAPI_GetStartLoopOffset(void *hHandle);
 
 /**
  * Sets the End Loop Offset position.  When the play pointer crosses
@@ -950,23 +930,22 @@ CTDWORD SEGAAPI_GetStartLoopOffset(CTHANDLE hHandle);
  * GetEndLoopOffset() just returns the current value and may be called
  * at any interrupt level.
  *
- * Note that EndLoopOffset must not be larger than EndOffset. 
+ * Note that EndLoopOffset must not be larger than EndOffset.
  *
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param  dwOffset
  * An offset in bytes from the beginning of the buffer,
  * dwOffset specifies the location for the End Loop point.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetEndLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset);
-
+int SEGAAPI_SetEndLoopOffset(void *hHandle, unsigned int dwOffset);
 
 /**
  * Returns the current end loop offest.
@@ -974,14 +953,13 @@ SEGASTATUS SEGAAPI_SetEndLoopOffset(CTHANDLE hHandle, CTDWORD dwOffset);
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
- * @return 
+ * @return
  * Returns the current end loop offest.
  * Note that returned value is set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetEndLoopOffset(CTHANDLE hHandle);
-
+unsigned int SEGAAPI_GetEndLoopOffset(void *hHandle);
 
 /**
  * Sets the End Offset position.  When the play pointer crosses
@@ -989,27 +967,27 @@ CTDWORD SEGAAPI_GetEndLoopOffset(CTHANDLE hHandle);
  * the buffer will halt.
  *
  * Only change the End offset position when buffer is not at
- * PLAYBACK_STATUS_ACTIVE state.  End Offset must be sample frame aligned.  
- * For example, 16-bit 1 channel is WORD aligned, 16-bit 2 channel 
+ * PLAYBACK_STATUS_ACTIVE state.  End Offset must be sample frame aligned.
+ * For example, 16-bit 1 channel is WORD aligned, 16-bit 2 channel
  * is DWORD aligned.
  *
  * Note that EndOffset must not be larger than pConfig->mapdata.dwSize
- * specified in the CreateBuffer(). 
+ * specified in the CreateBuffer().
  *
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   dwOffset
  * An offset in bytes from the beginning of the buffer,
  * dwOffset specifies the location for the End point.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetEndOffset(CTHANDLE hHandle, CTDWORD dwOffset);
+int SEGAAPI_SetEndOffset(void *hHandle, unsigned int dwOffset);
 
 /**
  * Returns the current end offest.
@@ -1017,13 +995,13 @@ SEGASTATUS SEGAAPI_SetEndOffset(CTHANDLE hHandle, CTDWORD dwOffset);
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
  * Returns the current end offest.
  * Note that returned value is set to 0 if error invoked this function.
  */
-CTDWORD SEGAAPI_GetEndOffset(CTHANDLE hHandle);
+unsigned int SEGAAPI_GetEndOffset(void *hHandle);
 
 /**
  * Allows the user to control whether the voice loops back to the
@@ -1031,12 +1009,12 @@ CTDWORD SEGAAPI_GetEndOffset(CTHANDLE hHandle);
  * it goes into the release phase (i.e. post end loop).  Note that
  * setting the loop state doesn't actually cause the device
  * to transition to the stopped state.
- * 
+ *
  *
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   bDoContinuousLooping
  * If TRUE, the buffer will loop from start-loop to end
@@ -1046,25 +1024,24 @@ CTDWORD SEGAAPI_GetEndOffset(CTHANDLE hHandle);
  * is playing.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetLoopState(CTHANDLE hHandle, CTBOOL bDoContinuousLooping);
+int SEGAAPI_SetLoopState(void *hHandle, int bDoContinuousLooping);
 
 /**
- * Returns the current loop status. 
+ * Returns the current loop status.
  *
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
- * Returns TRUE if it is in loop state. Otherwise, returns FALSE. 
+ * Returns TRUE if it is in loop state. Otherwise, returns FALSE.
  * Note that returned value is set to FALSE if error invoked this function.
  */
-CTBOOL SEGAAPI_GetLoopState(CTHANDLE hHandle);
-
+int SEGAAPI_GetLoopState(void *hHandle);
 
 /**
  * Advises the driver code that some portion of the buffer
@@ -1075,16 +1052,16 @@ CTBOOL SEGAAPI_GetLoopState(CTHANDLE hHandle);
  *
  * The caller should call this function *after* they have filled
  * the data into the ring buffer that they passed
- * to the driver in the CreateBuffer() call.  
+ * to the driver in the CreateBuffer() call.
  *
  * Although this routine takes it values in bytes, the caller
  * is responsible for insuring that the starting offset and
  * length are a integer multiple of the sample size.
  *
  * CALL LEVELS: DPC, PASSIVE.
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param  dwStartOffset
  *  The offset of the first byte in the buffer which
@@ -1093,14 +1070,13 @@ CTBOOL SEGAAPI_GetLoopState(CTHANDLE hHandle);
  *  The number of bytes which have changed.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_UpdateBuffer(CTHANDLE hHandle, CTDWORD dwStartOffset, CTDWORD dwLength);
-
+int SEGAAPI_UpdateBuffer(void *hHandle, unsigned int dwStartOffset, unsigned int dwLength);
 
 /***********************************************************
- * @section 
+ * @section
  * Low level API to control Synth buffer parameters
  *
  */
@@ -1111,9 +1087,9 @@ SEGASTATUS SEGAAPI_UpdateBuffer(CTHANDLE hHandle, CTDWORD dwStartOffset, CTDWORD
  * The parameter is applied for mono buffer only.
  *
  * CALL LEVELS: DPC, PASSIVE.
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param param
  * The parameter to apply
@@ -1122,23 +1098,22 @@ SEGASTATUS SEGAAPI_UpdateBuffer(CTHANDLE hHandle, CTDWORD dwStartOffset, CTDWORD
  * The value in PARW units
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param, CTLONG lPARWValue);
-
+int SEGAAPI_SetSynthParam(void *hHandle, HASYNTHPARAMSEXT param, int lPARWValue);
 
 /**
  * Returns the most recent call to SetSynthParam() in PARW units.  This is the cache value
- * of the most recent PARW value set by SetSynthParam(). If the parameter has not been set 
- * before, this function will return 0.  
+ * of the most recent PARW value set by SetSynthParam(). If the parameter has not been set
+ * before, this function will return 0.
  *
  * The parameter is applied for mono buffer only.
  *
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param param
  * The parameter to retrieve
@@ -1147,8 +1122,7 @@ SEGASTATUS SEGAAPI_SetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param, CTLON
  * The returned value in PARW units.
  * Note that returned value is set to -1 if error invoked this function.
  */
-CTLONG SEGAAPI_GetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param);
-
+int SEGAAPI_GetSynthParam(void *hHandle, HASYNTHPARAMSEXT param);
 
 /**
  * Sets and stores an array of synthesizer parameters, in Perceptually-Additive Real-World (PARW) units.
@@ -1156,9 +1130,9 @@ CTLONG SEGAAPI_GetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param);
  * The parameter is applied for mono buffer only.
  *
  * CALL LEVELS: DPC, PASSIVE.
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param dwNumParams
  * Number of parameters to apply
@@ -1167,11 +1141,10 @@ CTLONG SEGAAPI_GetSynthParam(CTHANDLE hHandle, HASYNTHPARAMSEXT param);
  * Pointer to the Synth Parameters array to apply.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, SynthParamSet *pSynthParams);
-
+int SEGAAPI_SetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams);
 
 /**
  * Retrieves an array of synthesizer parameters, in Perceptually-Additive Real-World (PARW) units.
@@ -1179,9 +1152,9 @@ SEGASTATUS SEGAAPI_SetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, 
  * The parameter is applied for mono buffer only.
  *
  * CALL LEVELS: DPC, PASSIVE.
- * 
+ *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param dwNumParams
  * Number of parameters to retrieve.
@@ -1190,36 +1163,33 @@ SEGASTATUS SEGAAPI_SetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, 
  * Pointer to the Synth Parameters array to retrieve.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_GetSynthParamMultiple(CTHANDLE hHandle, CTDWORD dwNumParams, SynthParamSet *pSynthParams);
-
+int SEGAAPI_GetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams);
 
 /**
- * Set the voice into the release phase of the volume envelope engines when set to TRUE.  
+ * Set the voice into the release phase of the volume envelope engines when set to TRUE.
  * This will automatically stop the voice when the voice reaches end of release phase.
  *
  * CALL LEVELS: DPC, PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param bSet
  * TRUE for enter releaes phase
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetReleaseState(CTHANDLE hHandle, CTBOOL bSet);
-
-
+int SEGAAPI_SetReleaseState(void *hHandle, int bSet);
 
 /***********************************************************
- * @section 
- * Playback buffers (voices) callback notification function.  
- * 
+ * @section
+ * Playback buffers (voices) callback notification function.
+ *
  */
 
 /**
@@ -1234,78 +1204,77 @@ SEGASTATUS SEGAAPI_SetReleaseState(CTHANDLE hHandle, CTBOOL bSet);
  *  HAWOS_NOTIFY -- Indicates that the current play position
  *  has passed over one of the notification points set
  *  with SetNotificationPoint.
- * 
+ *
  * CALL LEVELS: The callback is invoked at DPC level.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @param   HAWOSMESSAGETYPE message
  * The callback message.
  */
-typedef void (*HAWOSEGABUFFERCALLBACK)(CTHANDLE hHandle,
-   HAWOSMESSAGETYPE message);
-
+typedef void (*HAWOSEGABUFFERCALLBACK)(void *hHandle,
+                                       HAWOSMESSAGETYPE message);
 
 /***********************************************************
- * @section 
- * API to create playback buffers (voices).  
- * 
+ * @section
+ * API to create playback buffers (voices).
+ *
  * This is the entry call to obtain the voice handle
  * and perform further voice operations.
  */
 
 /**
- * Creates a new buffer (voice) of the output device using 
+ * Creates a new buffer (voice) of the output device using
  * the configuration specified in pConfig.
  *
- * There are two types of buffers: normal buffer and synthesizer buffer.  
- * Typically, a buffer is created as normal buffer.  Synthesizer buffer 
+ * There are two types of buffers: normal buffer and synthesizer buffer.
+ * Typically, a buffer is created as normal buffer.  Synthesizer buffer
  * is used if a buffer requires synthesizer type of parameter controls.
  *
  * Caller specifies the configuration to create in pConfig structure.
- * Driver will allocate memory and hardware resources needed for this 
- * voice creation.  If successful, the pConfig->mapdata.hBufferHdr contains  
- * the memory address that user-space application can access.  Caller 
+ * Driver will allocate memory and hardware resources needed for this
+ * voice creation.  If successful, the pConfig->mapdata.hBufferHdr contains
+ * the memory address that user-space application can access.  Caller
  * should write the valid sound data into this memory buffer.
  *
- * Caller can indicate to the sound driver to use the caller allocated sound 
+ * Caller can indicate to the sound driver to use the caller allocated sound
  * data memory buffer for efficiency purpose if the same buffer is re-used frequently.
- * In such a case, caller needs to provide the sound buffer address in the  
+ * In such a case, caller needs to provide the sound buffer address in the
  * pConfig->mapdata.hBufferHdr and sets the HABUF_ALLOC_USER_MEM bit
  * of dwFlags parameter.  Caller needs to ensure that the sound buffer
- * memory is page-aligned and locked. 
+ * memory is page-aligned and locked.
  *
- * pConfig->mapdata.dwSize must be sample frame aligned.  For example, 
+ * pConfig->mapdata.dwSize must be sample frame aligned.  For example,
  * 16-bit 1 channel is WORD aligned, 16-bit 2 channel is DWORD aligned.
- * For more efficient memory management, pConfig->mapdata.dwSize is 
+ * For more efficient memory management, pConfig->mapdata.dwSize is
  * recomended to be page aligned.
  *
- * The size of the ring buffer is fixed throughout the lifetime of the 
- * buffer until it is destroyed.  During the lifetime of the buffer, 
- * caller can periodically update the data of the buffer if necessary or 
- * modulate the buffer with SetSynthParam or SetSynthParamMultiple functions 
- * if the buffer is created as synthesizer buffer. 
+ * The size of the ring buffer is fixed throughout the lifetime of the
+ * buffer until it is destroyed.  During the lifetime of the buffer,
+ * caller can periodically update the data of the buffer if necessary or
+ * modulate the buffer with SetSynthParam or SetSynthParamMultiple functions
+ * if the buffer is created as synthesizer buffer.
  *
- * If all the voices are currently in use, CreateBuffer will perform voice-stealing 
- * to fulfill the request. Note that voice stealing may fail if all voices that are 
+ * If all the voices are currently in use, CreateBuffer will perform voice-stealing
+ * to fulfill the request. Note that voice stealing may fail if all voices that are
  * currently in use are set to HAWOSEP_MAXIMUM priority.
  *
  * The followings are default values for a newly created buffer:
- *   - Send Routing 
+ *   - Send Routing
  *      - for 1 channel buffer, channel is routed to Front-Left and Front-Right.
- *      - for 2 channel buffer, channel 0 is routed Front-Left, channel 1 is routed Front-Right  
+ *      - for 2 channel buffer, channel 0 is routed Front-Left, channel 1 is routed Front-Right
  *   - Send Levels are set to 0 (infinite attenuation)
  *   - Channel Volume is set to 0xFFFFFFFF (no attenuation)
  *   - No notification.
  *   - StartLoopOffset is set to 0.
  *   - EndLoopOffset and EndOffset are set to pConfig->mapdata.dwSize.
  *   - No loop.
- *   - Buffer is in the stop state. 
+ *   - Buffer is in the stop state.
  *   - Play position is set to 0.
  *
  * CALL LEVELS: PASSIVE.
- * 
+ *
  * @param   pConfig
  * A pointers to configuration structures containing
  * information about how the clients should be opened.
@@ -1313,33 +1282,32 @@ typedef void (*HAWOSEGABUFFERCALLBACK)(CTHANDLE hHandle,
  * @param   pCallback
  * A pointer to the callback function.
  *
- * @param   dwFlags 
- * HABUF_SYNTH_BUFFER bit when set indicates synthesizer buffer. 
- * HABUF_ALLOC_USER_MEM bit when set indicates caller allocate sound data memory buffer.  
- * 
+ * @param   dwFlags
+ * HABUF_SYNTH_BUFFER bit when set indicates synthesizer buffer.
+ * HABUF_ALLOC_USER_MEM bit when set indicates caller allocate sound data memory buffer.
+ *
  * @param   phHandle
  * A pointer to a memory address where the token of new client identifier
  * should be placed.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
- * 
+ *
  * @retval  SEGAERR_BAD_POINTER if either the pConfig or phHandle pointers are
  * NULL.
  * @retval  SEGAERR_OUT_OF_MEMORY if buffer size requested in pConfig cannot be
- * allocated. 
+ * allocated.
  * @retval  SEGAERR_BAD_CONFIG if the device can't support the configuration
  * requested.
  * @retval  SEGAERR_NO_RESOURCES if no resources are available for creating
  * the device.  Generally, increasing the client's priority
  * will allow a subsequent creation request to succeed.
  */
-SEGASTATUS SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG * pConfig,
-  HAWOSEGABUFFERCALLBACK pCallback,
-  CTDWORD dwFlags,
-  CTHANDLE *phHandle);
-
+int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig,
+                         HAWOSEGABUFFERCALLBACK pCallback,
+                         unsigned int dwFlags,
+                         void **phHandle);
 
 /**
  * Destroys the buffer previously created with CreateBuffer().
@@ -1351,37 +1319,33 @@ SEGASTATUS SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG * pConfig,
  * CALL LEVELS: PASSIVE.
  *
  * @param hHandle
- * An opaque identifier obtained from CreateBuffer. 
+ * An opaque identifier obtained from CreateBuffer.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_DestroyBuffer(CTHANDLE hHandle);
-
-
-
-
+int SEGAAPI_DestroyBuffer(void *hHandle);
 
 /***********************************************************
- * @section 
+ * @section
  * API to control effect slots and effects parameters.
- * 
+ *
  * Refers to the EAX4 Programmer's Guide for the details of
  * controlling FX Slots and controlling Effect parameters.
- * 
+ *
  * Only the EAX4 FX Slots and Effect Parameters property controls
  * will be implemented for this project.
  *
- * Need to add property to switch the FX returns for 
+ * Need to add property to switch the FX returns for
  * FXSlot2 and FXSlot3 when non-reverb is loaded to these slots
  * as per SEGA request.
  */
- 
+
 /**
  * Sets global EAX property.
  *
- * This function sets the EAX4 FX Slots and Effect Parameters property 
+ * This function sets the EAX4 FX Slots and Effect Parameters property
  * controls as defined in EAX4 EAX4 Programmer's Guide.
  *
  * @param guid
@@ -1391,20 +1355,20 @@ SEGASTATUS SEGAAPI_DestroyBuffer(CTHANDLE hHandle);
  * Property enumeration value of each object
  *
  * @param pData
- * A pointer to a memory address where the data will be accessed 
+ * A pointer to a memory address where the data will be accessed
  *
  * @param ulDataSize
  * An unsigned integer indicating the size of the data pointed to by the pData.
  *
  * @return
  * Returns TRUE if successful.  Otherwise, returns FALSE.
- */ 
-CTBOOL SEGAAPI_SetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize);
+ */
+int SEGAAPI_SetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize);
 
 /**
  * Gets global EAX property.
  *
- * This function gets the EAX4 FX Slots and Effect Parameters property 
+ * This function gets the EAX4 FX Slots and Effect Parameters property
  * controls as defined in EAX4 EAX4 Programmer's Guide.
  *
  * @param guid
@@ -1414,22 +1378,21 @@ CTBOOL SEGAAPI_SetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *
  * Property enumeration value of each object
  *
  * @param pData
- * A pointer to a memory address where the data will be accessed 
+ * A pointer to a memory address where the data will be accessed
  *
  * @param ulDataSize
  * An unsigned integer indicating the size of the data pointed to by the pData.
  *
  * @return
  * Returns TRUE if successful.  Otherwise, returns FALSE.
- */ 
-CTBOOL SEGAAPI_GetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize);
-
+ */
+int SEGAAPI_GetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize);
 
 /***********************************************************
- * @section 
+ * @section
  * API to control SPDIF Output channel status, sampling rate
  * and output routing matrix.
- * 
+ *
  */
 
 /**
@@ -1442,12 +1405,12 @@ CTBOOL SEGAAPI_GetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *
  * Extended Channel Status
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetSPDIFOutChannelStatus(
- CTDWORD dwChannelStatus,
- CTDWORD dwExtChannelStatus);
+int SEGAAPI_SetSPDIFOutChannelStatus(
+    unsigned int dwChannelStatus,
+    unsigned int dwExtChannelStatus);
 
 /**
  * Gets SPDIF Out channel status.
@@ -1459,13 +1422,12 @@ SEGASTATUS SEGAAPI_SetSPDIFOutChannelStatus(
  * Pointer to address where Extended Channel Status is returned to.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_GetSPDIFOutChannelStatus(
- CTDWORD *pdwChannelStatus,
- CTDWORD *pdwExtChannelStatus);
-
+int SEGAAPI_GetSPDIFOutChannelStatus(
+    unsigned int *pdwChannelStatus,
+    unsigned int *pdwExtChannelStatus);
 
 /**
  * Sets the SPDIF Out sampling rate.  This function also updates the
@@ -1476,64 +1438,61 @@ SEGASTATUS SEGAAPI_GetSPDIFOutChannelStatus(
  * Sampling rate enumeration type
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetSPDIFOutSampleRate(HASPDIFOUTRATE dwSamplingRate);
+int SEGAAPI_SetSPDIFOutSampleRate(HASPDIFOUTRATE dwSamplingRate);
 
 /**
  * Gets SPDIF Out sampling rate
  *
- * @return 
+ * @return
  * Returns sampling rate enum.
- * Note that returned value is set to HASPDIFOUT_48KHZ if error invoked this function. 
+ * Note that returned value is set to HASPDIFOUT_48KHZ if error invoked this function.
  */
 HASPDIFOUTRATE SEGAAPI_GetSPDIFOutSampleRate(void);
-
 
 /**
  * Sets SPDIF Out channel routing.
  *
  * @param   dwChannel
- *  The channel to route.  
+ *  The channel to route.
  *  0 for Left channel, 1 for right channel.
  *
  * @param   dwSource
  *  The source to which the channel should be received signal from.
  *  If the channel doesn't need to be connected to anything,
- *  specify HA_UNUSED_PORT. 
- *  HA_FXSLOTx_PORT is not a valid source.  Routes from these ports 
+ *  specify HA_UNUSED_PORT.
+ *  HA_FXSLOTx_PORT is not a valid source.  Routes from these ports
  *  will return failure.
  *
  *  See HAROUTING for the details of the source enumeration list.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetSPDIFOutChannelRouting(
-  CTDWORD dwChannel,
-  HAROUTING dwSource);
+int SEGAAPI_SetSPDIFOutChannelRouting(
+    unsigned int dwChannel,
+    HAROUTING dwSource);
 
- /**
+/**
  * Gets SPDIF Out channel routing
  *
  * @param   dwChannel
- *  The channel to route.  
+ *  The channel to route.
  *  0 for Left channel, 1 for right channel.
  *
- * @return  
+ * @return
  *  The source to which the channel is received signal from.
-  * Note that returned value is set to HA_UNUSED_PORT if error invoked this function.  
+ * Note that returned value is set to HA_UNUSED_PORT if error invoked this function.
  *
  *  See HAROUTING for the details of the source enumeration list.
  */
-HAROUTING SEGAAPI_GetSPDIFOutChannelRouting(CTDWORD dwChannel);
-
-
+HAROUTING SEGAAPI_GetSPDIFOutChannelRouting(unsigned int dwChannel);
 
 /***********************************************************
- * @section 
+ * @section
  * API to control global inputs and outputs volume.
  * For outputs, these volume controls are post-routing.
  */
@@ -1550,10 +1509,10 @@ HAROUTING SEGAAPI_GetSPDIFOutChannelRouting(CTDWORD dwChannel);
  * The new volume level.
  *
  * @return
- * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate 
+ * Returns SEGA_SUCCESS if successful.  Otherwise, returns an appropriate
  * error code.
  */
-SEGASTATUS SEGAAPI_SetIOVolume(HAPHYSICALIO dwPhysIO, CTDWORD dwVolume);
+int SEGAAPI_SetIOVolume(HAPHYSICALIO dwPhysIO, unsigned int dwVolume);
 
 /**
  * Returns the current volume level for the requested physical IO.
@@ -1561,11 +1520,11 @@ SEGASTATUS SEGAAPI_SetIOVolume(HAPHYSICALIO dwPhysIO, CTDWORD dwVolume);
  * @param dwPhysIO
  * The Physical IO being addressed.
  *
- * @return  
+ * @return
  * The current volume.
- * Note that returned value is set to 0xffffffff if error invoked this function.  
+ * Note that returned value is set to 0xffffffff if error invoked this function.
  */
-CTDWORD SEGAAPI_GetIOVolume(HAPHYSICALIO dwPhysIO);
+unsigned int SEGAAPI_GetIOVolume(HAPHYSICALIO dwPhysIO);
 
 /**
  * Sets the last status code manually.
@@ -1576,72 +1535,62 @@ CTDWORD SEGAAPI_GetIOVolume(HAPHYSICALIO dwPhysIO);
  * @param LastStatus
  * The last status code to change to.
  *
- * @return  
- * None.  
+ * @return
+ * None.
  */
-void SEGAAPI_SetLastStatus(SEGASTATUS LastStatus);
-
+void SEGAAPI_SetLastStatus(int LastStatus);
 
 /**
  * Returns the last status code for the function that just invoked.
  * The last status code will be reset whenever a function is invoked.
  * Therefore, The last status code should be checked immediately after a function
- * is invoked.  
+ * is invoked.
  *
- * For functions that return SEGASTATUS, caller can check the return code 
- * immediately without needing to call GetLastStatus function.   
+ * For functions that return int, caller can check the return code
+ * immediately without needing to call GetLastStatus function.
  *
- * @return  
- * The SEGASTATUS code.  
+ * @return
+ * The int code.
  */
-SEGASTATUS SEGAAPI_GetLastStatus(void);
-
+int SEGAAPI_GetLastStatus(void);
 
 /**
  * Resets the driver to its default states.
- * 
+ *
  * This includes but not limited to the followings:
- *  - Stop and destroy all the currently playing buffers. All previous buffer 
+ *  - Stop and destroy all the currently playing buffers. All previous buffer
  *    handles are no longer valid after returning from this call.
  *  - Resets all volume levels to its default.
  *  - Resets EAX property values to their defaults.
- *  - Resets SPDIF Out sampling rate and routing to its default. 
- *   
+ *  - Resets SPDIF Out sampling rate and routing to its default.
  *
- * @return  
- * The SEGASTATUS code.  
+ *
+ * @return
+ * The int code.
  */
-SEGASTATUS SEGAAPI_Reset(void);
-
+int SEGAAPI_Reset(void);
 
 /**
  * Initializes the SEGAAPI Library.
- * 
- * This must be the first function to call before using any of the SEGAAPI functions.
- *   
  *
- * @return  
- * The SEGASTATUS code.  
+ * This must be the first function to call before using any of the SEGAAPI functions.
+ *
+ *
+ * @return
+ * The int code.
  */
-SEGASTATUS SEGAAPI_Init(void);
-
+int SEGAAPI_Init(void);
 
 /**
  * Exits from the SEGAAPI Library.
- * 
- * This function performs cleanup on the SEGAAPI Library.  
- * It must be the last function to call.  
- *   
  *
- * @return  
- * The SEGASTATUS code.  
+ * This function performs cleanup on the SEGAAPI Library.
+ * It must be the last function to call.
+ *
+ *
+ * @return
+ * The int code.
  */
-SEGASTATUS SEGAAPI_Exit(void);
+int SEGAAPI_Exit(void);
 
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif  /* __SEGAAPI_H */
-
+#endif /* __SEGAAPI_H */
