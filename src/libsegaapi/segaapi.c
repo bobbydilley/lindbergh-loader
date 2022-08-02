@@ -93,9 +93,9 @@ typedef struct
 	struct tsf_region *region;
 } segaapiContext_t;
 
-LPALBUFFERSAMPLESSOFT alBufferSamplesSOFT = NULL;
-LPALBUFFERSUBSAMPLESSOFT alBufferSubSamplesSOFT = NULL;
-LPALGETBUFFERSAMPLESSOFT alGetBufferSamplesSOFT = NULL;
+// LPALBUFFERSAMPLESSOFT alBufferSamplesSOFT = NULL;
+// LPALBUFFERSUBSAMPLESSOFT alBufferSubSamplesSOFT = NULL;
+// LPALGETBUFFERSAMPLESSOFT alGetBufferSamplesSOFT = NULL;
 
 #ifdef DEBUG_OUTPUT
 void dbgPrint(const char *format, ...)
@@ -292,14 +292,19 @@ static void updateBufferLoop(segaapiContext_t *context)
 	return;
 }
 
-void AL_APIENTRY wrap_BufferSamples(ALuint buffer, ALuint samplerate,
-									ALenum internalformat, ALsizei samples,
-									ALenum channels, ALenum type,
-									const ALvoid *data)
+void AL_APIENTRY alBufferSamplesSOFT(ALuint buffer, ALuint samplerate, ALenum internalformat, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data)
 {
-	alBufferData(buffer, internalformat, data,
-				 FramesToBytes(samples, channels, type),
-				 samplerate);
+	alBufferData(buffer, internalformat, data, FramesToBytes(samples, channels, type), samplerate);
+}
+
+AL_API void AL_APIENTRY alBufferSubSamplesSOFT(ALuint buffer, ALsizei offset, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data, ALuint samplerate, ALenum internalformat)
+{
+	
+	ALsizei FrameSize = FramesToBytes(samples, channels, type);
+
+	offset *= FrameSize;
+
+	alBufferData(buffer + offset, internalformat, data, FrameSize, samplerate);
 }
 
 static void updateBufferData(segaapiContext_t *context, unsigned int offset, size_t length)
@@ -359,12 +364,9 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 	// CHECK();
 	if (offset != -1)
 	{
-		// printf("CANNOT DO IT\n");
-		// exit(1);
-		wrap_BufferSamples(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize(context), alChannels, alType, &(context->data[offset]));
 
-		// alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset]);
-		//  CHECK();
+		alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset], context->sampleRate, alFormat);
+		// CHECK();
 		dbgPrint("Soft update in buffer %X at %u (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, offset, length, position, unsafe[0], unsafe[1]);
 	}
 	else
@@ -372,7 +374,7 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 
 		alSourcei(context->alSource, AL_BUFFER, AL_NONE);
 		// CHECK();
-		wrap_BufferSamples(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize(context), alChannels, alType, context->data);
+		alBufferSamplesSOFT(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize(context), alChannels, alType, context->data);
 		// CHECK();
 		alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
 		// CHECK();
@@ -451,7 +453,7 @@ static void resetBuffer(segaapiContext_t *context)
 	updateBufferData(context, -1, -1);
 }
 
-int SEGAAPI_Play(void* hHandle)
+int SEGAAPI_Play(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Play() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -479,7 +481,7 @@ int SEGAAPI_Play(void* hHandle)
 	return SEGA_SUCCESS;
 }
 
-int SEGAAPI_Pause(void* hHandle)
+int SEGAAPI_Pause(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Pause() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -489,7 +491,7 @@ int SEGAAPI_Pause(void* hHandle)
 	return SEGA_SUCCESS;
 }
 
-int SEGAAPI_Stop(void* hHandle)
+int SEGAAPI_Stop(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Stop() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -499,7 +501,7 @@ int SEGAAPI_Stop(void* hHandle)
 	return SEGA_SUCCESS;
 }
 
-int SEGAAPI_PlayWithSetup(void* hHandle)
+int SEGAAPI_PlayWithSetup(void *hHandle)
 {
 	dbgPrint("SEGAAPI_PlayWithSetup() 0x%x", hHandle);
 	segaapiContext_t *context = hHandle;
@@ -511,7 +513,7 @@ int SEGAAPI_PlayWithSetup(void* hHandle)
 	return SEGAERR_UNSUPPORTED;
 }
 
-PlaybackStatus SEGAAPI_GetPlaybackStatus(void* hHandle)
+PlaybackStatus SEGAAPI_GetPlaybackStatus(void *hHandle)
 {
 	ALint state;
 
@@ -537,19 +539,19 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(void* hHandle)
 	return PLAYBACK_STATUS_INVALID;
 }
 
-int SEGAAPI_SetFormat(void* hHandle, HAWOSEFORMAT *pFormat)
+int SEGAAPI_SetFormat(void *hHandle, HAWOSEFORMAT *pFormat)
 {
 	dbgPrint("SEGAAPI_SetFormat() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_GetFormat(void* hHandle, HAWOSEFORMAT *pFormat)
+int SEGAAPI_GetFormat(void *hHandle, HAWOSEFORMAT *pFormat)
 {
 	dbgPrint("SEGAAPI_GetFormat() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetSampleRate(void* hHandle, unsigned int dwSampleRate)
+int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate)
 {
 	dbgPrint("SEGAAPI_SetSampleRate() 0x%x 0x%x", hHandle, dwSampleRate);
 	if (hHandle == NULL)
@@ -562,25 +564,25 @@ int SEGAAPI_SetSampleRate(void* hHandle, unsigned int dwSampleRate)
 	return SEGA_SUCCESS;
 }
 
-unsigned int SEGAAPI_GetSampleRate(void* hHandle)
+unsigned int SEGAAPI_GetSampleRate(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetSampleRate() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetPriority(void* hHandle, unsigned int dwPriority)
+int SEGAAPI_SetPriority(void *hHandle, unsigned int dwPriority)
 {
 	dbgPrint("SEGAAPI_SetPriority() 0x%x 0x%x", hHandle, dwPriority);
 	return SEGAERR_UNSUPPORTED;
 }
 
-unsigned int SEGAAPI_GetPriority(void* hHandle)
+unsigned int SEGAAPI_GetPriority(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetPriority() 0x%x", hHandle);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetUserData(void* hHandle, void* hUserData)
+int SEGAAPI_SetUserData(void *hHandle, void *hUserData)
 {
 	dbgPrint("SEGAAPI_SetUserData() 0x%x 0x%x", hHandle, hUserData);
 	if (hHandle == NULL)
@@ -594,7 +596,7 @@ int SEGAAPI_SetUserData(void* hHandle, void* hUserData)
 	return SEGA_SUCCESS;
 }
 
-void* SEGAAPI_GetUserData(void* hHandle)
+void *SEGAAPI_GetUserData(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetPriority() 0x%x", hHandle);
 	if (hHandle == NULL)
@@ -603,43 +605,43 @@ void* SEGAAPI_GetUserData(void* hHandle)
 	return context->userData;
 }
 
-int SEGAAPI_SetSendRouting(void* hHandle, unsigned int dwChannel, unsigned int dwSend, HAROUTING dwDest)
+int SEGAAPI_SetSendRouting(void *hHandle, unsigned int dwChannel, unsigned int dwSend, HAROUTING dwDest)
 {
 	dbgPrint("SEGAAPI_SetSendRouting() 0x%x 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend, dwDest);
 	return SEGA_SUCCESS;
 }
 
-HAROUTING SEGAAPI_GetSendRouting(void* hHandle, unsigned int dwChannel, unsigned int dwSend)
+HAROUTING SEGAAPI_GetSendRouting(void *hHandle, unsigned int dwChannel, unsigned int dwSend)
 {
 	dbgPrint("SEGAAPI_GetSendRouting() 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend);
 	return HA_UNUSED_PORT;
 }
 
-int SEGAAPI_SetSendLevel(void* hHandle, unsigned int dwChannel, unsigned int dwSend, unsigned int dwLevel)
+int SEGAAPI_SetSendLevel(void *hHandle, unsigned int dwChannel, unsigned int dwSend, unsigned int dwLevel)
 {
 	dbgPrint("SEGAAPI_SetSendLevel() 0x%x 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend, dwLevel);
 	return SEGA_SUCCESS;
 }
 
-unsigned int SEGAAPI_GetSendLevel(void* hHandle, unsigned int dwChannel, unsigned int dwSend)
+unsigned int SEGAAPI_GetSendLevel(void *hHandle, unsigned int dwChannel, unsigned int dwSend)
 {
 	dbgPrint("SEGAAPI_GetSendLevel() 0x%x 0x%x 0x%x", hHandle, dwChannel, dwSend);
 	return 0;
 }
 
-int SEGAAPI_SetChannelVolume(void* hHandle, unsigned int dwChannel, unsigned int dwVolume)
+int SEGAAPI_SetChannelVolume(void *hHandle, unsigned int dwChannel, unsigned int dwVolume)
 {
 	dbgPrint("SEGAAPI_SetChannelVolume() 0x%x 0x%x 0x%x", hHandle, dwChannel, dwVolume);
 	return SEGAERR_UNSUPPORTED;
 }
 
-unsigned int SEGAAPI_GetChannelVolume(void* hHandle, unsigned int dwChannel)
+unsigned int SEGAAPI_GetChannelVolume(void *hHandle, unsigned int dwChannel)
 {
 	dbgPrint("SEGAAPI_GetChannelVolume() 0x%x 0x%x", hHandle, dwChannel);
 	return 0;
 }
 
-int SEGAAPI_SetPlaybackPosition(void* hHandle, unsigned int dwPlaybackPos)
+int SEGAAPI_SetPlaybackPosition(void *hHandle, unsigned int dwPlaybackPos)
 {
 	dbgPrint("SEGAAPI_SetPlaybackPosition() 0x%x 0x%x", hHandle, dwPlaybackPos);
 	segaapiContext_t *context = hHandle;
@@ -647,7 +649,7 @@ int SEGAAPI_SetPlaybackPosition(void* hHandle, unsigned int dwPlaybackPos)
 	return SEGA_SUCCESS;
 }
 
-unsigned int SEGAAPI_GetPlaybackPosition(void* hHandle)
+unsigned int SEGAAPI_GetPlaybackPosition(void *hHandle)
 {
 	ALint position;
 	dbgPrint("SEGAAPI_GetPlaybackPosition() 0x%x", hHandle);
@@ -656,25 +658,25 @@ unsigned int SEGAAPI_GetPlaybackPosition(void* hHandle)
 	return position;
 }
 
-int SEGAAPI_SetNotificationFrequency(void* hHandle, unsigned int dwFrameCount)
+int SEGAAPI_SetNotificationFrequency(void *hHandle, unsigned int dwFrameCount)
 {
 	dbgPrint("SEGAAPI_SetNotificationFrequency() 0x%x 0x%x", hHandle, dwFrameCount);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetNotificationPoint(void* hHandle, unsigned int dwBufferOffset)
+int SEGAAPI_SetNotificationPoint(void *hHandle, unsigned int dwBufferOffset)
 {
 	dbgPrint("SEGAAPI_SetNotificationPoint() 0x%x 0x%x", hHandle, dwBufferOffset);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_ClearNotificationPoint(void* hHandle, unsigned int dwBufferOffset)
+int SEGAAPI_ClearNotificationPoint(void *hHandle, unsigned int dwBufferOffset)
 {
 	dbgPrint("SEGAAPI_ClearNotificationPoint() 0x%x 0x%x", hHandle, dwBufferOffset);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetStartLoopOffset(void* hHandle, unsigned int dwOffset)
+int SEGAAPI_SetStartLoopOffset(void *hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetStartLoopOffset() 0x%x 0x%x", hHandle, dwOffset);
 	if (hHandle == NULL)
@@ -687,13 +689,13 @@ int SEGAAPI_SetStartLoopOffset(void* hHandle, unsigned int dwOffset)
 	return SEGA_SUCCESS;
 }
 
-unsigned int SEGAAPI_GetStartLoopOffset(void* hHandle)
+unsigned int SEGAAPI_GetStartLoopOffset(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetStartLoopOffset() 0x%x", hHandle);
 	return 0;
 }
 
-int SEGAAPI_SetEndLoopOffset(void* hHandle, unsigned int dwOffset)
+int SEGAAPI_SetEndLoopOffset(void *hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetEndLoopOffset() 0x%x 0x%x", hHandle, dwOffset);
 	if (hHandle == NULL)
@@ -706,25 +708,25 @@ int SEGAAPI_SetEndLoopOffset(void* hHandle, unsigned int dwOffset)
 	return SEGA_SUCCESS;
 }
 
-unsigned int SEGAAPI_GetEndLoopOffset(void* hHandle)
+unsigned int SEGAAPI_GetEndLoopOffset(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetEndLoopOffset() 0x%x", hHandle);
 	return 0;
 }
 
-int SEGAAPI_SetEndOffset(void* hHandle, unsigned int dwOffset)
+int SEGAAPI_SetEndOffset(void *hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetEndOffset() 0x%x 0x%x", hHandle, dwOffset);
 	return SEGAERR_UNSUPPORTED;
 }
 
-unsigned int SEGAAPI_GetEndOffset(void* hHandle)
+unsigned int SEGAAPI_GetEndOffset(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetEndOffset() 0x%x", hHandle);
 	return 0;
 }
 
-int SEGAAPI_SetLoopState(void* hHandle, int bDoContinuousLooping)
+int SEGAAPI_SetLoopState(void *hHandle, int bDoContinuousLooping)
 {
 	dbgPrint("SEGAAPI_SetLoopState() 0x%x 0x%x", hHandle, bDoContinuousLooping);
 	segaapiContext_t *context = hHandle;
@@ -733,13 +735,13 @@ int SEGAAPI_SetLoopState(void* hHandle, int bDoContinuousLooping)
 	return SEGA_SUCCESS;
 }
 
-int SEGAAPI_GetLoopState(void* hHandle)
+int SEGAAPI_GetLoopState(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetLoopState() 0x%x", hHandle);
 	return 0;
 }
 
-int SEGAAPI_UpdateBuffer(void* hHandle, unsigned int dwStartOffset, unsigned int dwLength)
+int SEGAAPI_UpdateBuffer(void *hHandle, unsigned int dwStartOffset, unsigned int dwLength)
 {
 	dbgPrint("SEGAAPI_UpdateBuffer() 0x%x 0x%x 0x%x", hHandle, dwStartOffset, dwLength);
 	if (hHandle == NULL)
@@ -752,7 +754,7 @@ int SEGAAPI_UpdateBuffer(void* hHandle, unsigned int dwStartOffset, unsigned int
 	return SEGA_SUCCESS;
 }
 
-int SEGAAPI_SetSynthParam(void* hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
+int SEGAAPI_SetSynthParam(void *hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
 {
 	float volume;
 	float semiTones;
@@ -886,13 +888,13 @@ int SEGAAPI_SetSynthParam(void* hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_GetSynthParam(void* hHandle, HASYNTHPARAMSEXT param)
+int SEGAAPI_GetSynthParam(void *hHandle, HASYNTHPARAMSEXT param)
 {
 	dbgPrint("SEGAAPI_GetSynthParam() 0x%x 0x%x", hHandle, param);
 	return 0;
 }
 
-int SEGAAPI_SetSynthParamMultiple(void* hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
+int SEGAAPI_SetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
 {
 	dbgPrint("SEGAAPI_SetSynthParamMultiple() 0x%x 0x%x 0x%x", hHandle, dwNumParams, pSynthParams);
 	segaapiContext_t *context = hHandle;
@@ -907,19 +909,19 @@ int SEGAAPI_SetSynthParamMultiple(void* hHandle, unsigned int dwNumParams, Synth
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_GetSynthParamMultiple(void* hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
+int SEGAAPI_GetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
 {
 	dbgPrint("SEGAAPI_GetSynthParamMultiple() 0x%x 0x%x 0x%x", hHandle, dwNumParams, pSynthParams);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetReleaseState(void* hHandle, int bSet)
+int SEGAAPI_SetReleaseState(void *hHandle, int bSet)
 {
 	dbgPrint("SEGAAPI_SetReleaseState() 0x%x 0x%x", hHandle, bSet);
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCallback, unsigned int dwFlags, void* *phHandle)
+int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCallback, unsigned int dwFlags, void **phHandle)
 {
 	dbgPrint("SEGAAPI_CreateBuffer() 0x%x 0x%x 0x%x 0x%x", pConfig, pCallback, dwFlags, phHandle);
 	if ((phHandle == NULL) || (pConfig == NULL))
@@ -1025,7 +1027,7 @@ int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCa
 	return SEGA_SUCCESS;
 }
 
-int SEGAAPI_DestroyBuffer(void* hHandle)
+int SEGAAPI_DestroyBuffer(void *hHandle)
 {
 	dbgPrint("SEGAAPI_DestroyBuffer() 0x%x", hHandle);
 	if (hHandle == NULL)
@@ -1135,27 +1137,27 @@ int SEGAAPI_Init(void)
 		dbgPrint("SEGAAPI_Init() alutInit failed");
 		return SEGAERR_FAIL;
 	}
+	/*
+		alBufferSamplesSOFT = alGetProcAddress("alBufferSamplesSOFT");
+		if (alBufferSamplesSOFT == NULL)
+		{
+			dbgPrint("Warning: Could not resolve AL extension!\n");
+			// exit(1);
+		}
 
-	alBufferSamplesSOFT = alGetProcAddress("alBufferSamplesSOFT");
-	if (alBufferSamplesSOFT == NULL)
-	{
-		dbgPrint("Warning: Could not resolve AL extension!\n");
-		// exit(1);
-	}
-
-	alBufferSubSamplesSOFT = alGetProcAddress("alBufferSubSamplesSOFT");
-	if (alBufferSubSamplesSOFT == NULL)
-	{
-		dbgPrint("Warning: Could not resolve AL extension!\n");
-		// exit(1);
-	}
-	alGetBufferSamplesSOFT = alGetProcAddress("alGetBufferSamplesSOFT");
-	if (alGetBufferSamplesSOFT == NULL)
-	{
-		dbgPrint("Warning: Could not resolve AL extension!\n");
-		// exit(1);
-	}
-
+		alBufferSubSamplesSOFT = alGetProcAddress("alBufferSubSamplesSOFT");
+		if (alBufferSubSamplesSOFT == NULL)
+		{
+			dbgPrint("Warning: Could not resolve AL extension!\n");
+			// exit(1);
+		}
+		alGetBufferSamplesSOFT = alGetProcAddress("alGetBufferSamplesSOFT");
+		if (alGetBufferSamplesSOFT == NULL)
+		{
+			dbgPrint("Warning: Could not resolve AL extension!\n");
+			// exit(1);
+		}
+	*/
 	SEGAAPI_SetGlobalEAXProperty((GUID *)&EAXPROPERTYID_EAX40_FXSlot2, 0, (void *)&EAX_NULL_GUID, 16);
 
 	SEGAAPI_SetSPDIFOutChannelRouting(0, 0);
