@@ -17,8 +17,9 @@
 #include <sys/ioctl.h>
 #include <linux/serial.h>
 
-
 #include "serial.h"
+
+#define TIMEOUT_SELECT 200
 
 int setSerialAttributes(int fd, int myBaud)
 {
@@ -38,8 +39,8 @@ int setSerialAttributes(int fd, int myBaud)
   options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
   options.c_oflag &= ~OPOST;
 
-  options.c_cc[VMIN] = 10;
-  options.c_cc[VTIME] = 10; // One seconds (10 deciseconds)
+  options.c_cc[VMIN] = 0;
+  options.c_cc[VTIME] = 0; // One seconds (10 deciseconds)
 
   tcsetattr(fd, TCSANOW, &options);
 
@@ -63,4 +64,26 @@ int setSerialAttributes(int fd, int myBaud)
   usleep(100 * 1000); // Required to make flush work, for some reason
 
   return 0;
+}
+
+int readBytes(int fd, unsigned char *buffer, int amount)
+{
+  fd_set fd_serial;
+  struct timeval tv;
+
+  FD_ZERO(&fd_serial);
+  FD_SET(fd, &fd_serial);
+
+  tv.tv_sec = 0;
+  tv.tv_usec = TIMEOUT_SELECT * 1000;
+
+  int filesReadyToRead = select(fd + 1, &fd_serial, NULL, NULL, &tv);
+
+  if (filesReadyToRead < 1)
+    return 0;
+
+  if (!FD_ISSET(fd, &fd_serial))
+    return 0;
+
+  return read(fd, buffer, amount);
 }

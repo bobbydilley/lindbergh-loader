@@ -205,22 +205,18 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       }
       else if (jvsFileDescriptor >= 0)
       {
+
         write(jvsFileDescriptor, inputBuffer, jvsCommand.srcSize);
-        for (int i = 0; i < jvsCommand.srcSize; i++)
-          printf("%X ", inputBuffer[i]);
-        printf("\n");
 
         for (int i = 0; i < jvsCommand.srcSize; i++)
         {
           if (inputBuffer[i] == 0xF0)
           {
-            printf("SENSE LINE 3\n");
             setSenseLine(3);
           }
           else if (inputBuffer[i] == 0xF1)
           {
             setSenseLine(1);
-            printf("SENSE LINE 1\n");
           }
         }
       }
@@ -270,12 +266,13 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       }
       else if (jvsFileDescriptor >= 0)
       {
-        int count = read(jvsFileDescriptor, &sharedMemory[jvsCommand.destAddress], 255); 
+        int count = readBytes(jvsFileDescriptor, &sharedMemory[jvsCommand.destAddress], 255);
+
+        if (count == -1)
+          count = 0;
+
         _data[2] = jvsCommand.destAddress;
         _data[3] = count;
-        for (int i = 0; i < count; i++)
-          printf("%X ", sharedMemory[jvsCommand.destAddress + i]);
-        printf("\n");
       }
     }
     break;
