@@ -179,6 +179,28 @@ int XNextEvent(Display *display, XEvent *event_return)
     setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 255.0);
   }
   break;
+
+  case ButtonPress:
+  case ButtonRelease:
+  {
+    printf("%d %d %d\n", event_return->xbutton.button, event_return->xbutton.x, event_return->xbutton.y);
+
+    switch (event_return->xbutton.button)
+    {
+    case 1: // Trigger
+      setSwitch(PLAYER_1, BUTTON_1, event_return->type == ButtonPress);
+      break;
+    case 3: // Reload
+      setSwitch(PLAYER_1, BUTTON_2, event_return->type == ButtonPress);
+      break;
+    case 9: // Gun Button
+      setSwitch(PLAYER_1, BUTTON_3, event_return->type == ButtonPress);
+      break;
+    default:
+      break;
+    }
+  }
+  break;
   }
 
   return returnValue;
