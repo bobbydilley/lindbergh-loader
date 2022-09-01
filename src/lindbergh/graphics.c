@@ -183,8 +183,6 @@ int XNextEvent(Display *display, XEvent *event_return)
   case ButtonPress:
   case ButtonRelease:
   {
-    printf("%d %d %d\n", event_return->xbutton.button, event_return->xbutton.x, event_return->xbutton.y);
-
     switch (event_return->xbutton.button)
     {
     case 1: // Trigger
