@@ -6,6 +6,8 @@ This project contains header files from SEGA. Please DO NOT distrobute this code
 
 This project aims to hook and emulate the various different parts of the SEGA Lindbergh allowing the games to run on modern versions of Linux.
 
+You can view the supported titles [here.](docs/supported.md)
+
 ## What this project does
 
 This project provides an emulation layer so for various software & hardware components of hte SEGA Lindbergh system allowing you to run the games on a modern version of linux. The project also aims to provide documentation of the various APIs used in the Lindbergh system which may be useful for further emulation projects, or homebrew.

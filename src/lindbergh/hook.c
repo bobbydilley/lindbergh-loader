@@ -9,6 +9,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <ucontext.h>
+#include <semaphore.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "hook.h"
 
@@ -428,8 +432,28 @@ float powf(float base, float exponent)
 }
 
 /*
-int futex(int *uaddr, int op, int val, const struct timespec *timeout, int *uaddr2, int val3)
+int sem_wait(sem_t *sem)
 {
+    int (*original_sem_wait)(sem_t * sem) = dlsym(RTLD_NEXT, "sem_wait");
     return 0;
 }
 */
+
+/**
+ * Hook function used by Harley Davidson to change IPs to localhost
+ * Currently does nothing.
+ */
+int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+{
+    int (*_connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) = dlsym(RTLD_NEXT, "connect");
+
+
+    struct sockaddr_in *in_pointer = (struct sockaddr_in *)addr;
+
+    // Change the IP to connect to to 127.0.0.1
+    //in_pointer->sin_addr.s_addr = inet_addr("127.0.0.1");
+    char *some_addr = inet_ntoa(in_pointer->sin_addr);
+    printf("Connecting to %s\n", some_addr);
+
+    return _connect(sockfd, addr, addrlen);
+}
