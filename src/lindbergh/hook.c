@@ -27,7 +27,12 @@
 #define SERIAL0 2
 #define SERIAL1 3
 
-int hooks[4] = {-1, -1, -1, -1};
+#define CPUINFO 0
+#define OSRELEASE 1
+
+int hooks[5] = {-1, -1, -1, -1};
+FILE *fileHooks[2] = {NULL, NULL};
+int fileRead[2] = {0, 0};
 
 uint16_t basePortAddress = 0xFFFF;
 
@@ -147,25 +152,25 @@ int open(const char *pathname, int flags)
 
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
-        hooks[BASEBOARD] = open(HOOK_FILE_NAME, flags);
+        hooks[BASEBOARD] = _open(HOOK_FILE_NAME, flags);
         return hooks[BASEBOARD];
     }
 
     if (strcmp(pathname, "/dev/i2c/0") == 0)
     {
-        hooks[EEPROM] = open(HOOK_FILE_NAME, flags);
+        hooks[EEPROM] = _open(HOOK_FILE_NAME, flags);
         return hooks[EEPROM];
     }
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/tts/0") == 0)
     {
-        hooks[SERIAL0] = open(HOOK_FILE_NAME, flags);
+        hooks[SERIAL0] = _open(HOOK_FILE_NAME, flags);
         return hooks[SERIAL0];
     }
 
     if (strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
-        hooks[SERIAL1] = open(HOOK_FILE_NAME, flags);
+        hooks[SERIAL1] = _open(HOOK_FILE_NAME, flags);
         return hooks[SERIAL1];
     }
 
@@ -181,19 +186,44 @@ int open(const char *pathname, int flags)
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
 {
     FILE *(*_fopen)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen");
-    printf("FOpen %s\n", pathname);
+    printf("fopen %s\n", pathname);
 
     if (strcmp(pathname, "/root/lindbergrc") == 0)
     {
         return _fopen("lindbergrc", mode);
     }
 
+    if (strcmp(pathname, "/proc/cpuinfo") == 0)
+    {
+        fileRead[CPUINFO] = 0;
+        fileHooks[CPUINFO] = _fopen(HOOK_FILE_NAME, mode);
+        return fileHooks[CPUINFO];
+    }
+
     return _fopen(pathname, mode);
+}
+
+FILE *fopen64(const char *pathname, const char *mode)
+{
+    FILE *(*_fopen64)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen64");
+    printf("fopen64 %s\n", pathname);
+
+    if (strcmp(pathname, "/proc/sys/kernel/osrelease") == 0)
+    {
+        EmulatorConfig *config = getConfig();
+        config->game = SEGABOOT_2_6;
+        fileRead[OSRELEASE] = 0;
+        fileHooks[OSRELEASE] = _fopen64(HOOK_FILE_NAME, mode);
+        return fileHooks[OSRELEASE];
+    }
+
+    return _fopen64(pathname, mode);
 }
 
 int openat(int dirfd, const char *pathname, int flags)
 {
     int (*_openat)(int dirfd, const char *pathname, int flags) = dlsym(RTLD_NEXT, "openat");
+    printf("openat %s\n", pathname);
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/0") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
@@ -217,6 +247,33 @@ int close(int fd)
     }
 
     return _close(fd);
+}
+
+char *fgets(char *str, int n, FILE *stream)
+{
+    char *(*_fgets)(char *str, int n, FILE *stream) = dlsym(RTLD_NEXT, "fgets");
+
+    if (stream == fileHooks[OSRELEASE])
+    {
+        char *contents = "mvl";
+        strcpy(str, contents);
+        return str;
+    }
+
+    // This currently doesn't work
+    if (stream == fileHooks[CPUINFO])
+    {
+        char *contents = "model name\t: Intel(R) Celeron(R) CPU 3.00GHz\n";
+        strcpy(str, contents);
+
+        if(!fileRead[CPUINFO])
+            return str;
+
+        fileRead[CPUINFO] = 1;
+        return NULL;
+    }
+
+    return _fgets(str, n, stream);
 }
 
 ssize_t read(int fd, void *buf, size_t count)
@@ -330,6 +387,16 @@ int system(const char *command)
         return 0;
 
     if (strcmp(command, "lspci | grep MPC8272 > /dev/null") == 0)
+        return 0;
+
+    if (strcmp(command, "uname -r | grep mvl") == 0)
+    {
+        EmulatorConfig *config = getConfig();
+        config->game = SEGABOOT_2_4;
+        return 0;
+    }
+
+    if (strstr(command, "hwclock") != NULL)
         return 0;
 
     return _system(command);

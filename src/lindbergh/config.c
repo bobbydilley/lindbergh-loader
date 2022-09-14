@@ -56,6 +56,12 @@ static int detectGame()
         return 0;
     }
 
+    if (strstr(program_invocation_name, "lgj"))
+    {
+        config.game = LETS_GO_JUNGLE;
+        return 0;
+    }
+
     config.game = UNKNOWN;
     return 1;
 }
@@ -66,10 +72,16 @@ char *getGameName()
     {
     case SEGABOOT:
         return "SEGABOOT";
+    case SEGABOOT_2_4:
+        return "SEGABOOT 2.4";
+    case SEGABOOT_2_6:
+        return "SEGABOOT 2.6";
     case OUTRUN:
         return "Outrun 2 SP";
     case THE_HOUSE_OF_THE_DEAD_4:
         return "The House of the Dead 4";
+    case LETS_GO_JUNGLE:
+        return "Let's Go Jungle! Lost on the Island of Spice";
     default:
         return "Unknown Game";
     }
