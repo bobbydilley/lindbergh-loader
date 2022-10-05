@@ -76,6 +76,9 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   width = getConfig()->width;
   height = getConfig()->height;
 
+  width = 10;
+  height = 10;
+
   // Ensure that the windows will respond with keyboard and mouse events
   attributes->event_mask = attributes->event_mask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
   attributes->override_redirect = 0;

@@ -31,20 +31,6 @@
 //#define DUMP_WAV
 //#define DUMP_BUFFER
 
-#define CHECK()                                                \
-	{                                                          \
-		printf("%s %d\n", __func__, __LINE__);                 \
-		unsigned int err;                                      \
-		if ((err = alGetError()) != AL_NO_ERROR)               \
-		{                                                      \
-			printf("%s %d\n", __func__, __LINE__);             \
-			dbgPrint(":%i AL Error: 0x%08X\n", __LINE__, err); \
-			exit(2);                                           \
-		}                                                      \
-	}
-
-int g_LastStatus = SEGA_SUCCESS;
-
 // outrun2 will complain if these aren't present
 const GUID EAX_NULL_GUID;
 // DEFINE_GUID(EAX_NULL_GUID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -70,6 +56,7 @@ const GUID EAXPROPERTYID_EAX40_FXSlot3;
 
 typedef struct
 {
+	// SEGA API Parts
 	void *userData;
 	HAWOSEGABUFFERCALLBACK callback;
 	bool synthesizer;
@@ -84,18 +71,15 @@ typedef struct
 	size_t size;
 	bool playing;
 	bool paused;
-	bool playWithSetup;
 
+	// OpenAL Parts
 	ALuint alBuffer;
 	ALuint alSource;
 
+	// TinySoundFont Parts
 	tsf *synth;
 	struct tsf_region *region;
 } segaapiContext_t;
-
-// LPALBUFFERSAMPLESSOFT alBufferSamplesSOFT = NULL;
-// LPALBUFFERSUBSAMPLESSOFT alBufferSubSamplesSOFT = NULL;
-// LPALGETBUFFERSAMPLESSOFT alGetBufferSamplesSOFT = NULL;
 
 #ifdef DEBUG_OUTPUT
 void dbgPrint(const char *format, ...)
@@ -109,106 +93,6 @@ void dbgPrint(const char *format, ...)
 #else
 void dbgPrint(const char *format, ...)
 {
-	return;
-}
-#endif
-
-#ifdef DUMP_BUFFER
-static void dumpBuffer(const char *path, void *data, size_t size)
-{
-	FILE *soundFile = NULL;
-
-	soundFile = fopen(path, "wb");
-	fwrite(data, size, 1, soundFile);
-	fclose(soundFile);
-}
-#endif
-
-#ifdef DUMP_WAV
-static void dumpWaveBuffer(const char *path, unsigned int channels, unsigned int sampleRate, unsigned int sampleBits, void *data, size_t size)
-{
-
-	struct RIFF_Header
-	{
-		char chunkID[4];
-		long chunkSize; // size not including chunkSize or chunkID
-		char format[4];
-	};
-
-	struct WAVE_Format
-	{
-		char subChunkID[4];
-		long subChunkSize;
-		short audioFormat;
-		short numChannels;
-		long sampleRate;
-		long byteRate;
-		short blockAlign;
-		short bitsPerSample;
-	};
-
-	struct WAVE_Data
-	{
-		char subChunkID[4]; // should contain the word data
-		long subChunk2Size; // Stores the size of the data block
-	};
-
-	// Local Declarations
-	FILE *soundFile = NULL;
-	struct WAVE_Format wave_format;
-	struct RIFF_Header riff_header;
-	struct WAVE_Data wave_data;
-
-	soundFile = fopen(path, "wb");
-
-	// check for RIFF and WAVE tag in memeory
-	riff_header.chunkID[0] = 'R';
-	riff_header.chunkID[1] = 'I';
-	riff_header.chunkID[2] = 'F';
-	riff_header.chunkID[3] = 'F';
-	riff_header.format[0] = 'W';
-	riff_header.format[1] = 'A';
-	riff_header.format[2] = 'V';
-	riff_header.format[3] = 'E';
-
-	// Read in the first chunk into the struct
-	fwrite(&riff_header, sizeof(struct RIFF_Header), 1, soundFile);
-
-	// check for fmt tag in memory
-	wave_format.subChunkID[0] = 'f';
-	wave_format.subChunkID[1] = 'm';
-	wave_format.subChunkID[2] = 't';
-	wave_format.subChunkID[3] = ' ';
-
-	wave_format.audioFormat = 1;
-	wave_format.sampleRate = sampleRate;
-	wave_format.numChannels = channels;
-	wave_format.bitsPerSample = sampleBits;
-	wave_format.byteRate = (sampleRate * sampleBits * channels) / 8;
-	wave_format.blockAlign = (sampleBits * channels) / 8;
-	wave_format.subChunkSize = 16;
-
-	// Read in the 2nd chunk for the wave info
-	fwrite(&wave_format, sizeof(struct WAVE_Format), 1, soundFile);
-
-	// Read in the the last byte of data before the sound file
-
-	// check for data tag in memory
-	wave_data.subChunkID[0] = 'd';
-	wave_data.subChunkID[1] = 'a';
-	wave_data.subChunkID[2] = 't';
-	wave_data.subChunkID[3] = 'a';
-
-	wave_data.subChunk2Size = size;
-
-	fwrite(&wave_data, sizeof(struct WAVE_Data), 1, soundFile);
-
-	// Read in the sound data into the soundData variable
-	fwrite(data, wave_data.subChunk2Size, 1, soundFile);
-
-	// clean up and return true if successful
-	fclose(soundFile);
-
 	return;
 }
 #endif
@@ -272,34 +156,29 @@ ALsizei FramesToBytes(ALsizei size, ALenum channels, ALenum type)
 }
 
 static unsigned int bufferSampleSize(segaapiContext_t *context)
-{ // printf("%s %d\n", __func__, __LINE__);
+{
 	return context->channels * ((context->sampleFormat == HASF_SIGNED_16PCM) ? 2 : 1);
 }
 
 static void updateBufferLoop(segaapiContext_t *context)
-{ // printf("%s %d\n", __func__, __LINE__);
+{
 	if (context == NULL)
 		return;
+
 	unsigned int sampleSize = bufferSampleSize(context);
 	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-	// CHECK();
+
 	/*
 	FIXME: Re-enable, only crashed before - so fix this too..
 	  ALint loopPoints[] = { buffer->startLoop / sampleSize, buffer->endLoop / sampleSize };
 	  alBufferiv(buffer->alBuffer,AL_LOOP_POINTS_SOFT,loopPoints);
 	  CHECK();
 	*/
-	return;
-}
-
-void AL_APIENTRY alBufferSamplesSOFT(ALuint buffer, ALuint samplerate, ALenum internalformat, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data)
-{
-	alBufferData(buffer, internalformat, data, FramesToBytes(samples, channels, type), samplerate);
 }
 
 AL_API void AL_APIENTRY alBufferSubSamplesSOFT(ALuint buffer, ALsizei offset, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data, ALuint samplerate, ALenum internalformat)
 {
-	
+
 	ALsizei FrameSize = FramesToBytes(samples, channels, type);
 
 	offset *= FrameSize;
@@ -350,63 +229,44 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 	default:
 		break;
 	}
+
 	if (alFormat == -1)
 	{
 		dbgPrint("Unknown format! 0x%X with %u channels!\n", context->sampleFormat, context->channels);
+		abort();
 	}
 
 	ALint position;
 	alGetSourcei(context->alSource, AL_SAMPLE_OFFSET, &position); // TODO: Patch if looping is active
-	// CHECK();
 
 	ALint unsafe[2];
 	alGetSourceiv(context->alSource, AL_BYTE_RW_OFFSETS_SOFT, unsafe); // AL_BYTE_OFFSET
-	// CHECK();
+
+	// We should update the playing buffer
+	// OpenAL doesn't want to let us do this!!
 	if (offset != -1)
 	{
 
-		alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset], context->sampleRate, alFormat);
-		// CHECK();
+		// alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset], context->sampleRate, alFormat);
 		dbgPrint("Soft update in buffer %X at %u (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, offset, length, position, unsafe[0], unsafe[1]);
-	}
-	else
-	{
 
+		ALint position;
+		alGetSourcei(context->alSource, AL_BYTE_OFFSET, &position);
 		alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-		// CHECK();
-		alBufferSamplesSOFT(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize(context), alChannels, alType, context->data);
-		// CHECK();
+		alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
 		alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
-		// CHECK();
-		updateBufferLoop(context);
-		dbgPrint("Hard update in buffer %X (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, context->size, position, unsafe[0], unsafe[1]);
+		alSourcei(context->alSource, AL_BYTE_OFFSET, position);
+
+
+		return;
 	}
 
-#ifdef DUMP_WAV
-	// This dumps the buffer
-	if (context->data != NULL)
-	{
-		uint8_t *nonZero = context->data;
-		while (*nonZero++ == 0x00)
-			;
-		if ((nonZero - (uint8_t *)context->data) < context->size)
-		{
-			printf("%s %d\n", __func__, __LINE__);
-			char buf[1000];
-			sprintf(buf, "SAMPLE-%X-%i-%04X-%u.wav", (uintptr_t)context, context->channels, context->sampleFormat, context->sampleRate);
-			dbgPrint("Writing: %s (%i)", buf, context->size);
-			void *tmp = malloc(context->size);
-			if (tmp != NULL)
-			{
-				alGetBufferSamplesSOFT(context->alBuffer, 0, context->size / bufferSampleSize(context), alChannels, alType, tmp);
-				// CHECK();
-				dumpWaveBuffer(buf, context->channels, context->sampleRate, (context->sampleFormat == HASF_SIGNED_16PCM) ? 16 : 8, tmp, context->size);
-				free(tmp);
-			}
-		}
-	}
-#endif
-	return;
+	// Clear the buffer and write again
+	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
+	alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
+	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
+	// updateBufferLoop(context);
+	dbgPrint("Hard update in buffer %X (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, context->size, position, unsafe[0], unsafe[1]);
 }
 
 static void resetBuffer(segaapiContext_t *context)
@@ -425,7 +285,6 @@ static void resetBuffer(segaapiContext_t *context)
 	// *   - No loop.
 	context->loop = false;
 	context->paused = false;
-	context->playWithSetup = false;
 
 	tsf *res = (tsf *)TSF_MALLOC(sizeof(tsf));
 	TSF_MEMSET(res, 0, sizeof(tsf));
@@ -456,24 +315,10 @@ static void resetBuffer(segaapiContext_t *context)
 int SEGAAPI_Play(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Play() 0x%x", hHandle);
+
 	segaapiContext_t *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
-#ifdef DUMP_BUFFER
-	if (context->data != NULL)
-	{
-		if (context->synthesizer)
-		{
-			if (context->data)
-			{
-				char filename[1000];
-				sprintf(filename, "SYNTH-%X-%i-%04X-%u.bin", (uintptr_t)context, context->channels, context->sampleFormat, context->sampleRate);
-				dbgPrint("Writing: %s (%i)", filename, context->size);
-				dumpBuffer(filename, context->data, context->size);
-			}
-		}
-	}
-#endif
 
 	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
 	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
@@ -554,10 +399,10 @@ int SEGAAPI_GetFormat(void *hHandle, HAWOSEFORMAT *pFormat)
 int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate)
 {
 	dbgPrint("SEGAAPI_SetSampleRate() 0x%x 0x%x", hHandle, dwSampleRate);
+
 	if (hHandle == NULL)
-	{ // Not sure if this is correct here, but ABC currently tries to call this with a null pointer..
 		return SEGAERR_BAD_HANDLE;
-	}
+
 	segaapiContext_t *context = hHandle;
 	context->sampleRate = dwSampleRate;
 	updateBufferData(context, -1, -1);
@@ -926,16 +771,17 @@ int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCa
 	dbgPrint("SEGAAPI_CreateBuffer() 0x%x 0x%x 0x%x 0x%x", pConfig, pCallback, dwFlags, phHandle);
 	if ((phHandle == NULL) || (pConfig == NULL))
 	{
-		g_LastStatus = SEGAERR_BAD_POINTER;
 		dbgPrint("SEGAAPI_CreateBuffer() SEGAERR_BAD_POINTER");
 		return SEGAERR_BAD_POINTER;
 	}
+
 	segaapiContext_t *context = malloc(sizeof(segaapiContext_t));
 	if (context == NULL)
 	{
 		dbgPrint("SEGAAPI_CreateBuffer() SEGAERR_OUT_OF_MEMORY");
 		return SEGAERR_OUT_OF_MEMORY;
 	}
+
 	// dbgPrint("SEGAAPI_CreateBuffer() allocated %i bytes",sizeof(segaapiContext_t));
 	context->playing = false;
 	context->callback = pCallback;
@@ -1131,38 +977,14 @@ int SEGAAPI_Init(void)
 {
 	dbgPrint("SEGAAPI_Init()");
 
-	int res = alutInit(NULL, NULL);
-	if (res == AL_FALSE)
+	if (alutInit(NULL, NULL) == AL_FALSE)
 	{
-		dbgPrint("SEGAAPI_Init() alutInit failed");
+		dbgPrint("SEGAAPI_Init() alutInit() failed!");
 		return SEGAERR_FAIL;
 	}
-	/*
-		alBufferSamplesSOFT = alGetProcAddress("alBufferSamplesSOFT");
-		if (alBufferSamplesSOFT == NULL)
-		{
-			dbgPrint("Warning: Could not resolve AL extension!\n");
-			// exit(1);
-		}
 
-		alBufferSubSamplesSOFT = alGetProcAddress("alBufferSubSamplesSOFT");
-		if (alBufferSubSamplesSOFT == NULL)
-		{
-			dbgPrint("Warning: Could not resolve AL extension!\n");
-			// exit(1);
-		}
-		alGetBufferSamplesSOFT = alGetProcAddress("alGetBufferSamplesSOFT");
-		if (alGetBufferSamplesSOFT == NULL)
-		{
-			dbgPrint("Warning: Could not resolve AL extension!\n");
-			// exit(1);
-		}
-	*/
 	SEGAAPI_SetGlobalEAXProperty((GUID *)&EAXPROPERTYID_EAX40_FXSlot2, 0, (void *)&EAX_NULL_GUID, 16);
 
-	SEGAAPI_SetSPDIFOutChannelRouting(0, 0);
-	SEGAAPI_SetSPDIFOutChannelRouting(1, 1);
-	SEGAAPI_SetSPDIFOutSampleRate(1);
 	return SEGA_SUCCESS;
 }
 

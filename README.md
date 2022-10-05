@@ -60,3 +60,17 @@ This is an emulation of the driver that games use to route sound out of the Crea
 ## Config
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder as the game is run from. If no config file is present a default setting will be used. 
+
+## Installation
+
+1. Make sure you have the nvidia drivers
+
+```
+sudo dpkg --add-architecture i386 
+sudo apt-get install gcc-multilib
+sudo apt-get install freeglut3:i386 freeglut3-dev:i386 libglew-dev
+sudo apt-get install xorg-dev
+sudo apt-get install libopenal1 libopenal-dev
+sudo apt-get install libxmu6:i386
+sudo apt-get install libstdc++5:i386
+```
