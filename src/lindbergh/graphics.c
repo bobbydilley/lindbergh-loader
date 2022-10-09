@@ -1,9 +1,11 @@
 #include <GL/freeglut.h>
 #include <GL/glx.h>
 #include <X11/extensions/xf86vmode.h>
+#include <X11/Xatom.h>
 #include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "config.h"
 #include "jvs.h"
@@ -76,15 +78,20 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   width = getConfig()->width;
   height = getConfig()->height;
 
-  width = 10;
-  height = 10;
-
   // Ensure that the windows will respond with keyboard and mouse events
   attributes->event_mask = attributes->event_mask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
-  attributes->override_redirect = 0;
+  // attributes->override_redirect = False;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
   printf("%d %d %d %d\n", x, y, width, height);
+
+  if (getConfig()->fullscreen)
+  {
+    Atom wm_state = XInternAtom(display, "_NET_WM_STATE", true);
+    Atom wm_fullscreen = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", true);
+    XChangeProperty(display, window, wm_state, XA_ATOM, 32, PropModeReplace, (unsigned char *)&wm_fullscreen, 1);
+  }
+
   return window;
 }
 

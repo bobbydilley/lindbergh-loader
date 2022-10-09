@@ -27,7 +27,7 @@
 #include "tsf.h"
 
 //#define DEBUG_SAMPLE
-#define DEBUG_OUTPUT
+// #define DEBUG_OUTPUT
 //#define DUMP_WAV
 //#define DUMP_BUFFER
 
@@ -162,6 +162,7 @@ static unsigned int bufferSampleSize(segaapiContext_t *context)
 
 static void updateBufferLoop(segaapiContext_t *context)
 {
+	return;
 	if (context == NULL)
 		return;
 
@@ -174,16 +175,6 @@ static void updateBufferLoop(segaapiContext_t *context)
 	  alBufferiv(buffer->alBuffer,AL_LOOP_POINTS_SOFT,loopPoints);
 	  CHECK();
 	*/
-}
-
-AL_API void AL_APIENTRY alBufferSubSamplesSOFT(ALuint buffer, ALsizei offset, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data, ALuint samplerate, ALenum internalformat)
-{
-
-	ALsizei FrameSize = FramesToBytes(samples, channels, type);
-
-	offset *= FrameSize;
-
-	alBufferData(buffer + offset, internalformat, data, FrameSize, samplerate);
 }
 
 static void updateBufferData(segaapiContext_t *context, unsigned int offset, size_t length)
@@ -236,37 +227,29 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 		abort();
 	}
 
-	ALint position;
-	alGetSourcei(context->alSource, AL_SAMPLE_OFFSET, &position); // TODO: Patch if looping is active
-
-	ALint unsafe[2];
-	alGetSourceiv(context->alSource, AL_BYTE_RW_OFFSETS_SOFT, unsafe); // AL_BYTE_OFFSET
-
 	// We should update the playing buffer
 	// OpenAL doesn't want to let us do this!!
 	if (offset != -1)
 	{
 
-		// alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize(context), length / bufferSampleSize(context), alChannels, alType, &context->data[offset], context->sampleRate, alFormat);
-		dbgPrint("Soft update in buffer %X at %u (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, offset, length, position, unsafe[0], unsafe[1]);
+		unsigned int sampleSize = bufferSampleSize(context);
 
 		ALint position;
-		alGetSourcei(context->alSource, AL_BYTE_OFFSET, &position);
+		alGetSourcei(context->alSource, AL_SAMPLE_OFFSET, &position);
+
 		alSourcei(context->alSource, AL_BUFFER, AL_NONE);
+		// alBufferData(context->alBuffer, alFormat, context->data + (offset / sampleSize), FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
 		alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
 		alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
-		alSourcei(context->alSource, AL_BYTE_OFFSET, position);
-
-
+		alSourcei(context->alSource, AL_SAMPLE_OFFSET, position);
 		return;
 	}
 
-	// Clear the buffer and write again
 	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
 	alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
 	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
+	
 	// updateBufferLoop(context);
-	dbgPrint("Hard update in buffer %X (%u bytes) - buffer playing at %u, unsafe region is %u to %u\n", (uintptr_t)context, context->size, position, unsafe[0], unsafe[1]);
 }
 
 static void resetBuffer(segaapiContext_t *context)
@@ -320,7 +303,8 @@ int SEGAAPI_Play(void *hHandle)
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 
-	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
+	// alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
+	alSourcei(context->alSource, AL_LOOPING, AL_FALSE);
 	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
 	alSourcePlay(context->alSource);
 	return SEGA_SUCCESS;
