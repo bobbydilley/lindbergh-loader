@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include "config.h"
 #include "jvs.h"
@@ -14,12 +15,23 @@
 int gameModeWidth = -1;
 int gameModeHeight = -1;
 
+void *glutMainLoopThread()
+{
+     glutMainLoop();
+     return NULL;
+}
+
 FGAPI int FGAPIENTRY glutEnterGameMode()
 {
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
   strcat(gameTitle, " (GLUT)");
   glutCreateWindow(gameTitle);
+
+  // Outrun doesn't run the glutMainLoop through, so we'll do that here
+  pthread_t glutMainLoopID;
+  pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);
+
   return 1;
 }
 
@@ -83,7 +95,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   // attributes->override_redirect = False;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
-  printf("%d %d %d %d\n", x, y, width, height);
+  printf("XCreateWindow Resolution %d %d %d %d\n", x, y, width, height);
 
   if (getConfig()->fullscreen)
   {

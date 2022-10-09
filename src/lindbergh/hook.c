@@ -152,7 +152,7 @@ int open(const char *pathname, int flags)
 {
     int (*_open)(const char *pathname, int flags) = dlsym(RTLD_NEXT, "open");
 
-    printf("Open %s\n", pathname);
+    //printf("Open %s\n", pathname);
 
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
@@ -190,7 +190,7 @@ int open(const char *pathname, int flags)
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
 {
     FILE *(*_fopen)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen");
-    printf("fopen %s\n", pathname);
+    //printf("fopen %s\n", pathname);
 
     if (strcmp(pathname, "/root/lindbergrc") == 0)
     {
@@ -210,7 +210,7 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
 FILE *fopen64(const char *pathname, const char *mode)
 {
     FILE *(*_fopen64)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen64");
-    printf("fopen64 %s\n", pathname);
+    //printf("fopen64 %s\n", pathname);
 
     if (strcmp(pathname, "/proc/sys/kernel/osrelease") == 0)
     {
@@ -227,7 +227,7 @@ FILE *fopen64(const char *pathname, const char *mode)
 int openat(int dirfd, const char *pathname, int flags)
 {
     int (*_openat)(int dirfd, const char *pathname, int flags) = dlsym(RTLD_NEXT, "openat");
-    printf("openat %s\n", pathname);
+    //printf("openat %s\n", pathname);
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/0") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
