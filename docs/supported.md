@@ -28,3 +28,9 @@ Working is defined by getting into attract mode and running the game, but not ne
 - Initial D 5
 - Hummer
 - R-Tuned
+
+## How to run specific games
+
+### Let's Go Jungle
+
+```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. LD_PRELOAD=lindbergh.so TEA_DIR=`pwd` ./lgj_final```

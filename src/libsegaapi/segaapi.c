@@ -1,13 +1,3 @@
-/*
-	Segaapi audio library emulator
-	Parts stolen from Sega, teknogods and jayfoxrox
-	Modified by doozer in 2022 to work with Outrun 2 SP under modern Linux
-
-	https://www.openal.org/documentation/
-	https://github.com/teknogods/OpenSegaAPI/blob/master/Opensegaapi/src/opensegaapi.cpp
-	https://web.archive.org/web/20070218003259/http://www.devmaster.net/articles.php?catID=6
-
-*/
 #define TSF_IMPLEMENTATION
 
 #include <AL/al.h>
@@ -26,16 +16,9 @@
 #include "segaeax.h"
 #include "tsf.h"
 
-//#define DEBUG_SAMPLE
-// #define DEBUG_OUTPUT
-//#define DUMP_WAV
-//#define DUMP_BUFFER
+//#define DEBUG_OUTPUT
 
-// outrun2 will complain if these aren't present
 const GUID EAX_NULL_GUID;
-// DEFINE_GUID(EAX_NULL_GUID, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-// DEFINE_GUID(EAXPROPERTYID_EAX40_FXSlot2, 0x883b431d, 0xf6f0, 0x3746, 0x91, 0x9f, 0x60, 0xe7, 0xe0, 0x6b, 0x5e, 0xdd);
-
 const GUID EAX_FREQUENCYSHIFTER_EFFECT;
 const GUID EAX_ECHO_EFFECT;
 const GUID EAX_REVERB_EFFECT;
@@ -79,7 +62,7 @@ typedef struct
 	// TinySoundFont Parts
 	tsf *synth;
 	struct tsf_region *region;
-} segaapiContext_t;
+} SEGAContext;
 
 #ifdef DEBUG_OUTPUT
 void dbgPrint(const char *format, ...)
@@ -155,12 +138,12 @@ ALsizei FramesToBytes(ALsizei size, ALenum channels, ALenum type)
 	return size;
 }
 
-static unsigned int bufferSampleSize(segaapiContext_t *context)
+static unsigned int bufferSampleSize(SEGAContext *context)
 {
 	return context->channels * ((context->sampleFormat == HASF_SIGNED_16PCM) ? 2 : 1);
 }
 
-static void updateBufferLoop(segaapiContext_t *context)
+static void updateBufferLoop(SEGAContext *context)
 {
 	return;
 	if (context == NULL)
@@ -177,7 +160,7 @@ static void updateBufferLoop(segaapiContext_t *context)
 	*/
 }
 
-static void updateBufferData(segaapiContext_t *context, unsigned int offset, size_t length)
+static void updateBufferData(SEGAContext *context, unsigned int offset, size_t length)
 {
 
 	ALenum alFormat = -1;
@@ -223,12 +206,10 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 
 	if (alFormat == -1)
 	{
-		dbgPrint("Unknown format! 0x%X with %u channels!\n", context->sampleFormat, context->channels);
+		printf("SEGAAPI: Unknown format! 0x%X with %u channels!\n", context->sampleFormat, context->channels);
 		abort();
 	}
 
-	// We should update the playing buffer
-	// OpenAL doesn't want to let us do this!!
 	if (offset != -1)
 	{
 
@@ -248,11 +229,11 @@ static void updateBufferData(segaapiContext_t *context, unsigned int offset, siz
 	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
 	alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
 	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
-	
+
 	// updateBufferLoop(context);
 }
 
-static void resetBuffer(segaapiContext_t *context)
+static void resetBuffer(SEGAContext *context)
 { // printf("%s %d\n", __func__, __LINE__);
 	// *   - Send Routing
 	// *      - for 1 channel buffer, channel is routed to Front-Left and Front-Right.
@@ -261,11 +242,12 @@ static void resetBuffer(segaapiContext_t *context)
 	// *   - Channel Volume is set to 0xFFFFFFFF (no attenuation)
 	// *   - No notification.
 	// *   - StartLoopOffset is set to 0.
-	context->startLoop = 0;
 	// *   - EndLoopOffset and EndOffset are set to pConfig->mapdata.dwSize.
+	// *   - No loop.
+
+	context->startLoop = 0;
 	context->endOffset = context->size;
 	context->endLoop = context->size;
-	// *   - No loop.
 	context->loop = false;
 	context->paused = false;
 
@@ -299,7 +281,7 @@ int SEGAAPI_Play(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Play() 0x%x", hHandle);
 
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 
@@ -313,7 +295,7 @@ int SEGAAPI_Play(void *hHandle)
 int SEGAAPI_Pause(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Pause() 0x%x", hHandle);
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 	alSourcePause(context->alSource);
@@ -323,7 +305,7 @@ int SEGAAPI_Pause(void *hHandle)
 int SEGAAPI_Stop(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Stop() 0x%x", hHandle);
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 	alSourceStop(context->alSource);
@@ -333,7 +315,7 @@ int SEGAAPI_Stop(void *hHandle)
 int SEGAAPI_PlayWithSetup(void *hHandle)
 {
 	dbgPrint("SEGAAPI_PlayWithSetup() 0x%x", hHandle);
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
@@ -347,7 +329,7 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(void *hHandle)
 	ALint state;
 
 	dbgPrint("SEGAAPI_GetPlaybackStatus() 0x%x", hHandle);
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return PLAYBACK_STATUS_INVALID;
 
@@ -387,7 +369,7 @@ int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate)
 	if (hHandle == NULL)
 		return SEGAERR_BAD_HANDLE;
 
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	context->sampleRate = dwSampleRate;
 	updateBufferData(context, -1, -1);
 	return SEGA_SUCCESS;
@@ -396,7 +378,11 @@ int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate)
 unsigned int SEGAAPI_GetSampleRate(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetSampleRate() 0x%x", hHandle);
-	return SEGAERR_UNSUPPORTED;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+	return context->sampleRate;
 }
 
 int SEGAAPI_SetPriority(void *hHandle, unsigned int dwPriority)
@@ -415,13 +401,10 @@ int SEGAAPI_SetUserData(void *hHandle, void *hUserData)
 {
 	dbgPrint("SEGAAPI_SetUserData() 0x%x 0x%x", hHandle, hUserData);
 	if (hHandle == NULL)
-	{ // Not sure if this is correct here, but ABC currently tries to call this with a null pointer..
-		dbgPrint("SEGAAPI_SetUserData() SEGAERR_BAD_HANDLE");
 		return SEGAERR_BAD_HANDLE;
-	}
-	segaapiContext_t *context = hHandle;
+
+	SEGAContext *context = hHandle;
 	context->userData = hUserData;
-	dbgPrint("SEGAAPI_SetUserData() complete");
 	return SEGA_SUCCESS;
 }
 
@@ -430,7 +413,8 @@ void *SEGAAPI_GetUserData(void *hHandle)
 	dbgPrint("SEGAAPI_GetPriority() 0x%x", hHandle);
 	if (hHandle == NULL)
 		return NULL;
-	segaapiContext_t *context = hHandle;
+
+	SEGAContext *context = hHandle;
 	return context->userData;
 }
 
@@ -473,17 +457,27 @@ unsigned int SEGAAPI_GetChannelVolume(void *hHandle, unsigned int dwChannel)
 int SEGAAPI_SetPlaybackPosition(void *hHandle, unsigned int dwPlaybackPos)
 {
 	dbgPrint("SEGAAPI_SetPlaybackPosition() 0x%x 0x%x", hHandle, dwPlaybackPos);
-	segaapiContext_t *context = hHandle;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
 	alSourcei(context->alSource, AL_BYTE_OFFSET, dwPlaybackPos);
+
 	return SEGA_SUCCESS;
 }
 
 unsigned int SEGAAPI_GetPlaybackPosition(void *hHandle)
 {
-	ALint position;
 	dbgPrint("SEGAAPI_GetPlaybackPosition() 0x%x", hHandle);
-	segaapiContext_t *context = hHandle;
+
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+
+	ALint position;
 	alGetSourcei(context->alSource, AL_BYTE_OFFSET, &position);
+
 	return position;
 }
 
@@ -509,57 +503,82 @@ int SEGAAPI_SetStartLoopOffset(void *hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetStartLoopOffset() 0x%x 0x%x", hHandle, dwOffset);
 	if (hHandle == NULL)
-	{ // Not sure if this is correct here, but ABC currently tries to call this with a null pointer..
 		return SEGAERR_BAD_HANDLE;
-	}
-	segaapiContext_t *context = hHandle;
+
+	SEGAContext *context = hHandle;
+
 	context->startLoop = dwOffset;
 	updateBufferLoop(context);
+
 	return SEGA_SUCCESS;
 }
 
 unsigned int SEGAAPI_GetStartLoopOffset(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetStartLoopOffset() 0x%x", hHandle);
-	return 0;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+
+	return context->startLoop;
 }
 
 int SEGAAPI_SetEndLoopOffset(void *hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetEndLoopOffset() 0x%x 0x%x", hHandle, dwOffset);
 	if (hHandle == NULL)
-	{ // Not sure if this is correct here, but ABC currently tries to call this with a null pointer..
 		return SEGAERR_BAD_HANDLE;
-	}
-	segaapiContext_t *context = hHandle;
+
+	SEGAContext *context = hHandle;
 	context->endLoop = dwOffset;
 	updateBufferLoop(context);
+
 	return SEGA_SUCCESS;
 }
 
 unsigned int SEGAAPI_GetEndLoopOffset(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetEndLoopOffset() 0x%x", hHandle);
-	return 0;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+
+	return context->endLoop;
 }
 
 int SEGAAPI_SetEndOffset(void *hHandle, unsigned int dwOffset)
 {
 	dbgPrint("SEGAAPI_SetEndOffset() 0x%x 0x%x", hHandle, dwOffset);
-	return SEGAERR_UNSUPPORTED;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+	context->endOffset = dwOffset;
+
+	return SEGA_SUCCESS;
 }
 
 unsigned int SEGAAPI_GetEndOffset(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetEndOffset() 0x%x", hHandle);
-	return 0;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+
+	return context->endOffset;
 }
 
-int SEGAAPI_SetLoopState(void *hHandle, int bDoContinuousLooping)
+int SEGAAPI_SetLoopState(void *hHandle, int loop)
 {
-	dbgPrint("SEGAAPI_SetLoopState() 0x%x 0x%x", hHandle, bDoContinuousLooping);
-	segaapiContext_t *context = hHandle;
-	context->loop = bDoContinuousLooping;
+	dbgPrint("SEGAAPI_SetLoopState() 0x%x 0x%x", hHandle, loop);
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+	context->loop = loop;
 	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
 	return SEGA_SUCCESS;
 }
@@ -567,7 +586,12 @@ int SEGAAPI_SetLoopState(void *hHandle, int bDoContinuousLooping)
 int SEGAAPI_GetLoopState(void *hHandle)
 {
 	dbgPrint("SEGAAPI_GetLoopState() 0x%x", hHandle);
-	return 0;
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+
+	return context->loop;
 }
 
 int SEGAAPI_UpdateBuffer(void *hHandle, unsigned int dwStartOffset, unsigned int dwLength)
@@ -578,7 +602,7 @@ int SEGAAPI_UpdateBuffer(void *hHandle, unsigned int dwStartOffset, unsigned int
 		dbgPrint("SEGAAPI_UpdateBuffer() SEGAERR_BAD_HANDLE");
 		return SEGAERR_BAD_HANDLE;
 	}
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	updateBufferData(context, dwStartOffset, dwLength);
 	return SEGA_SUCCESS;
 }
@@ -591,7 +615,7 @@ int SEGAAPI_SetSynthParam(void *hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
 
 	dbgPrint("SEGAAPI_SetSynthParam() 0x%x 0x%x 0x%x", hHandle, param, lPARWValue);
 
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
@@ -726,7 +750,7 @@ int SEGAAPI_GetSynthParam(void *hHandle, HASYNTHPARAMSEXT param)
 int SEGAAPI_SetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
 {
 	dbgPrint("SEGAAPI_SetSynthParamMultiple() 0x%x 0x%x 0x%x", hHandle, dwNumParams, pSynthParams);
-	segaapiContext_t *context = hHandle;
+	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 
@@ -759,14 +783,14 @@ int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCa
 		return SEGAERR_BAD_POINTER;
 	}
 
-	segaapiContext_t *context = malloc(sizeof(segaapiContext_t));
+	SEGAContext *context = malloc(sizeof(SEGAContext));
 	if (context == NULL)
 	{
 		dbgPrint("SEGAAPI_CreateBuffer() SEGAERR_OUT_OF_MEMORY");
 		return SEGAERR_OUT_OF_MEMORY;
 	}
 
-	// dbgPrint("SEGAAPI_CreateBuffer() allocated %i bytes",sizeof(segaapiContext_t));
+	// dbgPrint("SEGAAPI_CreateBuffer() allocated %i bytes",sizeof(SEGAContext));
 	context->playing = false;
 	context->callback = pCallback;
 	context->synthesizer = dwFlags & HABUF_SYNTH_BUFFER;
@@ -784,12 +808,14 @@ int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCa
 		free(context);
 		return SEGAERR_BAD_PARAM;
 	}
+
 	// indiate that caller allocate memory
 	if (dwFlags & HABUF_ALLOC_USER_MEM)
 	{
 		context->data = pConfig->mapData.hBufferHdr;
 		dbgPrint("SEGAAPI_CreateBuffer() user memory 0x%x", context->data);
 	}
+
 	// reuse memory
 	else if (dwFlags & HABUF_USE_MAPPED_MEM)
 	{
@@ -820,20 +846,6 @@ int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCa
 		dbgPrint("SEGAAPI_CreateBuffer() allocated %i data bytes", context->size);
 	}
 
-#ifdef DEBUG_SAMPLE
-	dbgPrint("SEGAAPI_CreateBuffer()  dwPriority = 0x%08X;         // The priority with which the voices should be allocated.  This is used when voices need to be ripped off.", pConfig->dwPriority);
-	dbgPrint("SEGAAPI_CreateBuffer()  dwSampleRate = %u;       // The sample rate the voice desires", pConfig->dwSampleRate);
-	dbgPrint("SEGAAPI_CreateBuffer()  dwSampleFormat = 0x%08X;     // The sample format the voice will use", pConfig->dwSampleFormat);
-	dbgPrint("SEGAAPI_CreateBuffer()  byNumChans = 0x%08X;         // The number of samples in the sample frame. (1 = mono, 2 = stereo).", pConfig->byNumChans);
-	dbgPrint("SEGAAPI_CreateBuffer()  dwReserved = 0x%08X;         // Reserved field", pConfig->dwReserved);
-	dbgPrint("SEGAAPI_CreateBuffer()  hUserData = 0x%08X;          // User data", (uintptr_t)pConfig->hUserData);
-	dbgPrint("SEGAAPI_CreateBuffer()  mapData {                   // The sample memory mapping for the buffer.");
-	dbgPrint("SEGAAPI_CreateBuffer()  dwSize = 0x%08X;       // Supply by caller. Size (in bytes) of the valid sample data", pConfig->mapData.dwSize);
-	dbgPrint("SEGAAPI_CreateBuffer()  dwOffset = 0x%08X;     // Return by driver. Offset of buffer where the the first valid sample should be written to", pConfig->mapData.dwOffset);
-	dbgPrint("SEGAAPI_CreateBuffer()  hBufferHdr = 0x%08X;   // Memory address that user-space application can access, or mapped memory handle.", (uintptr_t)pConfig->mapData.hBufferHdr);
-	dbgPrint("SEGAAPI_CreateBuffer()  }");
-#endif
-
 	pConfig->mapData.hBufferHdr = context->data;
 
 	alGenBuffers(1, &context->alBuffer);
@@ -862,7 +874,9 @@ int SEGAAPI_DestroyBuffer(void *hHandle)
 	dbgPrint("SEGAAPI_DestroyBuffer() 0x%x", hHandle);
 	if (hHandle == NULL)
 		return SEGAERR_BAD_PARAM;
+
 	free(hHandle);
+
 	return SEGA_SUCCESS;
 }
 
