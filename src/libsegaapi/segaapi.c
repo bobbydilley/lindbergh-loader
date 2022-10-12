@@ -305,10 +305,13 @@ int SEGAAPI_Pause(void *hHandle)
 int SEGAAPI_Stop(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Stop() 0x%x", hHandle);
+
 	SEGAContext *context = hHandle;
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
+
 	alSourceStop(context->alSource);
+
 	return SEGA_SUCCESS;
 }
 
@@ -598,10 +601,8 @@ int SEGAAPI_UpdateBuffer(void *hHandle, unsigned int dwStartOffset, unsigned int
 {
 	dbgPrint("SEGAAPI_UpdateBuffer() 0x%x 0x%x 0x%x", hHandle, dwStartOffset, dwLength);
 	if (hHandle == NULL)
-	{
-		dbgPrint("SEGAAPI_UpdateBuffer() SEGAERR_BAD_HANDLE");
 		return SEGAERR_BAD_HANDLE;
-	}
+
 	SEGAContext *context = hHandle;
 	updateBufferData(context, dwStartOffset, dwLength);
 	return SEGA_SUCCESS;
@@ -609,10 +610,6 @@ int SEGAAPI_UpdateBuffer(void *hHandle, unsigned int dwStartOffset, unsigned int
 
 int SEGAAPI_SetSynthParam(void *hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
 {
-	float volume;
-	float semiTones;
-	float freqRatio;
-
 	dbgPrint("SEGAAPI_SetSynthParam() 0x%x 0x%x 0x%x", hHandle, param, lPARWValue);
 
 	SEGAContext *context = hHandle;
@@ -620,125 +617,34 @@ int SEGAAPI_SetSynthParam(void *hHandle, HASYNTHPARAMSEXT param, int lPARWValue)
 	if (context == NULL)
 		return SEGAERR_BAD_PARAM;
 
-	enum
-	{
-		StartAddrsOffset,
-		EndAddrsOffset,
-		StartloopAddrsOffset,
-		EndloopAddrsOffset,
-		StartAddrsCoarseOffset,
-		ModLfoToPitch,
-		VibLfoToPitch,
-		ModEnvToPitch,
-		InitialFilterFc,
-		InitialFilterQ,
-		ModLfoToFilterFc,
-		ModEnvToFilterFc,
-		EndAddrsCoarseOffset,
-		ModLfoToVolume,
-		Unused1,
-		ChorusEffectsSend,
-		ReverbEffectsSend,
-		Pan,
-		Unused2,
-		Unused3,
-		Unused4,
-		DelayModLFO,
-		FreqModLFO,
-		DelayVibLFO,
-		FreqVibLFO,
-		DelayModEnv,
-		AttackModEnv,
-		HoldModEnv,
-		DecayModEnv,
-		SustainModEnv,
-		ReleaseModEnv,
-		KeynumToModEnvHold,
-		KeynumToModEnvDecay,
-		DelayVolEnv,
-		AttackVolEnv,
-		HoldVolEnv,
-		DecayVolEnv,
-		SustainVolEnv,
-		ReleaseVolEnv,
-		KeynumToVolEnvHold,
-		KeynumToVolEnvDecay,
-		Instrument,
-		Reserved1,
-		KeyRange,
-		VelRange,
-		StartloopAddrsCoarseOffset,
-		Keynum,
-		Velocity,
-		InitialAttenuation,
-		Reserved2,
-		EndloopAddrsCoarseOffset,
-		CoarseTune,
-		FineTune,
-		SampleID,
-		SampleModes,
-		Reserved3,
-		ScaleTuning,
-		ExclusiveClass,
-		OverridingRootKey,
-		Unused5,
-		EndOper
-	};
-
-	int mapping[26] = {
-		InitialAttenuation, ///< 0,         0x00,  initialAttenuation
-		FineTune,			///< 1,         0x01,  fineTune + coarseTune * 100
-		InitialFilterFc,	///< 2,         0x02,  initialFilterFc
-		InitialFilterQ,		///< 3,         0x03,  initialFilterQ
-		DelayVolEnv,		///< 4,         0x04,  delayVolEnv
-		AttackVolEnv,		///< 5,         0x05,  attackVolEnv
-		HoldVolEnv,			///< 6,         0x06,  holdVolEnv
-		DecayVolEnv,		///< 7,         0x07,  decayVolEnv
-		SustainVolEnv,		///< 8,         0x08,  sustainVolEnv
-		ReleaseVolEnv,		///< 9,         0x09,  releaseVolEnv
-		DelayModEnv,		///< 10,        0x0A,  delayModEnv
-		AttackModEnv,		///< 11,        0x0B,  attackModEnv
-		HoldModEnv,			///< 12,        0x0C,  holdModEnv
-		DecayModEnv,		///< 13,        0x0D,  decayModEnv
-		SustainModEnv,		///< 14,        0x0E,  sustainModEnv
-		ReleaseModEnv,		///< 15,        0x0F,  releaseModEnv
-		DelayModLFO,		///< 16,        0x10,  delayModLFO
-		FreqModLFO,			///< 17,        0x11,  freqModLFO
-		DelayVibLFO,		///< 18,        0x12,  delayVibLFO
-		FreqVibLFO,			///< 19,        0x13,  freqVibLFO
-		ModLfoToPitch,		///< 20,        0x14,  modLfoToPitch
-		VibLfoToPitch,		///< 21,        0x15,  vibLfoToPitch
-		ModLfoToFilterFc,	///< 22,        0x16,  modLfoToFilterFc
-		ModLfoToVolume,		///< 23,        0x17,  modLfoToVolume
-		ModEnvToPitch,		///< 24,        0x18,  modEnvToPitch
-		ModEnvToFilterFc	///< 25,        0x19,  modEnvToFilterFc
-	};
-
-	int realParam = mapping[param];
-
 	switch (param)
 	{
 	case HAVP_ATTENUATION:
-		volume = tsf_decibelsToGain(0.0f - lPARWValue / 10.0f);
+	{
+		float volume = tsf_decibelsToGain(0.0f - lPARWValue / 10.0f);
 		alListenerf(AL_GAIN, volume);
 		// buffer->xaVoice->SetVolume(volume);
 		dbgPrint("SEGAAPI_SetSynthParam() HAVP_ATTENUATION gain: %f dB: %d", volume, lPARWValue);
-		break;
+	}
+	break;
+
 	case HAVP_PITCH:
-		semiTones = lPARWValue / 100.0f;
+	{
+		float semiTones = lPARWValue / 100.0f;
 		// freqRatio = XAudio2SemitonesToFrequencyRatio(semiTones);
 		//  http://www-personal.umich.edu/~bazald/l/api/_x_audio2_8h_source.html
-		freqRatio = powf(2.0f, semiTones / 12.0f);
-
+		float freqRatio = powf(2.0f, semiTones / 12.0f);
 		// buffer->xaVoice->SetFrequencyRatio(freqRatio);
 		alSourcef(context->alSource, AL_PITCH, freqRatio);
 		dbgPrint("SEGAAPI_SetSynthParam() HAVP_PITCH hHandle: %08X semitones: %f freqRatio: %f", hHandle, semiTones, freqRatio);
-		break;
+	}
+	break;
+
 	default:
 		dbgPrint("SEGAAPI_SetSynthParam() unsupported param: 0x%x", param);
 	}
 
-	return SEGAERR_UNSUPPORTED;
+	return SEGA_SUCCESS;
 }
 
 int SEGAAPI_GetSynthParam(void *hHandle, HASYNTHPARAMSEXT param)
@@ -751,15 +657,16 @@ int SEGAAPI_SetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, Synth
 {
 	dbgPrint("SEGAAPI_SetSynthParamMultiple() 0x%x 0x%x 0x%x", hHandle, dwNumParams, pSynthParams);
 	SEGAContext *context = hHandle;
+
 	if (context == NULL)
-		return SEGAERR_BAD_PARAM;
+		return SEGAERR_BAD_HANDLE;
 
 	for (int i = 0; i < dwNumParams; i++)
 	{
 		SEGAAPI_SetSynthParam(hHandle, pSynthParams[i].param, pSynthParams[i].lPARWValue);
 	}
 
-	return SEGAERR_UNSUPPORTED;
+	return SEGA_SUCCESS;
 }
 
 int SEGAAPI_GetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, SynthParamSet *pSynthParams)
@@ -768,10 +675,21 @@ int SEGAAPI_GetSynthParamMultiple(void *hHandle, unsigned int dwNumParams, Synth
 	return SEGAERR_UNSUPPORTED;
 }
 
-int SEGAAPI_SetReleaseState(void *hHandle, int bSet)
+int SEGAAPI_SetReleaseState(void *hHandle, int enterReleasePhase)
 {
-	dbgPrint("SEGAAPI_SetReleaseState() 0x%x 0x%x", hHandle, bSet);
-	return SEGAERR_UNSUPPORTED;
+	dbgPrint("SEGAAPI_SetReleaseState() 0x%x 0x%x", hHandle, enterReleasePhase);
+	if (hHandle == NULL)
+		return SEGAERR_BAD_HANDLE;
+
+	SEGAContext *context = hHandle;
+
+	if (!enterReleasePhase)
+		return SEGA_SUCCESS;
+
+	context->playing = false;
+	alSourceStop(context->alSource);
+
+	return SEGA_SUCCESS;
 }
 
 int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCallback, unsigned int dwFlags, void **phHandle)
@@ -883,13 +801,13 @@ int SEGAAPI_DestroyBuffer(void *hHandle)
 int SEGAAPI_SetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize)
 {
 	dbgPrint("SEGAAPI_SetGlobalEAXProperty() 0x%x 0x%x 0x%x 0x%x", guid, ulProperty, pData, ulDataSize);
-	return 0;
+	return SEGA_SUCCESS;
 }
 
 int SEGAAPI_GetGlobalEAXProperty(GUID *guid, unsigned long ulProperty, void *pData, unsigned long ulDataSize)
 {
 	dbgPrint("SEGAAPI_GetGlobalEAXProperty() 0x%x 0x%x 0x%x 0x%x", guid, ulProperty, pData, ulDataSize);
-	return 0;
+	return SEGAERR_UNSUPPORTED;
 }
 
 int SEGAAPI_SetSPDIFOutChannelStatus(unsigned int dwChannelStatus, unsigned int dwExtChannelStatus)
@@ -980,8 +898,6 @@ int SEGAAPI_Init(void)
 		dbgPrint("SEGAAPI_Init() alutInit() failed!");
 		return SEGAERR_FAIL;
 	}
-
-	SEGAAPI_SetGlobalEAXProperty((GUID *)&EAXPROPERTYID_EAX40_FXSlot2, 0, (void *)&EAX_NULL_GUID, 16);
 
 	return SEGA_SUCCESS;
 }
