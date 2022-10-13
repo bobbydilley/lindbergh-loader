@@ -37,6 +37,8 @@ const GUID EAXPROPERTYID_EAX40_FXSlot1;
 const GUID EAXPROPERTYID_EAX40_FXSlot2;
 const GUID EAXPROPERTYID_EAX40_FXSlot3;
 
+#define BUFFER_SIZE 8
+
 typedef struct
 {
 	// SEGA API Parts
@@ -56,8 +58,9 @@ typedef struct
 	bool paused;
 
 	// OpenAL Parts
-	ALuint alBuffer;
 	ALuint alSource;
+	ALuint alBuffer[BUFFER_SIZE];
+	int buffersUsed;
 
 	// TinySoundFont Parts
 	tsf *synth;
@@ -143,23 +146,6 @@ static unsigned int bufferSampleSize(SEGAContext *context)
 	return context->channels * ((context->sampleFormat == HASF_SIGNED_16PCM) ? 2 : 1);
 }
 
-static void updateBufferLoop(SEGAContext *context)
-{
-	return;
-	if (context == NULL)
-		return;
-
-	unsigned int sampleSize = bufferSampleSize(context);
-	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-
-	/*
-	FIXME: Re-enable, only crashed before - so fix this too..
-	  ALint loopPoints[] = { buffer->startLoop / sampleSize, buffer->endLoop / sampleSize };
-	  alBufferiv(buffer->alBuffer,AL_LOOP_POINTS_SOFT,loopPoints);
-	  CHECK();
-	*/
-}
-
 static void updateBufferData(SEGAContext *context, unsigned int offset, size_t length)
 {
 
@@ -210,27 +196,33 @@ static void updateBufferData(SEGAContext *context, unsigned int offset, size_t l
 		abort();
 	}
 
-	if (offset != -1)
+	unsigned int sampleSize = bufferSampleSize(context);
+
+	ALuint buffer;
+
+	// Fill up all the buffers first
+	if (context->buffersUsed < BUFFER_SIZE)
 	{
+		buffer = context->alBuffer[context->buffersUsed++];
+	}
+	else
+	{
+		ALint processed;
+		alGetSourcei(context->alSource, AL_BUFFERS_PROCESSED, &processed);
 
-		unsigned int sampleSize = bufferSampleSize(context);
+		if (processed == 0)
+		{
+			printf("ERROR: BUUFFER UNDERRUN!\n");
+			abort();
+		}
 
-		ALint position;
-		alGetSourcei(context->alSource, AL_SAMPLE_OFFSET, &position);
-
-		alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-		// alBufferData(context->alBuffer, alFormat, context->data + (offset / sampleSize), FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
-		alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
-		alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
-		alSourcei(context->alSource, AL_SAMPLE_OFFSET, position);
-		return;
+		alSourceUnqueueBuffers(context->alSource, 1, &buffer);
 	}
 
-	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-	alBufferData(context->alBuffer, alFormat, context->data, FramesToBytes(context->size / bufferSampleSize(context), alChannels, alType), context->sampleRate);
-	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
 
-	// updateBufferLoop(context);
+	alBufferData(buffer, alFormat, context->data + (offset / sampleSize), FramesToBytes(length / bufferSampleSize(context), alChannels, alType), context->sampleRate);
+	alSourceQueueBuffers(context->alSource, 1, &buffer);
+
 }
 
 static void resetBuffer(SEGAContext *context)
@@ -271,6 +263,7 @@ static void resetBuffer(SEGAContext *context)
 	region->ampenv.sustain = 0;
 
 	context->region = region;
+	context->buffersUsed = 0;
 
 	// *   - Buffer is in the stop state.
 	// *   - Play position is set to 0.
@@ -287,7 +280,8 @@ int SEGAAPI_Play(void *hHandle)
 
 	// alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
 	alSourcei(context->alSource, AL_LOOPING, AL_FALSE);
-	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
+	alSourceRewind(context->alSource);
+	alSourcei(context->alSource, AL_BUFFER, 0);
 	alSourcePlay(context->alSource);
 	return SEGA_SUCCESS;
 }
@@ -318,13 +312,7 @@ int SEGAAPI_Stop(void *hHandle)
 int SEGAAPI_PlayWithSetup(void *hHandle)
 {
 	dbgPrint("SEGAAPI_PlayWithSetup() 0x%x", hHandle);
-	SEGAContext *context = hHandle;
-	if (context == NULL)
-		return SEGAERR_BAD_PARAM;
-	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
-	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
-	alSourcePlay(context->alSource);
-	return SEGAERR_UNSUPPORTED;
+	return SEGAAPI_Play(hHandle);
 }
 
 PlaybackStatus SEGAAPI_GetPlaybackStatus(void *hHandle)
@@ -511,7 +499,7 @@ int SEGAAPI_SetStartLoopOffset(void *hHandle, unsigned int dwOffset)
 	SEGAContext *context = hHandle;
 
 	context->startLoop = dwOffset;
-	updateBufferLoop(context);
+	// updateBufferLoop(context);
 
 	return SEGA_SUCCESS;
 }
@@ -535,7 +523,7 @@ int SEGAAPI_SetEndLoopOffset(void *hHandle, unsigned int dwOffset)
 
 	SEGAContext *context = hHandle;
 	context->endLoop = dwOffset;
-	updateBufferLoop(context);
+	// updateBufferLoop(context);
 
 	return SEGA_SUCCESS;
 }
@@ -766,8 +754,9 @@ int SEGAAPI_CreateBuffer(HAWOSEBUFFERCONFIG *pConfig, HAWOSEGABUFFERCALLBACK pCa
 
 	pConfig->mapData.hBufferHdr = context->data;
 
-	alGenBuffers(1, &context->alBuffer);
 	alGenSources(1, &context->alSource);
+	alGenBuffers(BUFFER_SIZE, context->alBuffer);
+	context->buffersUsed = 0;
 
 	/*
 	TODO:
