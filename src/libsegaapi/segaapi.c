@@ -12,8 +12,6 @@
 #include <unistd.h>
 
 #include "segaapi.h"
-#include "segadef.h"
-#include "segaeax.h"
 #include "tsf.h"
 
 //#define DEBUG_OUTPUT

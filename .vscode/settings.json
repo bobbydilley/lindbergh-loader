@@ -6,6 +6,7 @@
         "jvs.h": "c",
         "time.h": "c",
         "stdarg.h": "c",
-        "ioctl.h": "c"
+        "ioctl.h": "c",
+        "segaeax.h": "c"
     }
 }

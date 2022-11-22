@@ -1,8 +1,20 @@
 #ifndef __SEGAAPI_H
 #define __SEGAAPI_H
 
-// INCLUDES
-#include "segadef.h"
+#ifndef GUID_DEFINED
+#define GUID_DEFINED
+typedef struct _GUID
+{
+    unsigned long Data1;
+    unsigned short Data2;
+    unsigned short Data3;
+    unsigned char Data4[8];
+} GUID;
+#endif // GUID_DEFINED
+
+#ifndef DEFINE_GUID
+    #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) extern const GUID name
+#endif // DEFINE_GUID
 
 #define SEGARESULT_FAILURE(_x) ((1 << 31) | 0xA000 | (_x))
 #define SEGA_SUCCESS 0L
