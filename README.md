@@ -26,7 +26,7 @@ To build simply run the makefile, and then copy the contents of the build direct
 make
 cp build/* ~/the-house-of-the-dead-4/disk0/elf/.
 cd ~/the-house-of-the-dead-4/disk0/elf
-LD_PRELOAD=$(pwd)/lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
+LD_PRELOAD=lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
 ```
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder as the game is run from. If no config file is present a default setting will be used.
