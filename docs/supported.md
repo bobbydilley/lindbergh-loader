@@ -4,7 +4,7 @@
 
 These games have been loaded at some point using this software, but this doesn't mean they currently work or there are instructions on how to get them running.
 
-Working is defined by getting into attract mode and running the game, but not necciserily controlling it.
+Working is defined by getting into attract mode and running the game, but not necessarily controlling it.
 
 - The House Of The Dead 4
 - The House Of The Dead 4 Special
@@ -33,6 +33,6 @@ Working is defined by getting into attract mode and running the game, but not ne
 
 ### Let's Go Jungle
 
-Not this game will not start.
+No, this game will not start.
 
 ```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. LD_PRELOAD=lindbergh.so TEA_DIR=`pwd` ./lgj_final```
