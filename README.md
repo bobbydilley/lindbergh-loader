@@ -30,3 +30,7 @@ LD_PRELOAD=lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
 ```
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder as the game is run from. If no config file is present a default setting will be used.
+
+## Thanks
+
+This project has been built by referencing things made by Teknoparrot, Doozer and JayFoxRox so thanks to all of them!
