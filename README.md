@@ -4,6 +4,8 @@ This project aims to hook and emulate the various different parts of the SEGA Li
 
 You can view the supported titles [here.](docs/supported.md)
 
+You will need an nvidia graphics card and I have tested with the latest version of Ubuntu.
+
 ## Dependencies
 
 First make sure you have up to date nvidia drivers for your computer, and then install the following:
