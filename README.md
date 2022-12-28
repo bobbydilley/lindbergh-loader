@@ -36,6 +36,17 @@ It is likely that the games will require various other libraries from the Lindbe
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder as the game is run from. If no config file is present a default setting will be used.
 
+## Controls
+
+Currently the controls are setup for The House of the Dead 4.
+
+t           - Test
+s           - Service
+5           - Coin 1
+1           - Player 1 Start
+Right Click - Reload
+Left Click  - Shoot
+
 ## Thanks
 
 This project has been built by referencing things made by Teknoparrot, Doozer and JayFoxRox so thanks to all of them!
