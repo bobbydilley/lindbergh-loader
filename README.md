@@ -40,12 +40,12 @@ A default configuration file is provided in `docs/lindbergh.conf`. It should be 
 
 Currently the controls are setup for The House of the Dead 4.
 
-t           - Test
-s           - Service
-5           - Coin 1
-1           - Player 1 Start
-Right Click - Reload
-Left Click  - Shoot
+- t           - Test
+- s           - Service
+- 5           - Coin 1
+- 1           - Player 1 Start
+- Right Click - Reload
+- Left Click  - Shoot
 
 ## Thanks
 
