@@ -33,4 +33,6 @@ Working is defined by getting into attract mode and running the game, but not ne
 
 ### Let's Go Jungle
 
+Not this game will not start.
+
 ```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. LD_PRELOAD=lindbergh.so TEA_DIR=`pwd` ./lgj_final```
