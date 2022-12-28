@@ -12,12 +12,13 @@ First make sure you have up to date nvidia drivers for your computer, and then i
 
 ```
 sudo dpkg --add-architecture i386 
-sudo apt-get install gcc-multilib
-sudo apt-get install freeglut3:i386 freeglut3-dev:i386 libglew-dev
-sudo apt-get install xorg-dev
-sudo apt-get install libopenal1 libopenal-dev
-sudo apt-get install libxmu6:i386
-sudo apt-get install libstdc++5:i386
+sudo apt install gcc-multilib
+sudo apt install freeglut3:i386 freeglut3-dev:i386 libglew-dev
+sudo apt install xorg-dev
+sudo apt install libopenal1 libopenal-dev
+sudo apt install libalut-dev:i386
+sudo apt install libxmu6:i386
+sudo apt install libstdc++5:i386
 ```
 
 ## Building & Running
