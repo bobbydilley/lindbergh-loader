@@ -132,6 +132,14 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "JVS_PATH") == 0)
             strcpy(config->jvsPath, getNextToken(NULL, " ", &saveptr));
 
+        else if (strcmp(command, "LINDBERGH_COLOUR") == 0)
+        {
+            char colour[256];
+            strcpy(colour, getNextToken(NULL, " ", &saveptr));
+            if (strcmp(colour, "RED") == 0)
+                config->lindberghColour = RED;
+        }
+
         else
             printf("Error: Unknown settings command %s\n", command);
     }
@@ -146,6 +154,7 @@ int initConfig()
     config.emulateMotionboard = 0;
     config.emulateJVS = 1;
     config.fullscreen = 0;
+    config.lindberghColour = YELLOW;
     strcpy(config.eepromPath, "eeprom.bin");
     strcpy(config.sramPath, "sram.bin");
     strcpy(config.jvsPath, "none");

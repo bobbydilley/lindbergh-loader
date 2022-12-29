@@ -17,8 +17,8 @@ int gameModeHeight = -1;
 
 void *glutMainLoopThread()
 {
-     glutMainLoop();
-     return NULL;
+  glutMainLoop();
+  return NULL;
 }
 
 FGAPI int FGAPIENTRY glutEnterGameMode()
@@ -29,8 +29,11 @@ FGAPI int FGAPIENTRY glutEnterGameMode()
   glutCreateWindow(gameTitle);
 
   // Outrun doesn't run the glutMainLoop through, so we'll do that here
-  pthread_t glutMainLoopID;
-  pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);
+  if (getConfig()->game == OUTRUN)
+  {
+    pthread_t glutMainLoopID;
+    pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);
+  }
 
   return 1;
 }

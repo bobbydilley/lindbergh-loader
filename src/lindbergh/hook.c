@@ -152,7 +152,7 @@ int open(const char *pathname, int flags)
 {
     int (*_open)(const char *pathname, int flags) = dlsym(RTLD_NEXT, "open");
 
-    //printf("Open %s\n", pathname);
+    // printf("Open %s\n", pathname);
 
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
@@ -190,7 +190,7 @@ int open(const char *pathname, int flags)
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
 {
     FILE *(*_fopen)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen");
-    //printf("fopen %s\n", pathname);
+    // printf("fopen %s\n", pathname);
 
     if (strcmp(pathname, "/root/lindbergrc") == 0)
     {
@@ -210,7 +210,7 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
 FILE *fopen64(const char *pathname, const char *mode)
 {
     FILE *(*_fopen64)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen64");
-    //printf("fopen64 %s\n", pathname);
+    // printf("fopen64 %s\n", pathname);
 
     if (strcmp(pathname, "/proc/sys/kernel/osrelease") == 0)
     {
@@ -227,7 +227,7 @@ FILE *fopen64(const char *pathname, const char *mode)
 int openat(int dirfd, const char *pathname, int flags)
 {
     int (*_openat)(int dirfd, const char *pathname, int flags) = dlsym(RTLD_NEXT, "openat");
-    //printf("openat %s\n", pathname);
+    // printf("openat %s\n", pathname);
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/0") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
@@ -267,14 +267,21 @@ char *fgets(char *str, int n, FILE *stream)
     // This currently doesn't work
     if (stream == fileHooks[CPUINFO])
     {
-        char *contents = "model name\t: Intel(R) Celeron(R) CPU 3.00GHz\n";
-        strcpy(str, contents);
+        char contents[4][256];
 
-        if(!fileRead[CPUINFO])
-            return str;
+        strcpy(contents[0], "processor	: 0");
+        strcpy(contents[1], "vendor_id	: GenuineIntel");
+        strcpy(contents[2], "model		: 142");
+        strcpy(contents[3], "model name	: Intel(R) Pentium(R) CPU 3.00GHz");
 
-        fileRead[CPUINFO] = 1;
-        return NULL;
+        if (getConfig()->lindberghColour == RED)
+            strcpy(contents[3], "model name	: Intel(R) Celeron(R) CPU 3.00GHz");
+
+        if (fileRead[CPUINFO] == 4)
+            return NULL;
+
+        strcpy(str, contents[fileRead[CPUINFO]++]);
+        return str;
     }
 
     return _fgets(str, n, stream);
@@ -447,11 +454,10 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
     int (*_connect)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) = dlsym(RTLD_NEXT, "connect");
 
-
     struct sockaddr_in *in_pointer = (struct sockaddr_in *)addr;
 
     // Change the IP to connect to to 127.0.0.1
-    //in_pointer->sin_addr.s_addr = inet_addr("127.0.0.1");
+    // in_pointer->sin_addr.s_addr = inet_addr("127.0.0.1");
     char *some_addr = inet_ntoa(in_pointer->sin_addr);
     printf("Connecting to %s\n", some_addr);
 

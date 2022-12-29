@@ -2,7 +2,8 @@
 
 #define MAX_PATH_LENGTH 1024
 
-typedef enum {
+typedef enum
+{
   UNKNOWN,
   SEGABOOT,
   SEGABOOT_2_4,
@@ -11,6 +12,12 @@ typedef enum {
   OUTRUN,
   LETS_GO_JUNGLE
 } Game;
+
+typedef enum
+{
+  YELLOW,
+  RED
+} Colour;
 
 typedef struct
 {
@@ -28,11 +35,9 @@ typedef struct
   int width;
   int height;
   Game game;
+  Colour lindberghColour;
 } EmulatorConfig;
 
 int initConfig();
 EmulatorConfig *getConfig();
 char *getGameName();
-
-
-
