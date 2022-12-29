@@ -6,28 +6,28 @@ These games have been loaded at some point using this software, but this doesn't
 
 Working is defined by getting into attract mode and running the game, but not necciserily controlling it.
 
+- 2 Step 2 Spicy
+- Ghost Squad Evolution
+- Harley Davidson
+- Outrun 2 SP SDX
+- R-Tuned
+- Race TV
+- Rambo
 - The House Of The Dead 4
 - The House Of The Dead 4 Special
 - The House Of The Dead Ex
-- Harley Davidson
-- Rambo
-- 2 Step 2 Spicy
-- Ghost Squad Evolution
-- Outrun 2 SP SDX
-- Race TV
 
 ## Games that do not work or haven't been tested
 
-- Let's Go Jungle
-- Let's Go Jungle Special
 - After Burner Climax
-- Virtua Fighter
-- Virtua Tennis 3
-- Primevil
+- Hummer
 - Initial D 4
 - Initial D 5
-- Hummer
-- R-Tuned
+- Let's Go Jungle
+- Let's Go Jungle Special
+- Primevil
+- Virtua Fighter
+- Virtua Tennis 3
 
 ## How to run specific games
 
