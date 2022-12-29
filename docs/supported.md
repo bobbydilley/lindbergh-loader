@@ -12,7 +12,7 @@ Working is defined by getting into attract mode and running the game, but not ne
 - Harley Davidson
 - Rambo
 - 2 Step 2 Spicy
-- Ghost Squad
+- Ghost Squad Evolution
 - Outrun 2 SP SDX
 - Race TV
 
