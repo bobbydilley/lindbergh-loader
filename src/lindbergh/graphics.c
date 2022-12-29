@@ -154,10 +154,10 @@ int XNextEvent(Display *display, XEvent *event_return)
     switch (event_return->xkey.keycode)
     {
     case 28:
-      securityBoardSetSwitch(BUTTON_TEST, event_return->type == KeyPress);
+      setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
       break;
     case 39:
-      securityBoardSetSwitch(BUTTON_SERVICE, event_return->type == KeyPress);
+      setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);
       break;
     case 14:
       incrementCoin(PLAYER_1, event_return->type == KeyPress);
