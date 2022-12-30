@@ -152,29 +152,39 @@ int open(const char *pathname, int flags)
 {
     int (*_open)(const char *pathname, int flags) = dlsym(RTLD_NEXT, "open");
 
-    // printf("Open %s\n", pathname);
+     //printf("Open %s\n", pathname);
 
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
         hooks[BASEBOARD] = _open(HOOK_FILE_NAME, flags);
+        printf("Baseboard opened %d\n", hooks[BASEBOARD]);
         return hooks[BASEBOARD];
     }
 
     if (strcmp(pathname, "/dev/i2c/0") == 0)
     {
         hooks[EEPROM] = _open(HOOK_FILE_NAME, flags);
+        printf("EEPROM opened %d\n", hooks[EEPROM]);
         return hooks[EEPROM];
     }
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/tts/0") == 0)
     {
+        if(hooks[SERIAL0] != -1)
+            return -1;
+
         hooks[SERIAL0] = _open(HOOK_FILE_NAME, flags);
+        printf("SERIAL0 Opened %d\n", hooks[SERIAL0]);
         return hooks[SERIAL0];
     }
 
     if (strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
+        if(hooks[SERIAL1] != -1)
+            return -1;
+
         hooks[SERIAL1] = _open(HOOK_FILE_NAME, flags);
+        printf("SERIAL1 opened %d\n", hooks[SERIAL1]);
         return hooks[SERIAL1];
     }
 
@@ -304,6 +314,11 @@ ssize_t read(int fd, void *buf, size_t count)
     if (fd == hooks[SERIAL0] && getConfig()->emulateDriveboard)
     {
         return driveboardRead(fd, buf, count);
+    }
+
+    // If we don't hook the serial just reply with nothing
+    if(fd == hooks[SERIAL0] || fd == hooks[SERIAL1]) {
+        return -1;
     }
 
     return _read(fd, buf, count);
