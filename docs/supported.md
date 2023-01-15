@@ -6,6 +6,7 @@ These games have been loaded at some point using this software, but this doesn't
 
 Working is defined by getting into attract mode and running the game, but not necessarily controlling it.
 
+- After Burner Climax
 - 2 Step 2 Spicy
 - Ghost Squad Evolution
 - Harley Davidson
@@ -16,17 +17,16 @@ Working is defined by getting into attract mode and running the game, but not ne
 - The House Of The Dead 4
 - The House Of The Dead 4 Special
 - The House Of The Dead Ex
+- Let's Go Jungle Special (boots to ride error)
+- Virtua Fighter 5 (boots to dongle error)
 
 ## Games that do not work or haven't been tested
 
-- After Burner Climax
 - Hummer
 - Initial D 4
 - Initial D 5
 - Let's Go Jungle
-- Let's Go Jungle Special
 - Primevil
-- Virtua Fighter
 - Virtua Tennis 3
 
 ## How to run specific games
