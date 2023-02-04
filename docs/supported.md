@@ -16,10 +16,10 @@ Working is defined by getting into attract mode and running the game, but not ne
 - The House Of The Dead 4
 - The House Of The Dead 4 Special
 - The House Of The Dead Ex
+- After Burner Climax
 
 ## Games that do not work or haven't been tested
 
-- After Burner Climax
 - Hummer
 - Initial D 4
 - Initial D 5

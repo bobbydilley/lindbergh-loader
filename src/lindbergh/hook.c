@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/mman.h>
 
 #include "hook.h"
 
@@ -107,6 +108,24 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
 }
 
+void setVariable(uint32_t address, uint32_t value)
+{
+    int pagesize = sysconf(_SC_PAGE_SIZE);
+
+    uint32_t *variable = (uint32_t *)address;
+
+    void *toModify = (void *)(address - (address % pagesize));
+
+    int prot = mprotect(toModify, pagesize, PROT_WRITE);
+    if (prot != 0)
+    {
+        printf("Variable change error %d\n", prot);
+        abort();
+    }
+
+    *variable = value;
+}
+
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2022\nNot for public consumption\n\n");
@@ -146,13 +165,31 @@ void __attribute__((constructor)) hook_init()
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
     printf("Loader init success\n");
+
+    // The Hosue Of The Dead 4 C Set all Debug Variables;
+    /*
+    setVariable(0x0a737c60, 2); // amBackupDebugLevel
+    setVariable(0x0a737c64, 2); // amChunkDataDebugLevel
+    setVariable(0x0a737c80, 2); // amCreditDebugLevel
+    setVariable(0x0a737ed8, 2); // amDipswDebugLevel
+    setVariable(0x0a737edc, 2); // amDiskDebugLevel
+    setVariable(0x0a737ee0, 2); // amDongleDebugLevel
+    setVariable(0x0a737ee4, 2); // amEepromDebugLevel
+    setVariable(0x0a737ee8, 2); // amHmDebugLevel
+    setVariable(0x0a737ef0, 2); // amJvsDebugLevel
+    setVariable(0x0a737f14, 2); // amLibDebugLevel
+    setVariable(0x0a737f18, 2); // amMiscDebugLevel
+    setVariable(0x0a737f1c, 2); // amSysDataDebugLevel
+    setVariable(0x0a737f20, 2); // bcLibDebugLevel
+    setVariable(0x0a737f24, 0x0FFFFFFF); // s_logMask
+    */
 }
 
 int open(const char *pathname, int flags)
 {
     int (*_open)(const char *pathname, int flags) = dlsym(RTLD_NEXT, "open");
 
-     //printf("Open %s\n", pathname);
+    // printf("Open %s\n", pathname);
 
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
@@ -170,7 +207,7 @@ int open(const char *pathname, int flags)
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/tts/0") == 0)
     {
-        if(hooks[SERIAL0] != -1)
+        if (hooks[SERIAL0] != -1)
             return -1;
 
         hooks[SERIAL0] = _open(HOOK_FILE_NAME, flags);
@@ -180,7 +217,7 @@ int open(const char *pathname, int flags)
 
     if (strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
-        if(hooks[SERIAL1] != -1)
+        if (hooks[SERIAL1] != -1)
             return -1;
 
         hooks[SERIAL1] = _open(HOOK_FILE_NAME, flags);
@@ -195,6 +232,16 @@ int open(const char *pathname, int flags)
     }
 
     return _open(pathname, flags);
+}
+
+int open64(const char *pathname, int flags)
+{
+    return open(pathname, flags);
+}
+
+int sem_wait(sem_t *sem)
+{
+    return 0;
 }
 
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
@@ -317,7 +364,8 @@ ssize_t read(int fd, void *buf, size_t count)
     }
 
     // If we don't hook the serial just reply with nothing
-    if(fd == hooks[SERIAL0] || fd == hooks[SERIAL1]) {
+    if (fd == hooks[SERIAL0] || fd == hooks[SERIAL1])
+    {
         return -1;
     }
 

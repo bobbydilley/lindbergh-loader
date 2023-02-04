@@ -247,12 +247,14 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
     case BASEBOARD_GET_SERIAL:
     {
       memcpy(&sharedMemory[serialCommand.destAddress + 96], SERIAL_STRING, strlen(SERIAL_STRING));
+      _data[1] = 1; // Set the status to success
     }
     break;
 
     case BASEBOARD_GET_SENSE_LINE:
     {
       _data[2] = getSenseLine();
+      _data[1] = 1; // Set the status to success
     }
     break;
 
@@ -263,6 +265,7 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
         memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
         _data[2] = jvsCommand.destAddress;
         _data[3] = outputPacket.length + 3;
+        _data[1] = 1; // Set the status to success
       }
       else if (jvsFileDescriptor >= 0)
       {
@@ -273,6 +276,7 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
         _data[2] = jvsCommand.destAddress;
         _data[3] = count;
+        _data[1] = (count > 0); // Success if we receive any sort of data back
       }
     }
     break;
@@ -283,9 +287,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
     // Acknowledge the command
     _data[0] |= 0xF0000000;
-
-    // Set the status to success
-    _data[1] = 1;
 
     return 0;
   }
