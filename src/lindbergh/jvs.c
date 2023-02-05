@@ -636,6 +636,5 @@ int setAnalogue(JVSInput channel, int value)
 }
 
 void setSenseLine(int _senseLine) {
-    printf("sense line set to %d\n", _senseLine);
     senseLine = _senseLine;
 }
