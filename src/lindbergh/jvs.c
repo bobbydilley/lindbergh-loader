@@ -559,12 +559,6 @@ JVSStatus readPacket(JVSPacket *packet)
  */
 JVSStatus writePacket(JVSPacket *packet)
 {
-    printf("packet\n");
-    /* Don't return anything if there isn't anything to write! */
-   
-    printf("sent a packet\n");
-    
-
     /* Get pointer to raw data in packet */
     unsigned char *packetPointer = (unsigned char *)packet;
 

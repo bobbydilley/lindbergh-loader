@@ -109,7 +109,7 @@ ssize_t driveboardWrite(int fd, const void *buf, size_t count)
 
         if (wheelTest)
         {
-            printf("Increment wheel until 0.9 -> %d\n", (int)(steerValue * 255));
+            // printf("Increment wheel until 0.9 -> %d\n", (int)(steerValue * 255));
             steerValue += 0.09;
             setAnalogue(ANALOGUE_1, (int)(steerValue * 1024));
             response = DRIVEBOARD_BUSY;

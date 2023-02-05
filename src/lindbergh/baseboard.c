@@ -135,7 +135,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
   case BASEBOARD_INIT:
   {
-    printf("baseboard init\n");
     // selectReply = -1; Considering adding this in
     return 0;
   }
@@ -143,8 +142,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
   case BASEBOARD_READY: // Not sure this is what it should be called
   {
-    printf("baseboard read\n");
-
     selectReply = 0;
     return 0;
   }
@@ -184,7 +181,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
     case BASEBOARD_GET_SERIAL: // bcCmdSysInfoGetReq
     {
-      printf("game asked for serial\n");
       serialCommand.destAddress = _data[1];
       serialCommand.destSize = _data[2];
     }
@@ -203,12 +199,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       jvsCommand.destAddress = _data[3];
       jvsCommand.destSize = _data[4];
       memcpy(inputBuffer, &sharedMemory[jvsCommand.srcAddress], jvsCommand.srcSize);
-      printf("TO OPENJVS\n");
-      for (int i = 0; i < jvsCommand.srcSize; i++)
-      {
-        printf("%X ", sharedMemory[jvsCommand.srcAddress + i] & 0xFF);
-      }
-      printf("\n");
 
       if (getConfig()->emulateJVS)
       {
@@ -235,10 +225,7 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
     break;
 
     case BASEBOARD_GET_SENSE_LINE:
-    {
-      printf("REQUEST SENSE LINE\n");
-    }
-    break;
+      break;
 
     default:
       printf("Error: Unknown baseboard command %X\n", _data[0]);
@@ -260,7 +247,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
     case BASEBOARD_GET_SERIAL:
     {
-      printf("receive serial\n");
       memcpy(&sharedMemory[serialCommand.destAddress + 96], SERIAL_STRING, strlen(SERIAL_STRING));
       _data[1] = 1; // Set the status to success
     }
@@ -270,7 +256,6 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
     {
       _data[2] = getSenseLine();
       _data[1] = 1; // Set the status to success
-      printf("RECEIVE SENSE LINE\n");
     }
     break;
 
@@ -278,19 +263,10 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
     {
       if (getConfig()->emulateJVS)
       {
-        printf("FROM OPENJVS\n");
-
         memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
-        usleep(500);
         _data[2] = jvsCommand.destAddress;
         _data[3] = outputPacket.length + 3;
         _data[1] = 1; // Set the status to success
-
-        for (int i = 0; i < _data[3]; i++)
-        {
-          printf("%X ", sharedMemory[jvsCommand.destAddress + i] & 0xFF);
-        }
-        printf("\n");
       }
       else if (jvsFileDescriptor >= 0)
       {

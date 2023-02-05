@@ -13,7 +13,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/mman.h>
 
 #include "hook.h"
 
@@ -24,6 +23,7 @@
 #include "jvs.h"
 #include "rideboard.h"
 #include "securityboard.h"
+#include "patch.h"
 
 #define HOOK_FILE_NAME "/dev/zero"
 
@@ -108,84 +108,6 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
 }
 
-void setVariable(uint32_t address, uint32_t value)
-{
-    int pagesize = sysconf(_SC_PAGE_SIZE);
-
-    uint32_t *variable = (uint32_t *)address;
-
-    void *toModify = (void *)(address - (address % pagesize));
-
-    int prot = mprotect(toModify, pagesize, PROT_WRITE);
-    if (prot != 0)
-    {
-        printf("Variable change error %d\n", prot);
-        abort();
-    }
-
-    *variable = value;
-}
-
-/**
- bool Detour(byte_t* src, byte_t* dst, size_t size)
-{
-    if(size < HOOK_MIN_SIZE) return false;
-    //mprotect(src, size, PROT_EXEC | PROT_READ | PROT_WRITE);
-    int out = ProtectMemory((mem_t)src, size, PROT_EXEC | PROT_READ | PROT_WRITE);
-    //std::cout << out << std::endl;
-    mem_t jmpAddr = ((mem_t)dst - (mem_t)src) - HOOK_MIN_SIZE;
-    byte_t CodeCave[] = { JMP, 0x0, 0x0, 0x0, 0x0 };
-    *(mem_t*)((mem_t)CodeCave + sizeof(JMP)) = jmpAddr;
-    memcpy(src, CodeCave, sizeof(CodeCave));
-    return true;
-}
-*/
-
-void detourFunction(uint32_t address, void *function)
-{
-    int pagesize = sysconf(_SC_PAGE_SIZE);
-
-    void *toModify = (void *)(address - (address % pagesize));
-
-    int prot = mprotect(toModify, pagesize, PROT_EXEC | PROT_WRITE | PROT_READ);
-    if (prot != 0)
-    {
-        printf("unprotect error %d\n", prot);
-        abort();
-    }
-
-    uint32_t jumpAddress = ((uint32_t)function - address) - 5;
-
-    char cave[5] = {0xE9, 0x0, 0x00, 0x00, 0x00};
-    memcpy(cave + 1, (void *)jumpAddress, 4);
-    for (int i = 0; i < 5; i++)
-    {
-        printf("%X ", cave[i] & 0xFF);
-    }
-    printf("\n");
-
-    memcpy((void *)address, cave, 5);
-
-    return;
-}
-
-int amDongleInit()
-{
-    printf("amDongleInit calld\n");
-    return 0;
-}
-
-int amDongleIsAvailable()
-{
-    printf("amDongleIsAvailable calld\n");
-    return 1;
-}
-
-int amDongleUpdate()
-{
-    printf("amDongleUpdate calld\n");
-    return 0;
-}
 
 void __attribute__((constructor)) hook_init()
 {
@@ -198,6 +120,9 @@ void __attribute__((constructor)) hook_init()
     sigaction(SIGSEGV, &act, NULL);
 
     initConfig();
+
+    if(initPatch() != 0)
+        exit(1);
 
     if (initEeprom() != 0)
         exit(1);
@@ -226,45 +151,6 @@ void __attribute__((constructor)) hook_init()
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
     printf("Loader init success\n");
-
-    // The Hosue Of The Dead 4 C Set all Debug Variables;
-    /*
-    setVariable(0x0a737c60, 2); // amBackupDebugLevel
-    setVariable(0x0a737c64, 2); // amChunkDataDebugLevel
-    setVariable(0x0a737c80, 2); // amCreditDebugLevel
-    setVariable(0x0a737ed8, 2); // amDipswDebugLevel
-    setVariable(0x0a737edc, 2); // amDiskDebugLevel
-    setVariable(0x0a737ee0, 2); // amDongleDebugLevel
-    setVariable(0x0a737ee4, 2); // amEepromDebugLevel
-    setVariable(0x0a737ee8, 2); // amHmDebugLevel
-    setVariable(0x0a737ef0, 2); // amJvsDebugLevel
-    setVariable(0x0a737f14, 2); // amLibDebugLevel
-    setVariable(0x0a737f18, 2); // amMiscDebugLevel
-    setVariable(0x0a737f1c, 2); // amSysDataDebugLevel
-    setVariable(0x0a737f20, 2); // bcLibDebugLevel
-    setVariable(0x0a737f24, 0x0FFFFFFF); // s_logMask
-    */
-
-    if (getConfig()->game == OUTRUN)
-    {
-        printf("Enabling game debug features for outrun\n");
-        setVariable(0x0893a24c, 2); // amBackupDebugLevel
-        setVariable(0x0893a260, 2); // amCreditDebugLevel
-        setVariable(0x0893a4b8, 2); // amDipswDebugLevel
-        setVariable(0x0893a4bc, 2); // amDongleDebugLevel
-        setVariable(0x0893a4c0, 2); // amEepromDebugLevel
-        setVariable(0x0893a4c4, 2); // amHwmonitorDebugLevel
-        setVariable(0x0893a4c8, 2); // amJvsDebugLevel
-        setVariable(0x0893a4cc, 2); // amLibDebugLevel
-        setVariable(0x0893a4d0, 2); // amMiscDebugLevel
-        setVariable(0x0893a4d4, 2); // amOsinfoDebugLevel
-        setVariable(0x0893a4d8, 2); // amSysDataDebugLevel
-        setVariable(0x0893a4e0, 2); // bcLibDebugLevel
-
-        detourFunction(0x08190e80, amDongleInit); // amInit 08190e80
-        detourFunction(0x08191201, amDongleIsAvailable);
-        detourFunction(0x08191125, amDongleUpdate);
-    }
 }
 
 int open(const char *pathname, int flags)
