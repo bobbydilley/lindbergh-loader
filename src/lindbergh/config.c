@@ -48,9 +48,17 @@ static int detectGame()
         return 0;
     }
 
-    if (strstr(program_invocation_name, "Jennifer") || strstr(program_invocation_name, "JenTest"))
+    if (strstr(program_invocation_name, "Jennifer"))
     {
         config.game = OUTRUN;
+        config.emulateDriveboard = 1;
+        config.emulateMotionboard = 1;
+        return 0;
+    }
+
+    if (strstr(program_invocation_name, "JenTest"))
+    {
+        config.game = OUTRUN_TEST;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
         return 0;

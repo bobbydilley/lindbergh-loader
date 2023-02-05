@@ -29,7 +29,7 @@ FGAPI int FGAPIENTRY glutEnterGameMode()
   glutCreateWindow(gameTitle);
 
   // Outrun doesn't run the glutMainLoop through, so we'll do that here
-  if (getConfig()->game == OUTRUN)
+  if (getConfig()->game == OUTRUN || getConfig()->game == OUTRUN_TEST)
   {
     pthread_t glutMainLoopID;
     pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);

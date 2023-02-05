@@ -10,6 +10,7 @@ typedef enum
   SEGABOOT_2_6,
   THE_HOUSE_OF_THE_DEAD_4,
   OUTRUN,
+  OUTRUN_TEST,
   LETS_GO_JUNGLE
 } Game;
 

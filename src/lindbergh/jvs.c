@@ -189,7 +189,7 @@ JVSStatus processPacket()
             size = 2;
             io.deviceID = -1;
             senseLine = 3;
-            // printf("CMD_RESET %d\n", senseLine);
+            printf("CMD_RESET %d\n", senseLine);
         }
         break;
 
@@ -559,9 +559,11 @@ JVSStatus readPacket(JVSPacket *packet)
  */
 JVSStatus writePacket(JVSPacket *packet)
 {
+    printf("packet\n");
     /* Don't return anything if there isn't anything to write! */
-    if (packet->length < 2)
-        return JVS_STATUS_SUCCESS;
+   
+    printf("sent a packet\n");
+    
 
     /* Get pointer to raw data in packet */
     unsigned char *packetPointer = (unsigned char *)packet;
@@ -640,5 +642,6 @@ int setAnalogue(JVSInput channel, int value)
 }
 
 void setSenseLine(int _senseLine) {
+    printf("sense line set to %d\n", _senseLine);
     senseLine = _senseLine;
 }

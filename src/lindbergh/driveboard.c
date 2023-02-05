@@ -34,7 +34,7 @@ ssize_t driveboardWrite(int fd, const void *buf, size_t count)
 
     if (count != 4)
     {
-        printf("Error: Drive board count not what expected\n");
+        //printf("Error: Drive board count not what expected\n");
         return 1;
     }
 
@@ -44,21 +44,21 @@ ssize_t driveboardWrite(int fd, const void *buf, size_t count)
     {
     case 0xFF:
     {
-        printf("Driveboard: Drive board reset\n");
+        //printf("Driveboard: Drive board reset\n");
         response = DRIVEBOARD_READY;
     }
     break;
 
     case 0x81:
     {
-        printf("Driveboard: Drive board reset 2\n");
+        //printf("Driveboard: Drive board reset 2\n");
         response = DRIVEBOARD_NOT_INIT;
     }
     break;
 
     case 0xFC:
     {
-        printf("Driveboard: Start wheel bounds testing\n");
+        //printf("Driveboard: Start wheel bounds testing\n");
         wheelTest = 1;
     }
     break;
@@ -83,7 +83,7 @@ ssize_t driveboardWrite(int fd, const void *buf, size_t count)
             setAnalogue(ANALOGUE_1, (int)(steerValue * 1024));
         }
 
-        printf("Driveboard move %f %f\n", steerValue, force);
+        //printf("Driveboard move %f %f\n", steerValue, force);
     }
     break;
 
@@ -98,14 +98,14 @@ ssize_t driveboardWrite(int fd, const void *buf, size_t count)
         if (buffer[1] == 0)
             force = ((1 - ((double)buffer[2] / 128.0)) * 2) / 100;
 
-        printf("Driveboard set force%f %f\n", steerValue, force);
+        //printf("Driveboard set force%f %f\n", steerValue, force);
     }
     break;
 
     case 0xFA:
     case 0xFD:
     {
-        printf("Driveboard: auto turn wheel mode\n");
+        //printf("Driveboard: auto turn wheel mode\n");
 
         if (wheelTest)
         {
@@ -123,7 +123,7 @@ ssize_t driveboardWrite(int fd, const void *buf, size_t count)
     break;
 
     default:
-        printf("Driveboard: Unknown command received %X\n", buffer[0]);
+        //printf("Driveboard: Unknown command received %X\n", buffer[0]);
         break;
     }
 
