@@ -189,7 +189,7 @@ JVSStatus processPacket()
             size = 2;
             io.deviceID = -1;
             senseLine = 3;
-            printf("CMD_RESET %d\n", senseLine);
+            // printf("CMD_RESET %d\n", senseLine);
         }
         break;
 
