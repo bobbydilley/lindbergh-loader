@@ -95,6 +95,7 @@ int securityBoardSetSwitch(JVSInput switchNumber, int value)
 
 int securityBoardOut(uint16_t port, uint32_t *data)
 {
+    printf("OUT(%X, %X%X)\n", port, *data >> 8 & 0XFF, *data & 0XFF);
     return 0;
 }
 
@@ -102,6 +103,31 @@ int securityBoardIn(uint16_t port, uint32_t *data)
 {
     switch (port)
     {
+    case 0x28:
+    {
+        static int meme = 0;
+            static int n = 0;
+
+
+        if(meme == 0) {
+            meme++;
+            uint32_t result = 0xFFFFFFFF;
+        printf("flip\n");
+
+        *data = result;
+        } else {
+            meme = 0;
+            uint32_t result = 0x00000001 << n;
+            n++;
+            *data = result;
+        printf("flop return %d\n", result);
+
+        }
+
+        
+
+
+    }
     case SECURITY_BOARD_FRONT_PANEL_NON_ROOT:
     case SECURITY_BOARD_FRONT_PANEL:
     {

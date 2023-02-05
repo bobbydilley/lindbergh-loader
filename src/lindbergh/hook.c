@@ -48,9 +48,20 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 
     switch (*code)
     {
+
+    case 0xE4:
+    case 0xE5:
+    case 0xEC:
+    {
+        printf("UN IMPLELMENTED ASM IN CALL\n");
+        abort();
+    }
+
     case 0xED:
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+
+        printf("ED IN %X\n", port);
 
         // The first port called is usually random, but everything after that
         // is a constant offset, so this is a hack to fix that.
@@ -69,25 +80,50 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
     break;
 
-    case 0xE7: // OUT IMMIDIATE
+    case 0xE6: // OUT IMMIDIATE
     {
+        uint8_t port = *((uint8_t *)ctx->uc_mcontext.gregs[REG_EIP] + 1);
+        uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
+
+        if(port != 0x80) {
+        printf("E6 OUT %X, %X\n", port, data);
+
+        }
+
+        
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
+
         return;
     }
     break;
 
-    case 0xE6: // OUT IMMIDIATE
+    case 0xE7: // OUT IMMIDIATE
     {
+        uint8_t port = *((uint8_t *)ctx->uc_mcontext.gregs[REG_EIP] + 1);
+        uint32_t data = ctx->uc_mcontext.gregs[REG_EAX];
+
+        printf("E7 OUT %X, %X\n", port, data);
+
+        
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
+    abort();
+
         return;
     }
     break;
 
     case 0xEE: // OUT
     {
+       
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
         uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFF;
+
+        
+        printf("EE OUT %X, %X\n", port, data);
+
         ctx->uc_mcontext.gregs[REG_EIP]++;
+    abort();
+
         return;
     }
     break;
@@ -95,7 +131,11 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     case 0xEF: // OUT
     {
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
+        uint8_t data = ctx->uc_mcontext.gregs[REG_EAX] & 0xFFFF;
+
+        printf("EF OUT %X, %X\n", port, data);
         ctx->uc_mcontext.gregs[REG_EIP]++;
+  
         return;
     }
     break;
@@ -103,8 +143,9 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     default:
         printf("Warning: Skipping SEGFAULT %X\n", *code);
         ctx->uc_mcontext.gregs[REG_EIP]++;
-        // abort();
+        return;
     }
+
 }
 
 void __attribute__((constructor)) hook_init()
