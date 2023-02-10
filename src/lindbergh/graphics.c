@@ -200,8 +200,8 @@ int XNextEvent(Display *display, XEvent *event_return)
 
   case MotionNotify:
   {
-    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 1024.0);
-    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 1024.0);
+    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 255);
+    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 255);
   }
   break;
 
