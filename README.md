@@ -39,7 +39,7 @@ cd ~/the-house-of-the-dead-4/disk0/elf
 LD_PRELOAD=lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
 ```
 
-It is likely that the games will require various other libraries from the Lindbergh system such as `libkswapapi.so` and `libposixtime.so`. These can be found in any dumps of the Lindbergh CF image.
+Some games will require extra libraries like `libposixtime.so`. These can be found in any dumps of the Lindbergh CF image.
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder as the game is run from. If no config file is present a default setting will be used.
 
