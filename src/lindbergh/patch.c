@@ -107,6 +107,9 @@ int initPatch()
         setVariable(0x0a737f1c, 2);          // amSysDataDebugLevel
         setVariable(0x0a737f20, 2);          // bcLibDebugLevel
         setVariable(0x0a737f24, 0x0FFFFFFF); // s_logMask
+        detourFunction(0x08320178, amDongleInit);
+        detourFunction(0x08320459, amDongleIsAvailable);
+        detourFunction(0x083203c0, amDongleUpdate);
     }
     break;
 
