@@ -23,13 +23,6 @@ sudo apt install libstdc++5:i386
 
 ## Building & Running
 
-This emulator will need access to the input devices and serial devices on Linux. Before running this emulator you should add your user account to the following groups and then _restart your computer_.
-
-```
-sudo addgroup $USER dialout
-sudo addgroup $USER input
-```
-
 To build, run the makefile, and then copy the contents of the build directory into your game directory and run.
 
 ```
@@ -39,11 +32,9 @@ cd ~/the-house-of-the-dead-4/disk0/elf
 LD_PRELOAD=lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
 ```
 
-Some games will require extra libraries like `libposixtime.so`. These can be found in any dumps of the Lindbergh CF image.
+It is likely that the games will require various other libraries from the Lindbergh system such as `libkswapapi.so` and `libposixtime.so`. These can be found in any dumps of the Lindbergh CF image.
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder as the game is run from. If no config file is present a default setting will be used.
-
-I recomend that you do not run this as root, and instead use the usergroups for input/dialout to give the emulator access to what it needs. The Lindbergh games expect full control of the Linux OS and with root privilages it is possible that they could cause damage to your computer.
 
 ## Controls
 

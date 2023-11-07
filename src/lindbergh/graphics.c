@@ -11,6 +11,7 @@
 #include "config.h"
 #include "jvs.h"
 #include "securityboard.h"
+#include "log.h"
 
 int gameModeWidth = -1;
 int gameModeHeight = -1;
@@ -51,7 +52,7 @@ FGAPI void FGAPIENTRY glutSetCursor(int cursor)
 
 FGAPI void FGAPIENTRY glutGameModeString(const char *string)
 {
-  printf("glutGameModeString: %s\n", string);
+  log_info("glutGameModeString: %s", string);
 
   char gameModeString[1024];
   strcpy(gameModeString, string);
@@ -79,7 +80,7 @@ FGAPI void FGAPIENTRY glutGameModeString(const char *string)
 
   if (getConfig()->width != width || getConfig()->height != height)
   {
-    printf("Warning: Game is overriding resolution settings to %dX%d\n", width, height);
+    log_warn("Game is overriding resolution settings to %dX%d", width, height);
     getConfig()->width = width;
     getConfig()->height = height;
   }
@@ -98,7 +99,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   // attributes->override_redirect = False;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
-  printf("XCreateWindow Resolution %d %d %d %d\n", x, y, width, height);
+  log_info("XCreateWindow Resolution %d %d %d %d", x, y, width, height);
 
   if (getConfig()->fullscreen)
   {
@@ -200,8 +201,8 @@ int XNextEvent(Display *display, XEvent *event_return)
 
   case MotionNotify:
   {
-    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 255);
-    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 255);
+    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 1024.0);
+    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 1024.0);
   }
   break;
 

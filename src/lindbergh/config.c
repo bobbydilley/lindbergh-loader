@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "config.h"
+#include "log.h"
 
 EmulatorConfig config = {0};
 
@@ -149,7 +150,7 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         }
 
         else
-            printf("Error: Unknown settings command %s\n", command);
+            log_error("Unknown settings command %s", command);
     }
 
     return 0;
@@ -173,14 +174,14 @@ int initConfig()
     config.height = 768;
     if (detectGame() != 0)
     {
-        printf("Warning: Unsure what game this is, using default configuration values");
+        log_warn("Unsure what game this is, using default configuration values");
     }
 
     configFile = fopen(CONFIG_PATH, "r");
 
     if (configFile == NULL)
     {
-        printf("Warning: Cannot open %s, using default values\n", CONFIG_PATH);
+        log_warn("Cannot open %s, using default values", CONFIG_PATH);
         return 1;
     }
 

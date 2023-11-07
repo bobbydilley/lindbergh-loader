@@ -5,6 +5,7 @@
 
 #include "patch.h"
 #include "config.h"
+#include "log.h"
 
 static void setVariable(uint32_t address, uint32_t value)
 {
@@ -17,7 +18,7 @@ static void setVariable(uint32_t address, uint32_t value)
     int prot = mprotect(toModify, pagesize, PROT_WRITE);
     if (prot != 0)
     {
-        printf("Error: Cannot unprotect memory region to change variable (%d)\n", prot);
+        log_error("Cannot unprotect memory region to change variable (%d)", prot);
         return;
     }
 
@@ -33,7 +34,7 @@ static void detourFunction(uint32_t address, void *function)
     int prot = mprotect(toModify, pagesize, PROT_EXEC | PROT_WRITE);
     if (prot != 0)
     {
-        printf("Error: Cannot detour memory region to change variable (%d)\n", prot);
+        log_error("Cannot detour memory region to change variable (%d)", prot);
         return;
     }
 
@@ -107,9 +108,6 @@ int initPatch()
         setVariable(0x0a737f1c, 2);          // amSysDataDebugLevel
         setVariable(0x0a737f20, 2);          // bcLibDebugLevel
         setVariable(0x0a737f24, 0x0FFFFFFF); // s_logMask
-        detourFunction(0x08320178, amDongleInit);
-        detourFunction(0x08320459, amDongleIsAvailable);
-        detourFunction(0x083203c0, amDongleUpdate);
     }
     break;
 

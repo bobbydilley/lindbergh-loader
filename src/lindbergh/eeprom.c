@@ -4,6 +4,7 @@
 
 #include "eeprom.h"
 #include "config.h"
+#include "log.h"
 
 #define I2C_SMBUS_BLOCK_MAX	32
 #define I2C_GET_FUNCTIONS 0x705
@@ -38,7 +39,7 @@ int initEeprom()
     // Create file if it doesn't exist
     if (eeprom == NULL)
     {
-        printf("Error: Cannot open %s\n", eepromPath);
+        log_error("Cannot open %s", eepromPath);
         return 1;
     }
 
@@ -97,7 +98,7 @@ int eepromIoctl(int fd, unsigned int request, void *data)
         break;
 
         default:
-            printf("Error: Incorrect I2C transfer size\n");
+            log_error("Incorrect I2C transfer size");
         }
     }
     break;
@@ -107,7 +108,7 @@ int eepromIoctl(int fd, unsigned int request, void *data)
         break;
 
     default:
-        printf("Error: Unkown I2C ioctl %X\n", request);
+        log_error("Unkown I2C ioctl %X", request);
     }
 
     return 0;

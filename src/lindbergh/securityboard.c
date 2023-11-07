@@ -3,6 +3,7 @@
 
 #include "securityboard.h"
 #include "config.h"
+#include "log.h"
 
 #define SECURITY_BOARD_FRONT_PANEL 0x38
 #define SECURITY_BOARD_FRONT_PANEL_NON_ROOT 0x1038
@@ -53,7 +54,7 @@ int securityBoardSetDipResolution(int width, int height)
     else if (width == 1360 && height == 768)
         setResolutionDips(1, 1, 1);
     else
-        printf("Warning: Resolution not compatible, using 640 x 480\n");
+        log_warn("Warning: Resolution not compatible, using 640 x 480");
 
     return 0;
 }
@@ -68,7 +69,7 @@ int securityBoardSetDipSwitch(int switchNumber, int value)
 {
     if (switchNumber == 0)
     {
-        printf("Error: Dip Switch index starts at 1\n");
+        log_error("Dip Switch index starts at 1");
         return 1;
     }
     securityBoard.dipSwitch[switchNumber] = value;
@@ -86,7 +87,7 @@ int securityBoardSetSwitch(JVSInput switchNumber, int value)
         securityBoard.serviceSwitch = value;
         break;
     default:
-        printf("Error: Attempted to set a security board switch incorrectly");
+        log_error("Attempted to set a security board switch incorrectly");
         return -1;
     }
 
