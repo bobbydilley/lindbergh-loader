@@ -108,6 +108,12 @@ char *getGameName()
         return "The House of the Dead 4";
     case LETS_GO_JUNGLE:
         return "Let's Go Jungle! Lost on the Island of Spice";
+    case ABC:
+        return "After Burner Climax";
+    case SRTV:
+        return "SEGA Race TV";
+    case RTUNED:
+        return "R-Tuned Ultimate Street Racing";
     default:
         return "Unknown Game";
     }
