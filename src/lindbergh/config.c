@@ -70,6 +70,24 @@ static int detectGame()
         return 0;
     }
 
+    if (strstr(program_invocation_name, "abc1080"))
+    {
+        config.game = ABC;
+        return 0;
+    }
+
+    if (strstr(program_invocation_name, "drive"))
+    {
+        config.game = SRTV;
+        return 0;
+    }
+    
+        if (strstr(program_invocation_name, "dsr"))
+    {
+        config.game = RTUNED;
+        return 0;
+    }
+    
     config.game = UNKNOWN;
     return 1;
 }
