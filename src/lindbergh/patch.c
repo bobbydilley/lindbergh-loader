@@ -70,7 +70,29 @@ int initPatch()
 
     switch (game)
     {
-        
+    case RTUNED:
+    {
+        detourFunction(0x08366846, amDongleInit);
+        detourFunction(0x08365301, amDongleIsAvailable);
+        detourFunction(0x08365cf7, amDongleUpdate);
+    }
+    break;
+    
+    case SRTV:
+    {
+        detourFunction(0x084d5b40, amDongleInit);
+        detourFunction(0x084d45f9, amDongleIsAvailable);
+        detourFunction(0x084d4fef, amDongleUpdate);
+    }
+    break;
+       
+    case ABC:
+    {
+        detourFunction(0x081e3424, amDongleInit);
+        detourFunction(0x081e3772, amDongleIsAvailable);
+        detourFunction(0x081e369e, amDongleUpdate);
+    }
+    break;
     case OUTRUN:
     {
         setVariable(0x0893a24c, 2); // amBackupDebugLevel
