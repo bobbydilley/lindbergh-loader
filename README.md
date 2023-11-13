@@ -60,4 +60,5 @@ Currently the controls are set up for The House of the Dead 4.
 
 ## Thanks
 
-This project has been built by referencing things made by Teknoparrot, Doozer and JayFoxRox so thanks to all of them!
+This project has been built by referencing things made by Teknoparrot, Doozer and JayFoxRox and from contributions by Rolel and 
+dkeruza-neo and extensive testing by Francesco so thanks to all of them!
