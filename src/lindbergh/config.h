@@ -11,7 +11,10 @@ typedef enum
   THE_HOUSE_OF_THE_DEAD_4,
   OUTRUN,
   OUTRUN_TEST,
-  LETS_GO_JUNGLE
+  LETS_GO_JUNGLE,
+  ABC,
+  SRTV,
+  RTUNED
 } Game;
 
 typedef enum

@@ -70,6 +70,24 @@ static int detectGame()
         return 0;
     }
 
+    if (strstr(program_invocation_name, "abc1080"))
+    {
+        config.game = ABC;
+        return 0;
+    }
+
+    if (strstr(program_invocation_name, "drive"))
+    {
+        config.game = SRTV;
+        return 0;
+    }
+    
+        if (strstr(program_invocation_name, "dsr"))
+    {
+        config.game = RTUNED;
+        return 0;
+    }
+    
     config.game = UNKNOWN;
     return 1;
 }
@@ -90,6 +108,12 @@ char *getGameName()
         return "The House of the Dead 4";
     case LETS_GO_JUNGLE:
         return "Let's Go Jungle! Lost on the Island of Spice";
+    case ABC:
+        return "After Burner Climax";
+    case SRTV:
+        return "SEGA Race TV";
+    case RTUNED:
+        return "R-Tuned Ultimate Street Racing";
     default:
         return "Unknown Game";
     }
