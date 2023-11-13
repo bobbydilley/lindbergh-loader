@@ -1,27 +1,16 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <linux/serial.h>
-#include <termios.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
-#include <time.h>
-#include <stdarg.h>
-#include <sys/ioctl.h>
-#include <linux/serial.h>
+#include <stdio.h>  /* Standard input/output definitions */
+#include <string.h> /* String function definitions */
+#include <unistd.h> /* UNIX standard function definitions */
+#include <fcntl.h>  /* File control definitions */
+#include <errno.h>  /* Error number definitions */
+#include <stdlib.h> /* Standard library functions like malloc, free, exit, and atoi */
 
 #include "baseboard.h"
 
 #include "config.h"
 #include "jvs.h"
 #include "serial.h"
+#include "passthrough.h"
 
 #define SERIAL_STRING "FE11-X018012022X"
 
@@ -83,21 +72,21 @@ int initBaseboard()
     printf("Error: Cannot open %s\n", sramPath);
     return 1;
   }
-
   fclose(sram);
-
   sram = fopen(sramPath, "rb+");
-
   fseek(sram, 0, SEEK_SET);
 
   if (getConfig()->emulateJVS == 0 && strcmp(getConfig()->jvsPath, "none") != 0)
   {
-    jvsFileDescriptor = open(getConfig()->jvsPath, O_RDWR | O_NOCTTY | O_SYNC | O_NDELAY);
+    jvsFileDescriptor = openJVSSerial(getConfig()->jvsPath);
     if (jvsFileDescriptor < 0)
     {
       printf("Error: Failed to open %s for JVS\n", getConfig()->jvsPath);
+      return -1;
     }
-    setSerialAttributes(jvsFileDescriptor, B115200);
+
+    initJVSSerial(jvsFileDescriptor);
+    startJVSFrameThread(&jvsFileDescriptor);
   }
 
   return 0;
@@ -206,11 +195,9 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       }
       else if (jvsFileDescriptor >= 0)
       {
-
-        write(jvsFileDescriptor, inputBuffer, jvsCommand.srcSize);
-
         for (int i = 0; i < jvsCommand.srcSize; i++)
         {
+          write(jvsFileDescriptor, &inputBuffer[i], 1);
           if (inputBuffer[i] == 0xF0)
           {
             setSenseLine(3);
@@ -270,14 +257,11 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
       }
       else if (jvsFileDescriptor >= 0)
       {
-        int count = readBytes(jvsFileDescriptor, &sharedMemory[jvsCommand.destAddress], 255);
-
-        if (count == -1)
-          count = 0;
-
+        JVSFrame frame = readJVSFrameFromThread();
+        memcpy(&sharedMemory[jvsCommand.destAddress], frame.buffer, frame.size);
         _data[2] = jvsCommand.destAddress;
-        _data[3] = count;
-        _data[1] = (count > 0); // Success if we receive any sort of data back
+        _data[3] = frame.size;
+        _data[1] = frame.ready;
       }
     }
     break;

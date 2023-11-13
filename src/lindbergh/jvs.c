@@ -598,6 +598,13 @@ JVSStatus writePacket(JVSPacket *packet)
     return JVS_STATUS_SUCCESS;
 }
 
+/**
+ * Gets the sense line value
+ * 
+ * Values are:
+ *  3 = no device, after a RESET
+ *  1 = address assigned
+ */
 int getSenseLine()
 {
     return senseLine;
@@ -635,6 +642,7 @@ int setAnalogue(JVSInput channel, int value)
     return 1;
 }
 
-void setSenseLine(int _senseLine) {
+void setSenseLine(int _senseLine)
+{
     senseLine = _senseLine;
 }

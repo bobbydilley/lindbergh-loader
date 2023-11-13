@@ -88,7 +88,7 @@ FGAPI void FGAPIENTRY glutGameModeString(const char *string)
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int class, Visual *visual, unsigned long valueMask, XSetWindowAttributes *attributes)
 {
 
-  Window (*_XCreateWindow)(Display * display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int class, Visual *visual, unsigned long valueMask, XSetWindowAttributes *attributes) = dlsym(RTLD_NEXT, "XCreateWindow");
+  Window (*_XCreateWindow)(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int class, Visual *visual, unsigned long valueMask, XSetWindowAttributes *attributes) = dlsym(RTLD_NEXT, "XCreateWindow");
 
   width = getConfig()->width;
   height = getConfig()->height;
@@ -112,7 +112,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
 
 int XGrabPointer(Display *display, Window grab_window, Bool owner_events, unsigned int event_mask, int pointer_mode, int keyboard_mode, Window confine_to, Cursor cursor, Time time)
 {
-  int (*_XGrabPointer)(Display * display, Window grab_window, Bool owner_events, unsigned int event_mask, int pointer_mode, int keyboard_mode, Window confine_to, Cursor cursor, Time time) = dlsym(RTLD_NEXT, "XGrabPointer");
+  int (*_XGrabPointer)(Display *display, Window grab_window, Bool owner_events, unsigned int event_mask, int pointer_mode, int keyboard_mode, Window confine_to, Cursor cursor, Time time) = dlsym(RTLD_NEXT, "XGrabPointer");
   int returnValue = _XGrabPointer(display, grab_window, owner_events, event_mask, pointer_mode, keyboard_mode, confine_to, cursor, time);
   XUngrabPointer(display, time);
   return returnValue;
@@ -120,7 +120,7 @@ int XGrabPointer(Display *display, Window grab_window, Bool owner_events, unsign
 
 int XGrabKeyboard(Display *display, Window grab_window, Bool owner_events, int pointer_mode, int keyboard_mode, Time time)
 {
-  int (*_XGrabKeyboard)(Display * display, Window grab_window, Bool owner_events, int pointer_mode, int keyboard_mode, Time time) = dlsym(RTLD_NEXT, "XGrabKeyboard");
+  int (*_XGrabKeyboard)(Display *display, Window grab_window, Bool owner_events, int pointer_mode, int keyboard_mode, Time time) = dlsym(RTLD_NEXT, "XGrabKeyboard");
   int returnValue = _XGrabKeyboard(display, grab_window, owner_events, pointer_mode, keyboard_mode, time);
   XUngrabKeyboard(display, time);
   return returnValue;
@@ -133,7 +133,7 @@ int XDefineCursor(Display *display, Window w, Cursor cursor)
 
 int XStoreName(Display *display, Window w, const char *window_name)
 {
-  int (*_XStoreName)(Display * display, Window w, const char *window_name) = dlsym(RTLD_NEXT, "XStoreName");
+  int (*_XStoreName)(Display *display, Window w, const char *window_name) = dlsym(RTLD_NEXT, "XStoreName");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
   strcat(gameTitle, " (X11)");
@@ -143,8 +143,15 @@ int XStoreName(Display *display, Window w, const char *window_name)
 int XNextEvent(Display *display, XEvent *event_return)
 {
 
-  int (*_XNextEvent)(Display * display, XEvent * event_return) = dlsym(RTLD_NEXT, "XNextEvent");
+  int (*_XNextEvent)(Display *display, XEvent *event_return) = dlsym(RTLD_NEXT, "XNextEvent");
   int returnValue = _XNextEvent(display, event_return);
+
+  // Return now if we're not emulating JVS
+  if (!getConfig()->emulateJVS)
+  {
+    return returnValue;
+  }
+
   switch (event_return->type)
   {
 
@@ -231,7 +238,7 @@ int XNextEvent(Display *display, XEvent *event_return)
 
 int XSetStandardProperties(Display *display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints)
 {
-  int (*_XSetStandardProperties)(Display * display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
+  int (*_XSetStandardProperties)(Display *display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
   strcat(gameTitle, " (X11)");
@@ -245,30 +252,36 @@ Bool XF86VidModeSwitchToMode(Display *display, int screen, XF86VidModeModeInfo *
 
 typedef unsigned int uint;
 
-int glXSwapIntervalSGI(int interval) {
+int glXSwapIntervalSGI(int interval)
+{
   return 0;
 }
 
-int glXGetVideoSyncSGI(uint *count) {
+int glXGetVideoSyncSGI(uint *count)
+{
   static unsigned int frameCount = 0;
-  //TODO: Framecount should depend on current system time
-  *count = (frameCount++)/2; // NOTE: Keeps the same frame for 2 calls
+  // TODO: Framecount should depend on current system time
+  *count = (frameCount++) / 2; // NOTE: Keeps the same frame for 2 calls
   return 0;
 }
 
-int glXGetRefreshRateSGI(unsigned int * rate) { //TODO: need an actual prototype
-  *rate = 60; //TODO: what does this function return?
+int glXGetRefreshRateSGI(unsigned int *rate)
+{             // TODO: need an actual prototype
+  *rate = 60; // TODO: what does this function return?
   return 0;
 }
 
-void glGenFencesNV(int n, uint *fences) {
+void glGenFencesNV(int n, uint *fences)
+{
   static unsigned int curf = 1;
-  while(n--) {
+  while (n--)
+  {
     *fences++ = curf++;
   }
   return;
 }
 
-void glDeleteFencesNV(int a, const uint *b) {
+void glDeleteFencesNV(int a, const uint *b)
+{
   return;
 }
