@@ -14,7 +14,8 @@ typedef enum
   LETS_GO_JUNGLE,
   ABC,
   SRTV,
-  RTUNED
+  RTUNED,
+  VF5
 } Game;
 
 typedef enum

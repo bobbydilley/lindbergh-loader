@@ -82,9 +82,15 @@ static int detectGame()
         return 0;
     }
     
-        if (strstr(program_invocation_name, "dsr"))
+    if (strstr(program_invocation_name, "dsr"))
     {
         config.game = RTUNED;
+        return 0;
+    }
+
+    if (strstr(program_invocation_name, "vf5"))
+    {
+        config.game = VF5;
         return 0;
     }
     
@@ -114,6 +120,8 @@ char *getGameName()
         return "SEGA Race TV";
     case RTUNED:
         return "R-Tuned Ultimate Street Racing";
+    case VF5:
+        return "Virtua Fighter 5";
     default:
         return "Unknown Game";
     }

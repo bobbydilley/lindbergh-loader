@@ -150,7 +150,7 @@ void __attribute__((constructor)) hook_init()
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
-    printf("Loader init success\n");
+    printf("Now emulating %s\n", getGameName());
 }
 
 int open(const char *pathname, int flags)

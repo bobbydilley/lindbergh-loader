@@ -18,7 +18,7 @@ Working is defined by getting into attract mode and running the game, but not ne
 - The House Of The Dead 4
 - The House Of The Dead 4 Special
 - The House Of The Dead Ex
-- Virtua Fighter 5 (boots to dongle error)
+- Virtua Fighter 5
 
 ## Games that do not work or haven't been tested
 
