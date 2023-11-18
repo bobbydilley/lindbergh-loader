@@ -203,9 +203,10 @@ int initConfig()
     strcpy(config.rideboardPath, "none");
     config.width = 1024;
     config.height = 768;
+
     if (detectGame() != 0)
     {
-        printf("Warning: Unsure what game this is, using default configuration values");
+        printf("Warning: Unsure what game this is, using default configuration values\n");
     }
 
     configFile = fopen(CONFIG_PATH, "r");
