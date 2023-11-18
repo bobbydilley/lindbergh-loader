@@ -108,7 +108,6 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
 }
 
-
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2022\nNot for public consumption\n\n");
@@ -121,7 +120,7 @@ void __attribute__((constructor)) hook_init()
 
     initConfig();
 
-    if(initPatch() != 0)
+    if (initPatch() != 0)
         exit(1);
 
     if (initEeprom() != 0)
@@ -493,4 +492,34 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     printf("Connecting to %s\n", some_addr);
 
     return _connect(sockfd, addr, addrlen);
+}
+
+/**
+ * Stop the game changing the DISPLAY environment variable
+ */
+int setenv(const char *name, const char *value, int overwrite)
+{
+    int (*_setenv)(const char *name, const char *value, int overwrite) = dlsym(RTLD_NEXT, "setenv");
+
+    if (strcmp(name, "DISPLAY") == 0)
+    {
+        return 0;
+    }
+
+    return _setenv(name, value, overwrite);
+}
+
+/**
+ * Stop the game unsetting the DISPLAY environment variable
+ */
+int unsetenv(const char *name)
+{
+    int (*_unsetenv)(const char *name) = dlsym(RTLD_NEXT, "unsetenv");
+
+    if (strcmp(name, "DISPLAY") == 0)
+    {
+        return 0;
+    }
+
+    return _unsetenv(name);
 }
