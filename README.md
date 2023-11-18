@@ -6,6 +6,8 @@ You can view the supported titles [here.](docs/supported.md)
 
 You will need an nvidia graphics card and I have tested with the latest version of Ubuntu.
 
+Please be aware that the project is in very early stages, and there will be lots of issues with all games.
+
 ## Dependencies
 
 First make sure you have up to date nVidia drivers for your computer, and then install the following:
