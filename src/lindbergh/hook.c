@@ -206,10 +206,7 @@ int open64(const char *pathname, int flags)
     return open(pathname, flags);
 }
 
-int sem_wait(sem_t *sem)
-{
-    return 0;
-}
+
 
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
 {
@@ -468,7 +465,7 @@ float powf(float base, float exponent)
     return (float)pow((double)base, (double)exponent);
 }
 
-/*
+/** This might be required for some games
 int sem_wait(sem_t *sem)
 {
     int (*original_sem_wait)(sem_t * sem) = dlsym(RTLD_NEXT, "sem_wait");
