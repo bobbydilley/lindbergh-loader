@@ -109,6 +109,12 @@ static int detectGame(uint32_t elf_crc)
         config.game = VT3;
         return 0;
     }
+
+    if (elf_crc == 0x1bf1b627)
+    {
+        config.game = VF5_REVC;
+        return 0;
+    }
     
     config.game = UNKNOWN;
     return 1;
@@ -141,6 +147,8 @@ char *getGameName()
         return "R-Tuned Ultimate Street Racing";
     case VT3:
         return "Virtua Tennis 3";
+    case VF5_REVC:
+        return "Virtua Fighter 5 - RevC";
     default:
         return "Unknown Game";
     }

@@ -180,6 +180,13 @@ int initPatch()
             setVariable(0x08072195, cpu_vendor.ecx);
         }
         break;
+        case VF5_REVC:
+        {
+            detourFunction(0x085c6010, amDongleInit);
+            detourFunction(0x085c63cc, amDongleIsAvailable);
+            detourFunction(0x085c62f0, amDongleUpdate);
+        }
+        break;
         default:
             // Don't do any patches for random games
         break;

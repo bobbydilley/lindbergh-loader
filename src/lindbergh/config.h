@@ -17,7 +17,8 @@ typedef enum
   ABC_2007,
   SRTV,
   RTUNED,
-  VT3
+  VT3,
+  VF5_REVC
 } Game;
 
 typedef enum
