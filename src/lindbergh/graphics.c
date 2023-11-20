@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <GL/freeglut.h>
 #include <GL/glx.h>
 #include <X11/extensions/xf86vmode.h>
