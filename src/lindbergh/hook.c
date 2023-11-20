@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+#include <link.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <linux/sockios.h>
@@ -13,6 +15,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <cpuid.h>
 
 #include "hook.h"
 
@@ -38,19 +41,33 @@
 int hooks[5] = {-1, -1, -1, -1};
 FILE *fileHooks[2] = {NULL, NULL};
 int fileRead[2] = {0, 0};
+uint32_t elf_crc = 0;
+
+cpuvendor cpu_vendor = {0};
+
+static int callback(struct dl_phdr_info *info, size_t size, void *data);
 
 uint16_t basePortAddress = 0xFFFF;
 
+/**
+ * Signal handler for the SIGSEGV signal, which is triggered when a process tries to access an illegal memory location.
+ * @param signal
+ * @param info
+ * @param ptr
+ */
 static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 {
     ucontext_t *ctx = ptr;
 
+    // Get the address of the instruction causing the segfault
     uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
 
+    printf("Code: 0x%08x - Port: 0x%08x\n", *code, (ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF));
     switch (*code)
     {
     case 0xED:
     {
+        // Get the port number from the EDX register
         uint16_t port = ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF;
 
         // The first port called is usually random, but everything after that
@@ -60,9 +77,11 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
         if (basePortAddress == 0xFFFF)
             basePortAddress = port;
 
+        // Adjust the port number if necessary
         if (port > 0x38)
             port = port - basePortAddress;
 
+        // Call the security board input function with the port number and data
         securityBoardIn(port, (uint32_t *)&(ctx->uc_mcontext.gregs[REG_EAX]));
 
         ctx->uc_mcontext.gregs[REG_EIP]++;
@@ -70,15 +89,17 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
     break;
 
-    case 0xE7: // OUT IMMIDIATE
+    case 0xE7: // OUT IMMEDIATE
     {
+        // Increment the instruction pointer by two to skip over this instruction
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
         return;
     }
     break;
 
-    case 0xE6: // OUT IMMIDIATE
+    case 0xE6: // OUT IMMEDIATE
     {
+        // Increment the instruction pointer by two to skip over this instruction
         ctx->uc_mcontext.gregs[REG_EIP] += 2;
         return;
     }
@@ -108,9 +129,14 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
 }
 
+
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2022\nNot for public consumption\n\n");
+    // Get offsets of the Game's ELF and calculate CRC32. 
+    dl_iterate_phdr(callback, NULL);
+    // Get CPU ID 
+    getCPUID();
 
     // Implement SIGSEGV handler
     struct sigaction act;
@@ -118,9 +144,9 @@ void __attribute__((constructor)) hook_init()
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGSEGV, &act, NULL);
 
-    initConfig();
+    initConfig(elf_crc);
 
-    if (initPatch() != 0)
+    if(initPatch() != 0)
         exit(1);
 
     if (initEeprom() != 0)
@@ -206,16 +232,28 @@ int open64(const char *pathname, int flags)
     return open(pathname, flags);
 }
 
-
-
 FILE *fopen(const char *restrict pathname, const char *restrict mode)
 {
     FILE *(*_fopen)(const char *restrict pathname, const char *restrict mode) = dlsym(RTLD_NEXT, "fopen");
-    // printf("fopen %s\n", pathname);
 
     if (strcmp(pathname, "/root/lindbergrc") == 0)
     {
         return _fopen("lindbergrc", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/logo.tga") == 0)
+    {
+        return _fopen("logo.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/LucidaConsole_12.tga") == 0)
+    {
+        return _fopen("LucidaConsole_12.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/LucidaConsole_12.abc") == 0)
+    {
+        return _fopen("LucidaConsole_12.abc", mode);
     }
 
     if (strcmp(pathname, "/proc/cpuinfo") == 0)
@@ -242,6 +280,25 @@ FILE *fopen64(const char *pathname, const char *mode)
         return fileHooks[OSRELEASE];
     }
 
+    if (strcmp(pathname, "/usr/lib/boot/logo_red.tga") == 0)
+    {
+        return _fopen64("logo_red.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/logo.tga") == 0)
+    {
+        return _fopen64("logo.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/SEGA_KakuGothic-DB-Roman_12.tga") == 0)
+    {
+        return _fopen64("SEGA_KakuGothic-DB-Roman_12.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/SEGA_KakuGothic-DB-Roman_12.abc") == 0)
+    {
+        return _fopen64("SEGA_KakuGothic-DB-Roman_12.abc", mode);
+    }
     return _fopen64(pathname, mode);
 }
 
@@ -465,7 +522,7 @@ float powf(float base, float exponent)
     return (float)pow((double)base, (double)exponent);
 }
 
-/** This might be required for some games
+/*
 int sem_wait(sem_t *sem)
 {
     int (*original_sem_wait)(sem_t * sem) = dlsym(RTLD_NEXT, "sem_wait");
@@ -476,6 +533,10 @@ int sem_wait(sem_t *sem)
 /**
  * Hook function used by Harley Davidson to change IPs to localhost
  * Currently does nothing.
+ * @param sockfd
+ * @param addr
+ * @param addrlen
+ * @return
  */
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
@@ -489,6 +550,45 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     printf("Connecting to %s\n", some_addr);
 
     return _connect(sockfd, addr, addrlen);
+}
+
+/**
+ * Function to calculate CRC32 checksum in memory.
+*/
+uint32_t get_crc32(const char *s,size_t n) 
+{
+    uint32_t crc=0xFFFFFFFF;
+
+    for(size_t i=0;i<n;i++) {
+	char ch=s[i];
+	for(size_t j=0;j<8;j++) {
+	    uint32_t b=(ch^crc)&1;
+	    crc>>=1;
+	    if(b) crc=crc^0xEDB88320;
+		ch>>=1;
+	}
+    }
+    return ~crc;
+}
+
+/**
+ * Callback function to get the offset and size of the execution program in memory of the ELF we hook to.
+*/
+static int callback(struct dl_phdr_info *info, size_t size, void *data) 
+{
+    if((info->dlpi_phnum >= 3) && (info->dlpi_phdr[2].p_type == PT_LOAD) && (info->dlpi_phdr[2].p_flags == 5))
+    {
+        elf_crc = get_crc32((void *)(info->dlpi_addr + info->dlpi_phdr[2].p_vaddr+10),128);
+    }
+    return 1;
+}
+
+void getCPUID()
+{
+    unsigned eax;
+    eax = 0;
+    __get_cpuid(0, &eax, &cpu_vendor.ebx, &cpu_vendor.ecx, &cpu_vendor.edx);
+    printf("CPU Vendor: %.4s%.4s%.4s\n", (const char*)&cpu_vendor.ebx,(const char*)&cpu_vendor.edx,(const char*)&cpu_vendor.ecx);
 }
 
 /**

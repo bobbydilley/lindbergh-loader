@@ -28,7 +28,7 @@ static char *getNextToken(char *buffer, char *seperator, char **saveptr)
     return token;
 }
 
-static int detectGame()
+static int detectGame(uint32_t elf_crc)
 {
 
     // For a better way of doing this, we should look for strings inside the game
@@ -36,19 +36,25 @@ static int detectGame()
     // strings %s | grep "RIDE TURN TEST" && strings %s | grep "PLEASE SHOOT GRID"
     // shows you its hotd4S for example
 
-    if (strstr(program_invocation_name, "segaboot"))
+    if (elf_crc == 0x93ea7e11)
     {
-        config.game = SEGABOOT;
+        config.game = SEGABOOT_2_4;
         return 0;
     }
 
-    if (strstr(program_invocation_name, "hod4"))
+    if (elf_crc == 0xbc0c9ffa)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4;
         return 0;
     }
 
-    if (strstr(program_invocation_name, "Jennifer"))
+    if (elf_crc == 0x7235bda8)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_4_TEST;
+        return 0;
+    }
+
+    if (elf_crc == 0x6d055308)
     {
         config.game = OUTRUN;
         config.emulateDriveboard = 1;
@@ -56,7 +62,7 @@ static int detectGame()
         return 0;
     }
 
-    if (strstr(program_invocation_name, "JenTest"))
+    if (elf_crc == 0xffdccaaa)
     {
         config.game = OUTRUN_TEST;
         config.emulateDriveboard = 1;
@@ -64,33 +70,43 @@ static int detectGame()
         return 0;
     }
 
-    if (strstr(program_invocation_name, "lgj"))
+    if (elf_crc == 0xd4726d61)
     {
         config.game = LETS_GO_JUNGLE;
         return 0;
     }
 
-    if (strstr(program_invocation_name, "abc1080"))
+    if (elf_crc == 0xcc02de7d)
     {
-        config.game = ABC;
+        config.game = ABC_2006;
         return 0;
     }
 
-    if (strstr(program_invocation_name, "drive"))
+    if (elf_crc == 0x152530dd)
+    {
+        config.game = ABC_2007;
+        return 0;
+    }
+
+    if (elf_crc == 0xfb096f81)
     {
         config.game = SRTV;
+        config.emulateDriveboard = 1;
+        config.emulateMotionboard = 1;
         return 0;
     }
     
-    if (strstr(program_invocation_name, "dsr"))
+    if (elf_crc == 0xb05d9bbe)
     {
         config.game = RTUNED;
+        config.emulateDriveboard = 1;
+        config.emulateMotionboard = 1;
         return 0;
     }
-
-    if (strstr(program_invocation_name, "vf5"))
+    
+    if (elf_crc == 0xc4b7e89)
     {
-        config.game = VF5;
+        config.game = VT3;
         return 0;
     }
     
@@ -112,16 +128,19 @@ char *getGameName()
         return "Outrun 2 SP";
     case THE_HOUSE_OF_THE_DEAD_4:
         return "The House of the Dead 4";
+    case THE_HOUSE_OF_THE_DEAD_4_TEST:
+        return "The House of the Dead 4 - Test Menu";
     case LETS_GO_JUNGLE:
         return "Let's Go Jungle! Lost on the Island of Spice";
-    case ABC:
+    case ABC_2006:
+    case ABC_2007:
         return "After Burner Climax";
     case SRTV:
         return "SEGA Race TV";
     case RTUNED:
         return "R-Tuned Ultimate Street Racing";
-    case VF5:
-        return "Virtua Fighter 5";
+    case VT3:
+        return "Virtua Tennis 3";
     default:
         return "Unknown Game";
     }
@@ -187,7 +206,7 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
     return 0;
 }
 
-int initConfig()
+int initConfig(uint32_t elf_crc)
 {
     config.emulateRideboard = 0;
     config.emulateDriveboard = 0;
@@ -203,17 +222,20 @@ int initConfig()
     strcpy(config.rideboardPath, "none");
     config.width = 1024;
     config.height = 768;
-
-    if (detectGame() != 0)
+    if (detectGame(elf_crc) != 0)
     {
-        printf("Warning: Unsure what game this is, using default configuration values\n");
+        printf("Warning: Unsure what game this is, using default configuration values.\n");
+    }
+    else
+    {
+        printf("Game Detected: %s\n", getGameName());
     }
 
     configFile = fopen(CONFIG_PATH, "r");
 
     if (configFile == NULL)
     {
-        printf("Warning: Cannot open %s, using default values\n", CONFIG_PATH);
+        printf("Warning: Cannot open %s, using default values.\n", CONFIG_PATH);
         return 1;
     }
 

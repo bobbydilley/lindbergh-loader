@@ -9,13 +9,15 @@ typedef enum
   SEGABOOT_2_4,
   SEGABOOT_2_6,
   THE_HOUSE_OF_THE_DEAD_4,
+  THE_HOUSE_OF_THE_DEAD_4_TEST,
   OUTRUN,
   OUTRUN_TEST,
   LETS_GO_JUNGLE,
-  ABC,
+  ABC_2006,
+  ABC_2007,
   SRTV,
   RTUNED,
-  VF5
+  VT3
 } Game;
 
 typedef enum
