@@ -13,8 +13,10 @@ typedef enum
   OUTRUN,
   OUTRUN_TEST,
   LETS_GO_JUNGLE,
+  LETS_GO_JUNGLE_SPECIAL,
   ABC_2006,
   ABC_2007,
+  ID4,
   SRTV,
   RTUNED,
   VT3,
@@ -26,6 +28,12 @@ typedef enum
   YELLOW,
   RED
 } Colour;
+
+typedef enum
+{
+  WORKING,
+  NOT_WORKING
+}GameStatus;
 
 typedef struct
 {
@@ -44,6 +52,9 @@ typedef struct
   int height;
   Game game;
   Colour lindberghColour;
+  GameStatus gameStatus;
+  uint32_t crc32;
+
 } EmulatorConfig;
 
 int initConfig();

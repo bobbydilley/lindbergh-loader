@@ -67,6 +67,20 @@ int amDongleUpdate()
     return 0;
 }
 
+void _putConsole(char *param1, char *param2)
+{
+    if(param2 >=0 )
+    {
+        printf(param1, (int)param2);
+        printf("\n");
+    }
+    else
+    {
+        printf("%s\n", param1);
+    }
+    return;
+}
+
 int initPatch()
 {
     Game game = getConfig()->game;
@@ -187,6 +201,69 @@ int initPatch()
             detourFunction(0x085c62f0, amDongleUpdate);
         }
         break;
+        case LETS_GO_JUNGLE:
+        {
+            setVariable(0x08c083a4, 2);          // amBackupDebugLevel
+            setVariable(0x08c083c0, 2);          // amCreditDebugLevel
+            setVariable(0x08c08618, 2);          // amDipswDebugLevel
+            setVariable(0x08c0861c, 2);          // amDongleDebugLevel
+            setVariable(0x08c08620, 2);          // amEepromDebugLevel
+            setVariable(0x08c08624, 2);          // amHwmonitorDebugLevel
+            setVariable(0x08c08628, 2);          // amJvsDebugLevel
+            setVariable(0x08c0862c, 2);          // amLibDebugLevel
+            setVariable(0x08c08630, 2);          // amMiscDebugLevel
+            setVariable(0x08c08638, 2);          // amSysDataDebugLevel
+            setVariable(0x08c08640, 2);          // bcLibDebugLevel
+            setVariable(0x08c08634, 2);          // amOsinfoDebugLevel
+            setVariable(0x08c08644, 0x0FFFFFFF); // s_logMask
+            detourFunction(0x084e50d8, amDongleInit);
+            detourFunction(0x084e5459, amDongleIsAvailable);
+            detourFunction(0x084e537d, amDongleUpdate);
+            //detourFunction(0x08074a8c, _putConsole);
+            setVariable(0x0840b06f, 0xc48306eb); // Patch to initialize????
+        }
+        break;
+        case LETS_GO_JUNGLE_SPECIAL:
+        {
+            setVariable(0x08c453e4, 2);          // amBackupDebugLevel
+            setVariable(0x08c45400, 2);          // amCreditDebugLevel
+            setVariable(0x08c45658, 2);          // amDipswDebugLevel
+            setVariable(0x08c4565c, 2);          // amDongleDebugLevel
+            setVariable(0x08c45660, 2);          // amEepromDebugLevel
+            setVariable(0x08c45664, 2);          // amHwmonitorDebugLevel
+            setVariable(0x08c45668, 2);          // amJvsDebugLevel
+            setVariable(0x08c4566c, 2);          // amLibDebugLevel
+            setVariable(0x08c45670, 2);          // amMiscDebugLevel
+            setVariable(0x08c45678, 2);          // amSysDataDebugLevel
+            setVariable(0x08c45680, 2);          // bcLibDebugLevel
+            setVariable(0x08c45674, 2);          // amOsinfoDebugLevel
+            setVariable(0x08c45684, 0x0FFFFFFF); // s_logMask
+            detourFunction(0x08510320, amDongleInit);
+            detourFunction(0x085106dc, amDongleIsAvailable);
+            detourFunction(0x08510600, amDongleUpdate);
+            detourFunction(0x08075012, _putConsole);
+        }
+        break;
+        case ID4:
+        {
+            setVariable(0x08d71750, 2);          // amBackupDebugLevel
+            setVariable(0x08d71760, 2);          // amCreditDebugLevel
+            setVariable(0x08d719b8, 2);          // amDipswDebugLevel
+            setVariable(0x08d719bc, 2);          // amDongleDebugLevel
+            setVariable(0x08d719c0, 2);          // amEepromDebugLevel
+            setVariable(0x08d719c4, 2);          // amHwmonitorDebugLevel
+            setVariable(0x08d719c8, 2);          // amJvsDebugLevel
+            setVariable(0x08d719cc, 2);          // amLibDebugLevel
+            setVariable(0x08d719d0, 2);          // amMiscDebugLevel
+            setVariable(0x08d719d8, 2);          // amSysDataDebugLevel
+            setVariable(0x08d719e0, 2);          // bcLibDebugLevel
+            setVariable(0x08d719d4, 2);          // amOsinfoDebugLevel
+            setVariable(0x08d719e4, 0x0FFFFFFF); // s_logMask
+            detourFunction(0x086e2336, amDongleInit);
+            detourFunction(0x086e0d81, amDongleIsAvailable);
+            detourFunction(0x086e17e5, amDongleUpdate);
+            detourFunction(0x0808f9a8, _putConsole);
+        }
         default:
             // Don't do any patches for random games
         break;

@@ -7,6 +7,8 @@
 
 EmulatorConfig config = {0};
 
+extern uint32_t elf_crc;
+
 FILE *configFile = NULL;
 
 #define CONFIG_PATH "lindbergh.conf"
@@ -31,26 +33,24 @@ static char *getNextToken(char *buffer, char *seperator, char **saveptr)
 static int detectGame(uint32_t elf_crc)
 {
 
-    // For a better way of doing this, we should look for strings inside the game
-    // This will allow patching the game and for it to still be detected.
-    // strings %s | grep "RIDE TURN TEST" && strings %s | grep "PLEASE SHOOT GRID"
-    // shows you its hotd4S for example
-
     if (elf_crc == 0x93ea7e11)
     {
         config.game = SEGABOOT_2_4;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
 
     if (elf_crc == 0xbc0c9ffa)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4;
+        config.gameStatus = WORKING;
         return 0;
     }
 
     if (elf_crc == 0x7235bda8)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4_TEST;
+        config.gameStatus = WORKING;
         return 0;
     }
 
@@ -59,6 +59,7 @@ static int detectGame(uint32_t elf_crc)
         config.game = OUTRUN;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
+        config.gameStatus = WORKING;
         return 0;
     }
 
@@ -67,24 +68,42 @@ static int detectGame(uint32_t elf_crc)
         config.game = OUTRUN_TEST;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
+        config.gameStatus = WORKING;
         return 0;
     }
 
     if (elf_crc == 0xd4726d61)
     {
         config.game = LETS_GO_JUNGLE;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0xbbabc0e0)
+    {
+        config.game = LETS_GO_JUNGLE_SPECIAL;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
 
     if (elf_crc == 0xcc02de7d)
     {
         config.game = ABC_2006;
+        config.gameStatus = WORKING;
         return 0;
     }
 
     if (elf_crc == 0x152530dd)
     {
         config.game = ABC_2007;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x4e9ccf33)
+    {
+        config.game = ID4;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
 
@@ -93,6 +112,7 @@ static int detectGame(uint32_t elf_crc)
         config.game = SRTV;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
     
@@ -101,18 +121,21 @@ static int detectGame(uint32_t elf_crc)
         config.game = RTUNED;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
+        config.gameStatus = WORKING;
         return 0;
     }
     
     if (elf_crc == 0xc4b7e89)
     {
         config.game = VT3;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
 
     if (elf_crc == 0x1bf1b627)
     {
         config.game = VF5_REVC;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
     
@@ -138,9 +161,13 @@ char *getGameName()
         return "The House of the Dead 4 - Test Menu";
     case LETS_GO_JUNGLE:
         return "Let's Go Jungle! Lost on the Island of Spice";
+    case LETS_GO_JUNGLE_SPECIAL:
+        return "Let's Go Jungle Special";
     case ABC_2006:
     case ABC_2007:
         return "After Burner Climax";
+    case ID4:
+        return "Initial D 4";
     case SRTV:
         return "SEGA Race TV";
     case RTUNED:
@@ -206,7 +233,6 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
             if (strcmp(colour, "RED") == 0)
                 config->lindberghColour = RED;
         }
-
         else
             printf("Error: Unknown settings command %s\n", command);
     }
@@ -214,7 +240,7 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
     return 0;
 }
 
-int initConfig(uint32_t elf_crc)
+int initConfig()
 {
     config.emulateRideboard = 0;
     config.emulateDriveboard = 0;
@@ -230,13 +256,10 @@ int initConfig(uint32_t elf_crc)
     strcpy(config.rideboardPath, "none");
     config.width = 1024;
     config.height = 768;
-    if (detectGame(elf_crc) != 0)
+    config.crc32 = elf_crc;
+    if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game this is, using default configuration values.\n");
-    }
-    else
-    {
-        printf("Game Detected: %s\n", getGameName());
     }
 
     configFile = fopen(CONFIG_PATH, "r");

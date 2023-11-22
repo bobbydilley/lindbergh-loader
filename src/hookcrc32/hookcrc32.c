@@ -74,7 +74,7 @@ __attribute__((__constructor__))
 static void setup(void) {
     dl_iterate_phdr(callback, NULL);
     //real_main = dlsym(RTLD_NEXT, "main");
-    exit(0);
+    //exit(0);
 }
 
 __attribute__((__destructor__))

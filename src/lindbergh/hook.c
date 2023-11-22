@@ -144,7 +144,7 @@ void __attribute__((constructor)) hook_init()
     act.sa_flags = SA_SIGINFO;
     sigaction(SIGSEGV, &act, NULL);
 
-    initConfig(elf_crc);
+    initConfig();
 
     if(initPatch() != 0)
         exit(1);
@@ -175,7 +175,15 @@ void __attribute__((constructor)) hook_init()
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
-    printf("Now emulating %s\n", getGameName());
+    printf("Now emulating %s", getGameName());
+    if(getConfig()->gameStatus == WORKING)
+    {
+        printf((" - Game is in working state.\n"));
+    }
+    else
+    {
+        printf((" - Game is in NOT WORKING state.\n"));
+    }
 }
 
 int open(const char *pathname, int flags)
