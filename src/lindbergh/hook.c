@@ -64,7 +64,6 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     // Get the address of the instruction causing the segfault
     uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
 
-    printf("Code: 0x%08x - Port: 0x%08x\n", *code, (ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF) - basePortAddress);
     switch (*code)
     {
     case 0xED:
