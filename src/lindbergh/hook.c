@@ -59,10 +59,12 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 {
     ucontext_t *ctx = ptr;
 
+    printf("Caught segfault at address %p\n", info->si_addr);
+
     // Get the address of the instruction causing the segfault
     uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
 
-    printf("Code: 0x%08x - Port: 0x%08x\n", *code, (ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF));
+    printf("Code: 0x%08x - Port: 0x%08x\n", *code, (ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF) - basePortAddress);
     switch (*code)
     {
     case 0xED:
@@ -137,6 +139,11 @@ void __attribute__((constructor)) hook_init()
     dl_iterate_phdr(callback, NULL);
     // Get CPU ID 
     getCPUID();
+
+    /*FILE *file = fopen("dump_unpatched.bin","w+b");
+            
+    fwrite((void *)0x08048000,0x630fac,1,file);
+    fclose(file);*/
 
     // Implement SIGSEGV handler
     struct sigaction act;
