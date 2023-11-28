@@ -32,7 +32,6 @@ static char *getNextToken(char *buffer, char *seperator, char **saveptr)
 
 static int detectGame(uint32_t elf_crc)
 {
-
     if (elf_crc == 0x93ea7e11)
     {
         config.game = SEGABOOT_2_4;
@@ -72,7 +71,7 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
-    if (elf_crc == 0xd4726d61)
+    if (elf_crc == 0xd4726d61 || elf_crc == 0xB6479554)
     {
         config.game = LETS_GO_JUNGLE;
         config.gameStatus = NOT_WORKING;
@@ -111,7 +110,6 @@ static int detectGame(uint32_t elf_crc)
     {
         config.game = SRTV;
         config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
@@ -120,7 +118,6 @@ static int detectGame(uint32_t elf_crc)
     {
         config.game = RTUNED;
         config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
