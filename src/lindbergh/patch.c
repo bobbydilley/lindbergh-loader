@@ -110,7 +110,7 @@ void _putConsole(const char *format, ...)
             }
             else if (*format == '0')
             {
-                format ++;
+                format++;
                 if (*format == '2')
                 {
                     format++;
@@ -135,6 +135,30 @@ void _putConsole(const char *format, ...)
     }
     va_end(args);
     printf("\n");
+}
+
+int amDipswInit()
+{
+    printf("amDipswInit called\n");
+    return 0;
+}
+
+int amDipswGetData()
+{
+    printf("amDipswGetData called\n");
+    return 0;
+}
+
+int amDipswSetLed()
+{
+    printf("amDipswSetLed called\n");
+    return 0;
+}
+
+int amDipswExit()
+{
+    printf("amDipswExit called\n");
+    return 0;
 }
 
 int initPatch()
@@ -287,6 +311,11 @@ int initPatch()
 
         fwrite((void *)0x08048000,0x630fac,1,file);
         fclose(file);*/
+
+        detourFunction(0x084e4efc, amDipswInit);
+        detourFunction(0x084e500e, amDipswGetData);
+        detourFunction(0x084e5086, amDipswSetLed);
+        detourFunction(0x084e4f98, amDipswExit);
     }
     break;
     case LETS_GO_JUNGLE_SPECIAL:

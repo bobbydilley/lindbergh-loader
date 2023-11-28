@@ -145,10 +145,10 @@ void __attribute__((constructor)) hook_init()
     fclose(file);*/
 
     // Implement SIGSEGV handler
-    struct sigaction act;
-    act.sa_sigaction = handleSegfault;
-    act.sa_flags = SA_SIGINFO;
-    sigaction(SIGSEGV, &act, NULL);
+    // struct sigaction act;
+    // act.sa_sigaction = handleSegfault;
+    // act.sa_flags = SA_SIGINFO;
+    // sigaction(SIGSEGV, &act, NULL);
 
     initConfig();
 
