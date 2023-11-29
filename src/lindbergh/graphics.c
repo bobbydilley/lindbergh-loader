@@ -163,6 +163,7 @@ int XNextEvent(Display *display, XEvent *event_return)
     {
     case 28:
       setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
+      //securityBoardSetSwitch(BUTTON_TEST, 1);
       break;
     case 39:
       setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);

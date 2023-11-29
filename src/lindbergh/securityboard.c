@@ -77,6 +77,7 @@ int securityBoardSetDipSwitch(int switchNumber, int value)
 
 int securityBoardSetSwitch(JVSInput switchNumber, int value)
 {
+    printf("Pressed\n");
     switch (switchNumber)
     {
     case BUTTON_TEST:

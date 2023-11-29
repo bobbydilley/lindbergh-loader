@@ -135,7 +135,7 @@ static int detectGame(uint32_t elf_crc)
     if (elf_crc == 0x1bf1b627)
     {
         config.game = VF5_REVC;
-        config.gameStatus = NOT_WORKING;
+        config.gameStatus = WORKING;
         return 0;
     }
     
