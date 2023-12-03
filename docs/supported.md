@@ -10,6 +10,7 @@ Working is defined by getting into attract mode and running the game, but not ne
 - After Burner Climax
 - Ghost Squad Evolution
 - Harley Davidson
+- Let's Go Jungle
 - Let's Go Jungle Special (boots to ride error)
 - Outrun 2 SP SDX
 - R-Tuned
@@ -25,14 +26,5 @@ Working is defined by getting into attract mode and running the game, but not ne
 - Hummer
 - Initial D 4
 - Initial D 5
-- Let's Go Jungle
 - Primevil
 - Virtua Tennis 3
-
-## How to run specific games
-
-### Let's Go Jungle
-
-No, this game will not start.
-
-```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. LD_PRELOAD=lindbergh.so TEA_DIR=`pwd` ./lgj_final```
