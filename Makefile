@@ -26,3 +26,6 @@ libkswapapi.so: src/libkswapapi/libkswapapi.o
 
 clean:
 	rm -rf $(BUILD)
+	rm -f src/lindbergh/*.o
+	rm -f src/libsegaapi/*.o
+	rm -f src/libkswapapi/*.o

@@ -233,6 +233,19 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
             if (strcmp(colour, "RED") == 0)
                 config->lindberghColour = RED;
         }
+        else if (strcmp(command, "REGION") == 0)
+        {
+            char region[256];
+            strcpy(region, getNextToken(NULL, " ", &saveptr));
+            if (strcmp(region, "JP") == 0)
+                config->region = JP;
+            else if (strcmp(region, "US") == 0)
+                config->region = US;
+            else
+                config->region = EX;
+        } 
+        else if (strcmp(command, "FREEPLAY") == 0)
+            config->freeplay = atoi(getNextToken(NULL, " ", &saveptr));
         else
             printf("Error: Unknown settings command %s\n", command);
     }
@@ -257,6 +270,8 @@ int initConfig()
     config.width = 1024;
     config.height = 768;
     config.crc32 = elf_crc;
+    config.region = US;
+    config.freeplay = 1;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game this is, using default configuration values.\n");

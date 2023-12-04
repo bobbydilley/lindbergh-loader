@@ -256,7 +256,7 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
         return _fopen("lindbergrc", mode);
     }
 
-    if (strcmp(pathname, "/usr/lib/boot/logo.tga") == 0)
+    if ((strcmp(pathname, "/usr/lib/boot/logo.tga") == 0) || (strcmp(pathname, "/usr/lib/boot/logo.tga") == 0))
     {
         return _fopen("logo.tga", mode);
     }
@@ -278,6 +278,19 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
         return fileHooks[CPUINFO];
     }
 
+    if (strcmp(pathname, "/usr/lib/boot/logo_red.tga") == 0)
+    {
+        return _fopen("logo_red.tga", mode);
+    }
+    if (strcmp(pathname, "/usr/lib/boot/SEGA_KakuGothic-DB-Roman_12.tga") == 0)
+    {
+        return _fopen("SEGA_KakuGothic-DB-Roman_12.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/SEGA_KakuGothic-DB-Roman_12.abc") == 0)
+    {
+        return _fopen("SEGA_KakuGothic-DB-Roman_12.abc", mode);
+    }
     return _fopen(pathname, mode);
 }
 

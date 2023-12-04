@@ -35,6 +35,13 @@ typedef enum
   NOT_WORKING
 }GameStatus;
 
+typedef enum
+{
+  JP,
+  US,
+  EX
+}gameRegion;
+
 typedef struct
 {
   int emulateRideboard;
@@ -54,7 +61,8 @@ typedef struct
   Colour lindberghColour;
   GameStatus gameStatus;
   uint32_t crc32;
-
+  gameRegion region;
+  int freeplay;
 } EmulatorConfig;
 
 int initConfig();
