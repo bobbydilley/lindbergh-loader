@@ -455,6 +455,15 @@ int initPatch()
         detourFunction(0x0831c64f, stub0);
         setVariable(0x0827ae1b, 0x34891beb); //Disable Fullscreen
     }
+    case VT3_TESTMODE:
+    {
+        detourFunction(0x0815f610, amDongleInit);
+        detourFunction(0x0815f923, amDongleIsAvailable);
+        detourFunction(0x0815f88a, amDongleUpdate);
+        detourFunction(0x0815d06b, amDipswGetData);
+        detourFunction(0x0815d0e3, stub0);
+        //setVariable(0x0827ae1b, 0x34891beb); //Disable Fullscreen
+    }
     break;
     default:
         // Don't do any patches for random games

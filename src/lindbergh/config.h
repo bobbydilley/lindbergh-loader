@@ -21,6 +21,7 @@ typedef enum
   SRTV,
   RTUNED,
   VT3,
+  VT3_TESTMODE,
   VF5_REVC
 } Game;
 

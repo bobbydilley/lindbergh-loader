@@ -135,6 +135,13 @@ static int detectGame(uint32_t elf_crc)
     if (elf_crc == 0xc4b7e89)
     {
         config.game = VT3;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0xffe3b0fd)
+    {
+        config.game = VT3_TESTMODE;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
@@ -183,6 +190,8 @@ char *getGameName()
         return "R-Tuned Ultimate Street Racing";
     case VT3:
         return "Virtua Tennis 3";
+    case VT3_TESTMODE:
+        return "Virtua Tennis 3 - Testmode";
     case VF5_REVC:
         return "Virtua Fighter 5 - RevC";
     default:

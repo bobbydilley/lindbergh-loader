@@ -16,6 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cpuid.h>
+#include <unistd.h>
 
 #include "hook.h"
 
