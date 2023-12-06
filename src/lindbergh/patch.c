@@ -453,6 +453,7 @@ int initPatch()
         detourFunction(0x0831c99e, amDongleUpdate);
         detourFunction(0x0831c5d7, amDipswGetData);
         detourFunction(0x0831c64f, stub0);
+        setVariable(0x0827ae1b, 0x34891beb); //Disable Fullscreen
     }
     break;
     default:

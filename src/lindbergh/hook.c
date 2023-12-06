@@ -43,6 +43,7 @@
 int hooks[5] = {-1, -1, -1, -1};
 FILE *fileHooks[3] = {NULL, NULL, NULL};
 int fileRead[3] = {0, 0, 0};
+char envpath[100];
 uint32_t elf_crc = 0;
 
 cpuvendor cpu_vendor = {0};
@@ -131,13 +132,12 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
 }
 
-
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2022\nNot for public consumption\n\n");
-    // Get offsets of the Game's ELF and calculate CRC32. 
+    // Get offsets of the Game's ELF and calculate CRC32.
     dl_iterate_phdr(callback, NULL);
-    // Get CPU ID 
+    // Get CPU ID
     getCPUID();
 
     // Implement SIGSEGV handler
@@ -148,7 +148,7 @@ void __attribute__((constructor)) hook_init()
 
     initConfig();
 
-    if(initPatch() != 0)
+    if (initPatch() != 0)
         exit(1);
 
     if (initEeprom() != 0)
@@ -178,7 +178,7 @@ void __attribute__((constructor)) hook_init()
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
     printf("Now emulating %s", getGameName());
-    if(getConfig()->gameStatus == WORKING)
+    if (getConfig()->gameStatus == WORKING)
     {
         printf((" - Game is in working state.\n"));
     }
@@ -290,7 +290,7 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
     if (strcmp(pathname, "/proc/bus/pci/00/1f.0") == 0)
     {
         fileRead[PCI_CARD_1F0] = 0;
-        fileHooks[PCI_CARD_1F0] =  _fopen(HOOK_FILE_NAME, mode);
+        fileHooks[PCI_CARD_1F0] = _fopen(HOOK_FILE_NAME, mode);
         return fileHooks[PCI_CARD_1F0];
     }
     return _fopen(pathname, mode);
@@ -334,10 +334,10 @@ FILE *fopen64(const char *pathname, const char *mode)
 
 int fclose(FILE *stream)
 {
-    int (*_fclose)(FILE * stream) = dlsym(RTLD_NEXT, "fclose");
+    int (*_fclose)(FILE *stream) = dlsym(RTLD_NEXT, "fclose");
     for (int i = 0; i < 3; i++)
     {
-        if(fileHooks[i] == stream)
+        if (fileHooks[i] == stream)
         {
             int r = _fclose(stream);
             fileHooks[i] = NULL;
@@ -440,8 +440,8 @@ ssize_t read(int fd, void *buf, size_t count)
 size_t fread(void *buf, size_t size, size_t count, FILE *stream)
 {
     size_t (*_fread)(void *buf, size_t size, size_t count, FILE *stream) = dlsym(RTLD_NEXT, "fread");
-    
-    if(stream == fileHooks[PCI_CARD_1F0])
+
+    if (stream == fileHooks[PCI_CARD_1F0])
     {
         memcpy(buf, pcidata, 68);
         return 68;
@@ -610,31 +610,34 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 
 /**
  * Function to calculate CRC32 checksum in memory.
-*/
-uint32_t get_crc32(const char *s,size_t n) 
+ */
+uint32_t get_crc32(const char *s, size_t n)
 {
-    uint32_t crc=0xFFFFFFFF;
+    uint32_t crc = 0xFFFFFFFF;
 
-    for(size_t i=0;i<n;i++) {
-	char ch=s[i];
-	for(size_t j=0;j<8;j++) {
-	    uint32_t b=(ch^crc)&1;
-	    crc>>=1;
-	    if(b) crc=crc^0xEDB88320;
-		ch>>=1;
-	}
+    for (size_t i = 0; i < n; i++)
+    {
+        char ch = s[i];
+        for (size_t j = 0; j < 8; j++)
+        {
+            uint32_t b = (ch ^ crc) & 1;
+            crc >>= 1;
+            if (b)
+                crc = crc ^ 0xEDB88320;
+            ch >>= 1;
+        }
     }
     return ~crc;
 }
 
 /**
  * Callback function to get the offset and size of the execution program in memory of the ELF we hook to.
-*/
-static int callback(struct dl_phdr_info *info, size_t size, void *data) 
+ */
+static int callback(struct dl_phdr_info *info, size_t size, void *data)
 {
-    if((info->dlpi_phnum >= 3) && (info->dlpi_phdr[2].p_type == PT_LOAD) && (info->dlpi_phdr[2].p_flags == 5))
+    if ((info->dlpi_phnum >= 3) && (info->dlpi_phdr[2].p_type == PT_LOAD) && (info->dlpi_phdr[2].p_flags == 5))
     {
-        elf_crc = get_crc32((void *)(info->dlpi_addr + info->dlpi_phdr[2].p_vaddr+10),128);
+        elf_crc = get_crc32((void *)(info->dlpi_addr + info->dlpi_phdr[2].p_vaddr + 10), 128);
     }
     return 1;
 }
@@ -644,7 +647,7 @@ void getCPUID()
     unsigned eax;
     eax = 0;
     __get_cpuid(0, &eax, &cpu_vendor.ebx, &cpu_vendor.ecx, &cpu_vendor.edx);
-    printf("CPU Vendor: %.4s%.4s%.4s\n", (const char*)&cpu_vendor.ebx,(const char*)&cpu_vendor.edx,(const char*)&cpu_vendor.ecx);
+    printf("CPU Vendor: %.4s%.4s%.4s\n", (const char *)&cpu_vendor.ebx, (const char *)&cpu_vendor.edx, (const char *)&cpu_vendor.ecx);
 }
 
 /**
@@ -660,6 +663,33 @@ int setenv(const char *name, const char *value, int overwrite)
     }
 
     return _setenv(name, value, overwrite);
+}
+
+/**
+ * Fake the TEA_DIR environment variable to games that require it to run
+*/
+char *getenv(const char *name)
+{
+    char *(*_getenv)(const char *name) = dlsym(RTLD_NEXT, "getenv");
+
+    if ((strcmp(name, "TEA_DIR") == 0) && getConfig()->game == VT3)
+    {
+        if (getcwd(envpath, 100) == NULL)
+            return "";
+        char *ptr = strrchr(envpath, '/');
+        if (ptr == NULL)
+            return "";
+        *ptr = '\0';
+        return envpath;
+    }
+    else if (strcmp(name, "TEA_DIR") == 0)
+    {
+        if (getcwd(envpath, 100) == NULL)
+            return "";
+        return envpath;
+    }
+
+    return _getenv(name);
 }
 
 /**
