@@ -7,6 +7,7 @@
 #include "patch.h"
 #include "config.h"
 #include "hook.h"
+#include "securityboard.h"
 
 extern cpuvendor cpu_vendor;
 
@@ -91,6 +92,76 @@ int amDongleUpdate()
     return 0;
 }
 
+int amLibInit()
+{
+    uint32_t *amLibContext = (uint32_t *)0x08dfa2c0;//0x0809cb00;
+    *amLibContext = 1;
+    uint32_t *amLibInitializad = (uint32_t *)0x08dfa2c4;//0x0809cb04;
+    uint16_t *amLibPort1 = (uint16_t *)(0x08dfa2c4 + 4);//(0x0809cb04 + 4);
+    uint16_t *amLibPort2 = (uint16_t *)(0x08dfa2c4 + 4);//(0x0809cb04 + 6);
+    uint32_t *bcLibInitialized = (uint32_t *)(0x08dfa2c4 + 8);//0x0809cb0c;
+    *amLibInitializad = 1;
+    *amLibPort1 = 0xd000;
+    *amLibPort2 = 0x0004;
+    *bcLibInitialized = 0;
+    int res = ((int (*)(void))0x084dedc4)();//0x08065d80)();
+    if (res == 1)
+        *bcLibInitialized = 1;
+    return 0;
+}
+
+int amDipswInit()
+{
+    uint32_t *amDipswContext = (uint32_t *)0x08df9cec;//0x0809c12c;
+    uint32_t *amDipswContext1 = (uint32_t *)(0x08df9cec + 4);//(0x0809c12c + 4);
+    uint32_t *amDipswContext2 = (uint32_t *)(0x08df9cec + 8);//(0x0809c12c + 8);
+    uint32_t *amDipswContext3 = (uint32_t *)(0x08df9cec + 12);//(0x0809c12c + 12);
+    //typedef void *(*___constant_c_and_count_memset)(uint32_t *, int, size_t);
+    //___constant_c_and_count_memset func = (___constant_c_and_count_memset)//0x0805c3d5;
+    //func(amDipswContext, 0, 4);
+    *amDipswContext = 1;
+    *amDipswContext1 = 1;
+    *amDipswContext2 = 1;
+    *amDipswContext3 = 1;
+    return 0;
+}
+
+void print_binary(unsigned int number)
+{
+    if (number >> 1)
+    {
+        print_binary(number >> 1);
+    }
+    putc((number & 1) ? '1' : '0', stdout);
+}
+
+int amDipswGetData(uint8_t *dip)
+{
+    //printf("amDipswGetData Called!!!!!\n");
+    uint8_t result;
+    uint32_t data;
+
+    securityBoardIn(0x38, &data);
+
+    result = (~data & 4) != 0; // Test Button
+    if ((~data & 8) != 0)
+        result |= 2;           // Service Button
+    if ((~data & 0x10) != 0)
+        result |= 4;           // ??
+    if ((char)data >= 0)
+        result |= 8;           // ??
+    if ((~data & 0x100) != 0)
+        result |= 0x10;        // Rotation
+    if ((~data & 0x200) != 0)
+        result |= 0x20;        // Resolution Dip 4
+    if ((~data & 0x400) != 0)
+        result |= 0x40;        // Resolution Dip 5
+    if ((~data & 0x800) != 0)
+        result |= 0x80;        // Resolution Dip 6
+    *dip = result;
+    return 0;
+}
+
 void _putConsole(const char *format, ...)
 {
     va_list args;
@@ -115,7 +186,7 @@ void _putConsole(const char *format, ...)
             }
             else if (*format == '0')
             {
-                format ++;
+                format++;
                 if (*format == '2')
                 {
                     format++;
@@ -161,6 +232,10 @@ int initPatch()
         detourFunction(0x084d5b40, amDongleInit);
         detourFunction(0x084d45f9, amDongleIsAvailable);
         detourFunction(0x084d4fef, amDongleUpdate);
+        detourFunction(0x084d44fc, stub0);
+        detourFunction(0x084d4485, amDipswGetData);
+        detourFunction(0x084d9118, amLibInit);
+        detourFunction(0x084d438c, amDipswInit);
     }
     break;
     case ABC_2006:
@@ -199,7 +274,7 @@ int initPatch()
         detourFunction(0x081e3424, amDongleInit);
         detourFunction(0x081e3772, amDongleIsAvailable);
         detourFunction(0x081e369e, amDongleUpdate);
-        setVariable(0x081e7945, 0x00000001); //Test
+        setVariable(0x081e7945, 0x00000001); // Test
     }
     break;
     case OUTRUN:
@@ -261,10 +336,10 @@ int initPatch()
         detourFunction(0x085c6010, amDongleInit);
         detourFunction(0x085c63cc, amDongleIsAvailable);
         detourFunction(0x085c62f0, amDongleUpdate);
-        detourFunction(0x080b3426, stub0); // Stub returns 0
-        detourFunction(0x080cb6d4, stub0); // Stub returns 0
-        detourFunction(0x0840889e, stub0); // Stub returns 0
-        detourFunction(0x0840ab90, stub0); // Stub returns 0
+        detourFunction(0x080b3426, stub0);   // Stub returns 0
+        detourFunction(0x080cb6d4, stub0);   // Stub returns 0
+        detourFunction(0x0840889e, stub0);   // Stub returns 0
+        detourFunction(0x0840ab90, stub0);   // Stub returns 0
         setVariable(0x080e17af, 0x000000b8); // Patch IDK what
         setVariable(0x080e17b3, 0x01e88300); // Patch IDK what
     }
@@ -284,22 +359,22 @@ int initPatch()
         setVariable(0x08c08640, 2);          // bcLibDebugLevel
         setVariable(0x08c08634, 2);          // amOsinfoDebugLevel
         setVariable(0x08c08644, 0x0FFFFFFF); // s_logMask
+        detourFunction(0x08074a8c, _putConsole); // Debug Messages
+
         detourFunction(0x084e50d8, amDongleInit);
         detourFunction(0x084e5459, amDongleIsAvailable);
         detourFunction(0x084e537d, amDongleUpdate);
-        detourFunction(0x08074a8c, _putConsole);
+        detourFunction(0x084e500e, amDipswGetData);
+
         setVariable(0x080d1f02, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080d1f06, 0xE8C3C990); // Patch acpSystem::checkDongle
         setVariable(0x0807b76a, 0xc2839090); // Patch initializeArcadeBackup
-//        setVariable(0x082E006b, 0x00000280); // Set ResX
-//        setVariable(0x082E0078, 0x000001E0); // Set ResY
+        setVariable(0x082E006b, 0x00000780); // Set ResX
+        setVariable(0x082E0078, 0x00000438); // Set ResY
 
-        detourFunction(0x084e4efc, stub0); // Stub amDipswInit
-        detourFunction(0x084e500e, stub0); // Stub amDipswGetData
-        detourFunction(0x084e5086, stub0); // Stub amDipswSetLed
-        detourFunction(0x084e4f98, stub0); // Stub amDipswExit
+        detourFunction(0x084e5086, stub0);   // Stub amDipswSetLed
         setVariable(0x0840d858, 0x1c899090); // No more Full Screen from the Game
-        //From Teknoparrot
+        // From Teknoparrot AMDFIX
         setVariable(0x083ef701, 0x00036ee9); // AMDFIX
         setVariable(0x084032e0, 0x8b90c933); // fix shader compilation with AMD GPUs
         setVariable(0x08523950, 0x000000c3); // Remove ADXM_SetupFramework (Not necessary)
@@ -324,8 +399,8 @@ int initPatch()
         detourFunction(0x085106dc, amDongleIsAvailable);
         detourFunction(0x08510600, amDongleUpdate);
         detourFunction(0x08075012, _putConsole);
-        //setVariable(0x08303C4B, 0x00000780); // Set ResX
-        //setVariable(0x08303C58, 0x00000438); // Set ResY
+        // setVariable(0x08303C4B, 0x00000780); // Set ResX
+        // setVariable(0x08303C58, 0x00000438); // Set ResY
         setVariable(0x080dad63, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080dad67, 0xE8C3C990); // Patch acpSystem::checkDongle
         setVariable(0x0807e609, 0x90909090); // Patch initializeArcadeBackup
@@ -352,12 +427,34 @@ int initPatch()
         detourFunction(0x086e2336, amDongleInit);
         detourFunction(0x086e0d81, amDongleIsAvailable);
         detourFunction(0x086e17e5, amDongleUpdate);
+        detourFunction(0x086e0c0d, amDipswGetData);
+        detourFunction(0x086e0c84, stub0);
         detourFunction(0x0808f9a8, _putConsole);
         setVariable(0x080dad63, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080dad67, 0xE8C3C990); // Patch acpSystem::checkDongle
         setVariable(0x0807e609, 0x90909090); // Patch initializeArcadeBackup
         setVariable(0x0807e60D, 0xC2839090); // Patch initializeArcadeBackup
     }
+    break;
+    case SEGABOOT_2_4_SYM:
+    {
+        detourFunction(0x0805e8b0, amDongleInit);
+        detourFunction(0x0805ebc3, amDongleIsAvailable);
+        detourFunction(0x0805eb2a, amDongleUpdate);
+        //detourFunction(0x08062cf8, amLibInit);
+        //detourFunction(0x0805c200, amDipswInit);
+        detourFunction(0x0805c30b, amDipswGetData);
+    }
+    break;
+    case VT3:
+    {
+        detourFunction(0x0831c724, amDongleInit);
+        detourFunction(0x0831ca37, amDongleIsAvailable);
+        detourFunction(0x0831c99e, amDongleUpdate);
+        detourFunction(0x0831c5d7, amDipswGetData);
+        detourFunction(0x0831c64f, stub0);
+    }
+    break;
     default:
         // Don't do any patches for random games
         break;

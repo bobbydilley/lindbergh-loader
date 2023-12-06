@@ -27,6 +27,7 @@
 #include "rideboard.h"
 #include "securityboard.h"
 #include "patch.h"
+#include "pcidata.h"
 
 #define HOOK_FILE_NAME "/dev/zero"
 
@@ -37,10 +38,11 @@
 
 #define CPUINFO 0
 #define OSRELEASE 1
+#define PCI_CARD_1F0 2
 
 int hooks[5] = {-1, -1, -1, -1};
-FILE *fileHooks[2] = {NULL, NULL};
-int fileRead[2] = {0, 0};
+FILE *fileHooks[3] = {NULL, NULL, NULL};
+int fileRead[3] = {0, 0, 0};
 uint32_t elf_crc = 0;
 
 cpuvendor cpu_vendor = {0};
@@ -59,12 +61,10 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 {
     ucontext_t *ctx = ptr;
 
-    //printf("Caught segfault at address %p\n", info->si_addr);
-
     // Get the address of the instruction causing the segfault
     uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
 
-    printf("Code: 0x%08x - Port: 0x%08x\n", *code, (ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF) - basePortAddress);
+    printf("Code: 0x%08x - Port: 0x%08x\n", *code, (ctx->uc_mcontext.gregs[REG_EDX] & 0xFFFF));
     switch (*code)
     {
     case 0xED:
@@ -139,11 +139,6 @@ void __attribute__((constructor)) hook_init()
     dl_iterate_phdr(callback, NULL);
     // Get CPU ID 
     getCPUID();
-
-    FILE *file = fopen("dump_unpatched.bin","w+b");
-            
-    fwrite((void *)0x08048000,0x630fac,1,file);
-    fclose(file);
 
     // Implement SIGSEGV handler
     struct sigaction act;
@@ -291,6 +286,13 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
     {
         return _fopen("SEGA_KakuGothic-DB-Roman_12.abc", mode);
     }
+
+    if (strcmp(pathname, "/proc/bus/pci/00/1f.0") == 0)
+    {
+        fileRead[PCI_CARD_1F0] = 0;
+        fileHooks[PCI_CARD_1F0] =  _fopen(HOOK_FILE_NAME, mode);
+        return fileHooks[PCI_CARD_1F0];
+    }
     return _fopen(pathname, mode);
 }
 
@@ -330,6 +332,20 @@ FILE *fopen64(const char *pathname, const char *mode)
     return _fopen64(pathname, mode);
 }
 
+int fclose(FILE *stream)
+{
+    int (*_fclose)(FILE * stream) = dlsym(RTLD_NEXT, "fclose");
+    for (int i = 0; i < 3; i++)
+    {
+        if(fileHooks[i] == stream)
+        {
+            int r = _fclose(stream);
+            fileHooks[i] = NULL;
+            return r;
+        }
+    }
+    return _fclose(stream);
+}
 int openat(int dirfd, const char *pathname, int flags)
 {
     int (*_openat)(int dirfd, const char *pathname, int flags) = dlsym(RTLD_NEXT, "openat");
@@ -419,6 +435,18 @@ ssize_t read(int fd, void *buf, size_t count)
     }
 
     return _read(fd, buf, count);
+}
+
+size_t fread(void *buf, size_t size, size_t count, FILE *stream)
+{
+    size_t (*_fread)(void *buf, size_t size, size_t count, FILE *stream) = dlsym(RTLD_NEXT, "fread");
+    
+    if(stream == fileHooks[PCI_CARD_1F0])
+    {
+        memcpy(buf, pcidata, 68);
+        return 68;
+    }
+    return _fread(buf, size, count, stream);
 }
 
 ssize_t write(int fd, const void *buf, size_t count)

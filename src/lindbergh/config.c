@@ -40,6 +40,13 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if(elf_crc == 0x3cc635ee)
+    {
+        config.game = SEGABOOT_2_4_SYM;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xbc0c9ffa)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4;
@@ -150,6 +157,8 @@ char *getGameName()
     case SEGABOOT:
         return "SEGABOOT";
     case SEGABOOT_2_4:
+        return "SEGABOOT 2.4";
+        case SEGABOOT_2_4_SYM:
         return "SEGABOOT 2.4";
     case SEGABOOT_2_6:
         return "SEGABOOT 2.6";
