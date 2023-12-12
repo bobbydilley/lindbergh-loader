@@ -16,6 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <cpuid.h>
+#include <unistd.h>
 
 #include "hook.h"
 
@@ -27,6 +28,8 @@
 #include "rideboard.h"
 #include "securityboard.h"
 #include "patch.h"
+#include "pcidata.h"
+#include "input.h"
 
 #define HOOK_FILE_NAME "/dev/zero"
 
@@ -37,10 +40,12 @@
 
 #define CPUINFO 0
 #define OSRELEASE 1
+#define PCI_CARD_1F0 2
 
 int hooks[5] = {-1, -1, -1, -1};
-FILE *fileHooks[2] = {NULL, NULL};
-int fileRead[2] = {0, 0};
+FILE *fileHooks[3] = {NULL, NULL, NULL};
+int fileRead[3] = {0, 0, 0};
+char envpath[100];
 uint32_t elf_crc = 0;
 
 cpuvendor cpu_vendor = {0};
@@ -58,8 +63,6 @@ uint16_t basePortAddress = 0xFFFF;
 static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 {
     ucontext_t *ctx = ptr;
-
-    //printf("Caught segfault at address %p\n", info->si_addr);
 
     // Get the address of the instruction causing the segfault
     uint8_t *code = (uint8_t *)ctx->uc_mcontext.gregs[REG_EIP];
@@ -130,7 +133,6 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
     }
 }
 
-
 void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2023\nNot for public consumption\n\n");
@@ -149,7 +151,7 @@ void __attribute__((constructor)) hook_init()
 
     initConfig();
 
-    if(initPatch() != 0)
+    if (initPatch() != 0)
         exit(1);
 
     if (initEeprom() != 0)
@@ -176,10 +178,13 @@ void __attribute__((constructor)) hook_init()
             exit(1);
     }
 
+    if(initInput() != 0)
+        exit(1);
+
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
     printf("Now emulating %s", getGameName());
-    if(getConfig()->gameStatus == WORKING)
+    if (getConfig()->gameStatus == WORKING)
     {
         printf((" - Game is in working state.\n"));
     }
@@ -198,14 +203,12 @@ int open(const char *pathname, int flags)
     if (strcmp(pathname, "/dev/lbb") == 0)
     {
         hooks[BASEBOARD] = _open(HOOK_FILE_NAME, flags);
-        printf("Baseboard opened %d\n", hooks[BASEBOARD]);
         return hooks[BASEBOARD];
     }
 
     if (strcmp(pathname, "/dev/i2c/0") == 0)
     {
         hooks[EEPROM] = _open(HOOK_FILE_NAME, flags);
-        printf("EEPROM opened %d\n", hooks[EEPROM]);
         return hooks[EEPROM];
     }
 
@@ -215,7 +218,7 @@ int open(const char *pathname, int flags)
             return -1;
 
         hooks[SERIAL0] = _open(HOOK_FILE_NAME, flags);
-        printf("SERIAL0 Opened %d\n", hooks[SERIAL0]);
+        printf("Warning: SERIAL0 Opened %d\n", hooks[SERIAL0]);
         return hooks[SERIAL0];
     }
 
@@ -225,7 +228,7 @@ int open(const char *pathname, int flags)
             return -1;
 
         hooks[SERIAL1] = _open(HOOK_FILE_NAME, flags);
-        printf("SERIAL1 opened %d\n", hooks[SERIAL1]);
+        printf("Warning: SERIAL1 opened %d\n", hooks[SERIAL1]);
         return hooks[SERIAL1];
     }
 
@@ -252,7 +255,7 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
         return _fopen("lindbergrc", mode);
     }
 
-    if (strcmp(pathname, "/usr/lib/boot/logo.tga") == 0)
+    if ((strcmp(pathname, "/usr/lib/boot/logo.tga") == 0) || (strcmp(pathname, "/usr/lib/boot/logo.tga") == 0))
     {
         return _fopen("logo.tga", mode);
     }
@@ -274,6 +277,26 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
         return fileHooks[CPUINFO];
     }
 
+    if (strcmp(pathname, "/usr/lib/boot/logo_red.tga") == 0)
+    {
+        return _fopen("logo_red.tga", mode);
+    }
+    if (strcmp(pathname, "/usr/lib/boot/SEGA_KakuGothic-DB-Roman_12.tga") == 0)
+    {
+        return _fopen("SEGA_KakuGothic-DB-Roman_12.tga", mode);
+    }
+
+    if (strcmp(pathname, "/usr/lib/boot/SEGA_KakuGothic-DB-Roman_12.abc") == 0)
+    {
+        return _fopen("SEGA_KakuGothic-DB-Roman_12.abc", mode);
+    }
+
+    if (strcmp(pathname, "/proc/bus/pci/00/1f.0") == 0)
+    {
+        fileRead[PCI_CARD_1F0] = 0;
+        fileHooks[PCI_CARD_1F0] = _fopen(HOOK_FILE_NAME, mode);
+        return fileHooks[PCI_CARD_1F0];
+    }
     return _fopen(pathname, mode);
 }
 
@@ -313,6 +336,20 @@ FILE *fopen64(const char *pathname, const char *mode)
     return _fopen64(pathname, mode);
 }
 
+int fclose(FILE *stream)
+{
+    int (*_fclose)(FILE *stream) = dlsym(RTLD_NEXT, "fclose");
+    for (int i = 0; i < 3; i++)
+    {
+        if (fileHooks[i] == stream)
+        {
+            int r = _fclose(stream);
+            fileHooks[i] = NULL;
+            return r;
+        }
+    }
+    return _fclose(stream);
+}
 int openat(int dirfd, const char *pathname, int flags)
 {
     int (*_openat)(int dirfd, const char *pathname, int flags) = dlsym(RTLD_NEXT, "openat");
@@ -402,6 +439,18 @@ ssize_t read(int fd, void *buf, size_t count)
     }
 
     return _read(fd, buf, count);
+}
+
+size_t fread(void *buf, size_t size, size_t count, FILE *stream)
+{
+    size_t (*_fread)(void *buf, size_t size, size_t count, FILE *stream) = dlsym(RTLD_NEXT, "fread");
+
+    if (stream == fileHooks[PCI_CARD_1F0])
+    {
+        memcpy(buf, pcidata, 68);
+        return 68;
+    }
+    return _fread(buf, size, count, stream);
 }
 
 ssize_t write(int fd, const void *buf, size_t count)
@@ -565,31 +614,34 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 
 /**
  * Function to calculate CRC32 checksum in memory.
-*/
-uint32_t get_crc32(const char *s,size_t n) 
+ */
+uint32_t get_crc32(const char *s, size_t n)
 {
-    uint32_t crc=0xFFFFFFFF;
+    uint32_t crc = 0xFFFFFFFF;
 
-    for(size_t i=0;i<n;i++) {
-	char ch=s[i];
-	for(size_t j=0;j<8;j++) {
-	    uint32_t b=(ch^crc)&1;
-	    crc>>=1;
-	    if(b) crc=crc^0xEDB88320;
-		ch>>=1;
-	}
+    for (size_t i = 0; i < n; i++)
+    {
+        char ch = s[i];
+        for (size_t j = 0; j < 8; j++)
+        {
+            uint32_t b = (ch ^ crc) & 1;
+            crc >>= 1;
+            if (b)
+                crc = crc ^ 0xEDB88320;
+            ch >>= 1;
+        }
     }
     return ~crc;
 }
 
 /**
  * Callback function to get the offset and size of the execution program in memory of the ELF we hook to.
-*/
-static int callback(struct dl_phdr_info *info, size_t size, void *data) 
+ */
+static int callback(struct dl_phdr_info *info, size_t size, void *data)
 {
-    if((info->dlpi_phnum >= 3) && (info->dlpi_phdr[2].p_type == PT_LOAD) && (info->dlpi_phdr[2].p_flags == 5))
+    if ((info->dlpi_phnum >= 3) && (info->dlpi_phdr[2].p_type == PT_LOAD) && (info->dlpi_phdr[2].p_flags == 5))
     {
-        elf_crc = get_crc32((void *)(info->dlpi_addr + info->dlpi_phdr[2].p_vaddr+10),128);
+        elf_crc = get_crc32((void *)(info->dlpi_addr + info->dlpi_phdr[2].p_vaddr + 10), 128);
     }
     return 1;
 }
@@ -599,7 +651,7 @@ void getCPUID()
     unsigned eax;
     eax = 0;
     __get_cpuid(0, &eax, &cpu_vendor.ebx, &cpu_vendor.ecx, &cpu_vendor.edx);
-    printf("CPU Vendor: %.4s%.4s%.4s\n", (const char*)&cpu_vendor.ebx,(const char*)&cpu_vendor.edx,(const char*)&cpu_vendor.ecx);
+    printf("CPU Vendor: %.4s%.4s%.4s\n", (const char *)&cpu_vendor.ebx, (const char *)&cpu_vendor.edx, (const char *)&cpu_vendor.ecx);
 }
 
 /**
@@ -615,6 +667,33 @@ int setenv(const char *name, const char *value, int overwrite)
     }
 
     return _setenv(name, value, overwrite);
+}
+
+/**
+ * Fake the TEA_DIR environment variable to games that require it to run
+*/
+char *getenv(const char *name)
+{
+    char *(*_getenv)(const char *name) = dlsym(RTLD_NEXT, "getenv");
+
+    if ((strcmp(name, "TEA_DIR") == 0) && getConfig()->game == VIRTUA_TENNIS_3)
+    {
+        if (getcwd(envpath, 100) == NULL)
+            return "";
+        char *ptr = strrchr(envpath, '/');
+        if (ptr == NULL)
+            return "";
+        *ptr = '\0';
+        return envpath;
+    }
+    else if (strcmp(name, "TEA_DIR") == 0)
+    {
+        if (getcwd(envpath, 100) == NULL)
+            return "";
+        return envpath;
+    }
+
+    return _getenv(name);
 }
 
 /**

@@ -28,6 +28,7 @@ typedef enum
   R_TUNED,
   SEGABOOT,
   SEGABOOT_2_4,
+  SEGABOOT_2_4_SYM,
   SEGABOOT_2_6,
   SEGA_RACE_TV,
   THE_HOUSE_OF_THE_DEAD_4,
@@ -45,7 +46,8 @@ typedef enum
   VIRTUA_FIGHTER_5_REVB,
   VIRTUA_FIGHTER_5_REVC,
   VIRTUA_FIGHTER_5_R_REVD,
-  VIRTUA_TENNIS_3
+  VIRTUA_TENNIS_3,
+  VIRTUA_TENNIS_3_TEST
 } Game;
 
 typedef enum
@@ -59,6 +61,13 @@ typedef enum
   WORKING,
   NOT_WORKING
 } GameStatus;
+
+typedef enum
+{
+  JP,
+  US,
+  EX
+} GameRegion;
 
 typedef struct
 {
@@ -80,6 +89,8 @@ typedef struct
   Colour lindberghColour;
   GameStatus gameStatus;
   uint32_t crc32;
+  GameRegion region;
+  int freeplay;
 } EmulatorConfig;
 
 int initConfig();

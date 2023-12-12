@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "eeprom.h"
+#include "eeprom_settings.h"
 #include "config.h"
 
 #define I2C_SMBUS_BLOCK_MAX	32
@@ -45,6 +46,19 @@ int initEeprom()
     fclose(eeprom);
 
     eeprom = fopen(eepromPath, "rb+");
+
+    if(eepromSettingsInit(eeprom) !=0)
+    {
+        printf("Error initializing eeprom settings.");
+        fclose(eeprom);
+        return 1;
+    }
+    
+    if(getRegion() != getConfig()->region)
+        setRegion(eeprom, getConfig()->region);
+    
+    if(getFreeplay() != getConfig()->freeplay)
+        setFreeplay(eeprom, getConfig()->freeplay);
 
     fseek(eeprom, 0, SEEK_SET);
 

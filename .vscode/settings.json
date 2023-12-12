@@ -9,6 +9,7 @@
         "ioctl.h": "c",
         "segaeax.h": "c",
         "passthrough.h": "c",
-        "pthread.h": "c"
-    }
+        "config.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

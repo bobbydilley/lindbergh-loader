@@ -40,6 +40,13 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x3cc635ee)
+    {
+        config.game = SEGABOOT_2_4_SYM;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xbc0c9ffa)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4;
@@ -124,6 +131,13 @@ static int detectGame(uint32_t elf_crc)
     if (elf_crc == 0xc4b7e89)
     {
         config.game = VIRTUA_TENNIS_3;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0xffe3b0fd)
+    {
+        config.game = VIRTUA_TENNIS_3_TEST;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
@@ -198,9 +212,11 @@ char *getGameName()
     case SEGABOOT:
         return "Segaboot";
     case SEGABOOT_2_4:
-        return "Segaboot from 2.4 Kernel";
+        return "SEGABOOT 2.4";
+    case SEGABOOT_2_4_SYM:
+        return "SEGABOOT 2.4 Symbols";
     case SEGABOOT_2_6:
-        return "Segaboot from 2.6 Kernel";
+        return "SEGABOOT 2.6";
     case SEGA_RACE_TV:
         return "SEGA Race TV";
     case THE_HOUSE_OF_THE_DEAD_4:
@@ -235,6 +251,8 @@ char *getGameName()
         return "Virtua Fighter 5 Rev D";
     case VIRTUA_TENNIS_3:
         return "Virtua Tennis 3";
+    case VIRTUA_TENNIS_3_TEST:
+        return "Virtua Tennis 3 - Testmode";
     default:
         return unknownGameTitle;
     }
@@ -288,6 +306,18 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "JVS_PATH") == 0)
             strcpy(config->jvsPath, getNextToken(NULL, " ", &saveptr));
 
+        else if (strcmp(command, "RIDEBOARD_PATH") == 0)
+            strcpy(config->rideboardPath, getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "DRIVEBOARD_PATH") == 0)
+            strcpy(config->driveboardPath, getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "MOTIONBOARD_PATH") == 0)
+            strcpy(config->motionboardPath, getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command, "FREEPLAY") == 0)
+            config->freeplay = atoi(getNextToken(NULL, " ", &saveptr));
+
         else if (strcmp(command, "LINDBERGH_COLOUR") == 0)
         {
             char colour[256];
@@ -295,6 +325,19 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
             if (strcmp(colour, "RED") == 0)
                 config->lindberghColour = RED;
         }
+
+        else if (strcmp(command, "REGION") == 0)
+        {
+            char region[256];
+            strcpy(region, getNextToken(NULL, " ", &saveptr));
+            if (strcmp(region, "JP") == 0)
+                config->region = JP;
+            else if (strcmp(region, "US") == 0)
+                config->region = US;
+            else
+                config->region = EX;
+        }
+
         else
             printf("Error: Unknown settings command %s\n", command);
     }
@@ -320,10 +363,11 @@ int initConfig()
     config.width = 1024;
     config.height = 768;
     config.crc32 = elf_crc;
-
+    config.region = US;
+    config.freeplay = 1;
     if (detectGame(config.crc32) != 0)
     {
-        printf("Warning: Unsure what game this is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32);
+        printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);
     }
 
     configFile = fopen(CONFIG_PATH, "r");
