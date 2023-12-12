@@ -24,7 +24,6 @@ static void setVariable(uint32_t address, uint32_t value)
         printf("Error: Cannot unprotect memory region to change variable (%d)\n", prot);
         return;
     }
-    // printf("Variable: %8X , Value: %8X\n",(uint32_t)variable, value);
     *variable = value;
 }
 
@@ -42,7 +41,6 @@ static void setMem(uint32_t address, uint32_t value, int size)
         printf("Error: Cannot unprotect memory region to change variable (%d)\n", prot);
         return;
     }
-    // printf("Variable: %8X , Value: %8X\n",(uint32_t)variable, value);
     memccpy((void *)variable, (void *)value, 1, size);
 }
 
@@ -115,7 +113,7 @@ void _putConsole(const char *format, ...)
             }
             else if (*format == '0')
             {
-                format ++;
+                format++;
                 if (*format == '2')
                 {
                     format++;
@@ -144,11 +142,11 @@ void _putConsole(const char *format, ...)
 
 int initPatch()
 {
-    Game game = getConfig()->game;
+    EmulatorConfig *config = getConfig();
 
-    switch (game)
+    switch (config->game)
     {
-    case RTUNED:
+    case R_TUNED:
     {
         detourFunction(0x08366846, amDongleInit);
         detourFunction(0x08365301, amDongleIsAvailable);
@@ -156,14 +154,14 @@ int initPatch()
     }
     break;
 
-    case SRTV:
+    case SEGA_RACE_TV:
     {
         detourFunction(0x084d5b40, amDongleInit);
         detourFunction(0x084d45f9, amDongleIsAvailable);
         detourFunction(0x084d4fef, amDongleUpdate);
     }
     break;
-    case ABC_2006:
+    case AFTER_BURNER_CLIMAX_REVA:
     {
         setVariable(0x0a0a37e4, 2); // amBackupDebugLevel
         setVariable(0x0a0a3800, 2); // amCreditDebugLevel
@@ -177,12 +175,13 @@ int initPatch()
         setVariable(0x0a0a3a74, 2); // amOsinfoDebugLevel
         setVariable(0x0a0a3a78, 2); // amSysDataDebugLevel
         setVariable(0x0a0a3a80, 2); // bcLibDebugLevel
+
         detourFunction(0x081e4980, amDongleInit);
         detourFunction(0x081e4cce, amDongleIsAvailable);
         detourFunction(0x081e4bfa, amDongleUpdate);
     }
     break;
-    case ABC_2007:
+    case AFTER_BURNER_CLIMAX_REVB:
     {
         setVariable(0x0a0a0d24, 2); // amBackupDebugLevel
         setVariable(0x0a0a0d40, 2); // amCreditDebugLevel
@@ -196,13 +195,14 @@ int initPatch()
         setVariable(0x0a0a0fb4, 2); // amOsinfoDebugLevel
         setVariable(0x0a0a0fb8, 2); // amSysDataDebugLevel
         setVariable(0x0a0a0fc0, 2); // bcLibDebugLevel
+
         detourFunction(0x081e3424, amDongleInit);
         detourFunction(0x081e3772, amDongleIsAvailable);
         detourFunction(0x081e369e, amDongleUpdate);
-        setVariable(0x081e7945, 0x00000001); //Test
+        setVariable(0x081e7945, 0x00000001); // Test
     }
     break;
-    case OUTRUN:
+    case OUTRUN_2_SP_SDX_REVA:
     {
         setVariable(0x0893a24c, 2); // amBackupDebugLevel
         setVariable(0x0893a260, 2); // amCreditDebugLevel
@@ -216,6 +216,7 @@ int initPatch()
         setVariable(0x0893a4d4, 2); // amOsinfoDebugLevel
         setVariable(0x0893a4d8, 2); // amSysDataDebugLevel
         setVariable(0x0893a4e0, 2); // bcLibDebugLevel
+
         detourFunction(0x08190e80, amDongleInit);
         detourFunction(0x08191201, amDongleIsAvailable);
         detourFunction(0x08191125, amDongleUpdate);
@@ -238,12 +239,17 @@ int initPatch()
         setVariable(0x0a737f1c, 2);          // amSysDataDebugLevel
         setVariable(0x0a737f20, 2);          // bcLibDebugLevel
         setVariable(0x0a737f24, 0x0FFFFFFF); // s_logMask
+
         detourFunction(0x08320178, amDongleInit);
         detourFunction(0x08320459, amDongleIsAvailable);
         detourFunction(0x083203c0, amDongleUpdate);
-        setVariable(0x0837d6aa, cpu_vendor.ebx);
-        setVariable(0x0837d6ba, cpu_vendor.edx);
-        setVariable(0x0837d6c5, cpu_vendor.ecx);
+
+        if (config->amdFix)
+        {
+            setVariable(0x0837d6aa, cpu_vendor.ebx);
+            setVariable(0x0837d6ba, cpu_vendor.edx);
+            setVariable(0x0837d6c5, cpu_vendor.ecx);
+        }
     }
     break;
     case THE_HOUSE_OF_THE_DEAD_4_TEST:
@@ -251,24 +257,29 @@ int initPatch()
         detourFunction(0x080677a0, amDongleInit);
         detourFunction(0x08067a81, amDongleIsAvailable);
         detourFunction(0x080679e8, amDongleUpdate);
-        setVariable(0x0807217a, cpu_vendor.ebx);
-        setVariable(0x0807218a, cpu_vendor.edx);
-        setVariable(0x08072195, cpu_vendor.ecx);
+
+        if (config->amdFix)
+        {
+            setVariable(0x0807217a, cpu_vendor.ebx);
+            setVariable(0x0807218a, cpu_vendor.edx);
+            setVariable(0x08072195, cpu_vendor.ecx);
+        }
     }
     break;
-    case VF5_REVC:
+    case VIRTUA_FIGHTER_5_REVC:
     {
         detourFunction(0x085c6010, amDongleInit);
         detourFunction(0x085c63cc, amDongleIsAvailable);
         detourFunction(0x085c62f0, amDongleUpdate);
-        detourFunction(0x080b3426, stub0); // Stub returns 0
-        detourFunction(0x080cb6d4, stub0); // Stub returns 0
-        detourFunction(0x0840889e, stub0); // Stub returns 0
-        detourFunction(0x0840ab90, stub0); // Stub returns 0
+        detourFunction(0x080b3426, stub0);   // Stub returns 0
+        detourFunction(0x080cb6d4, stub0);   // Stub returns 0
+        detourFunction(0x0840889e, stub0);   // Stub returns 0
+        detourFunction(0x0840ab90, stub0);   // Stub returns 0
         setVariable(0x080e17af, 0x000000b8); // Patch IDK what
         setVariable(0x080e17b3, 0x01e88300); // Patch IDK what
     }
     break;
+
     case LETS_GO_JUNGLE:
     {
         setVariable(0x08c083a4, 2);          // amBackupDebugLevel
@@ -291,20 +302,25 @@ int initPatch()
         setVariable(0x080d1f02, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080d1f06, 0xE8C3C990); // Patch acpSystem::checkDongle
         setVariable(0x0807b76a, 0xc2839090); // Patch initializeArcadeBackup
-//        setVariable(0x082E006b, 0x00000280); // Set ResX
-//        setVariable(0x082E0078, 0x000001E0); // Set ResY
+        //        setVariable(0x082E006b, 0x00000280); // Set ResX
+        //        setVariable(0x082E0078, 0x000001E0); // Set ResY
 
         detourFunction(0x084e4efc, stub0); // Stub amDipswInit
         detourFunction(0x084e500e, stub0); // Stub amDipswGetData
         detourFunction(0x084e5086, stub0); // Stub amDipswSetLed
         detourFunction(0x084e4f98, stub0); // Stub amDipswExit
+
         setVariable(0x0840d858, 0x1c899090); // No more Full Screen from the Game
-        //From Teknoparrot
-        setVariable(0x083ef701, 0x00036ee9); // AMDFIX
-        setVariable(0x084032e0, 0x8b90c933); // fix shader compilation with AMD GPUs
-        setVariable(0x08523950, 0x000000c3); // Remove ADXM_SetupFramework (Not necessary)
+
+        if (config->amdFix)
+        {
+            setVariable(0x083ef701, 0x00036ee9); // AMDFIX
+            setVariable(0x084032e0, 0x8b90c933); // fix shader compilation with AMD GPUs
+            setVariable(0x08523950, 0x000000c3); // Remove ADXM_SetupFramework (Not necessary)
+        }
     }
     break;
+
     case LETS_GO_JUNGLE_SPECIAL:
     {
         setVariable(0x08c453e4, 2);          // amBackupDebugLevel
@@ -324,8 +340,8 @@ int initPatch()
         detourFunction(0x085106dc, amDongleIsAvailable);
         detourFunction(0x08510600, amDongleUpdate);
         detourFunction(0x08075012, _putConsole);
-        //setVariable(0x08303C4B, 0x00000780); // Set ResX
-        //setVariable(0x08303C58, 0x00000438); // Set ResY
+        // setVariable(0x08303C4B, 0x00000780); // Set ResX
+        // setVariable(0x08303C58, 0x00000438); // Set ResY
         setVariable(0x080dad63, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080dad67, 0xE8C3C990); // Patch acpSystem::checkDongle
         setVariable(0x0807e609, 0x90909090); // Patch initializeArcadeBackup
@@ -334,7 +350,8 @@ int initPatch()
         setVariable(0x08438954, 0x1c899090); // No more Full Screen from the Game
     }
     break;
-    case ID4:
+
+    case INITIALD_4:
     {
         setVariable(0x08d71750, 2);          // amBackupDebugLevel
         setVariable(0x08d71760, 2);          // amCreditDebugLevel
@@ -349,10 +366,12 @@ int initPatch()
         setVariable(0x08d719e0, 2);          // bcLibDebugLevel
         setVariable(0x08d719d4, 2);          // amOsinfoDebugLevel
         setVariable(0x08d719e4, 0x0FFFFFFF); // s_logMask
+        
         detourFunction(0x086e2336, amDongleInit);
         detourFunction(0x086e0d81, amDongleIsAvailable);
         detourFunction(0x086e17e5, amDongleUpdate);
         detourFunction(0x0808f9a8, _putConsole);
+
         setVariable(0x080dad63, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080dad67, 0xE8C3C990); // Patch acpSystem::checkDongle
         setVariable(0x0807e609, 0x90909090); // Patch initializeArcadeBackup

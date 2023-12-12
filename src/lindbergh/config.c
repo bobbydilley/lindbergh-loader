@@ -36,7 +36,7 @@ static int detectGame(uint32_t elf_crc)
     if (elf_crc == 0x93ea7e11)
     {
         config.game = SEGABOOT_2_4;
-        config.gameStatus = NOT_WORKING;
+        config.gameStatus = WORKING;
         return 0;
     }
 
@@ -56,7 +56,7 @@ static int detectGame(uint32_t elf_crc)
 
     if (elf_crc == 0x6d055308)
     {
-        config.game = OUTRUN;
+        config.game = OUTRUN_2_SP_SDX_REVA;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
@@ -65,7 +65,7 @@ static int detectGame(uint32_t elf_crc)
 
     if (elf_crc == 0xffdccaaa)
     {
-        config.game = OUTRUN_TEST;
+        config.game = OUTRUN_2_SP_SDX_REVA_TEST;
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
@@ -75,7 +75,7 @@ static int detectGame(uint32_t elf_crc)
     if (elf_crc == 0xd4726d61)
     {
         config.game = LETS_GO_JUNGLE;
-        config.gameStatus = NOT_WORKING;
+        config.gameStatus = WORKING;
         return 0;
     }
 
@@ -88,98 +88,157 @@ static int detectGame(uint32_t elf_crc)
 
     if (elf_crc == 0xcc02de7d)
     {
-        config.game = ABC_2006;
+        config.game = AFTER_BURNER_CLIMAX;
         config.gameStatus = WORKING;
         return 0;
     }
 
     if (elf_crc == 0x152530dd)
     {
-        config.game = ABC_2007;
+        config.game = AFTER_BURNER_CLIMAX_REVA;
         config.gameStatus = WORKING;
         return 0;
     }
 
     if (elf_crc == 0x4e9ccf33)
     {
-        config.game = ID4;
+        config.game = INITIALD_4;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
 
     if (elf_crc == 0xfb096f81)
     {
-        config.game = SRTV;
-        config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
-        config.gameStatus = NOT_WORKING;
-        return 0;
-    }
-    
-    if (elf_crc == 0xb05d9bbe)
-    {
-        config.game = RTUNED;
-        config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
+        config.game = SEGA_RACE_TV;
         config.gameStatus = WORKING;
         return 0;
     }
-    
+
+    if (elf_crc == 0xb05d9bbe)
+    {
+        config.game = R_TUNED;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xc4b7e89)
     {
-        config.game = VT3;
+        config.game = VIRTUA_TENNIS_3;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
 
     if (elf_crc == 0x1bf1b627)
     {
-        config.game = VF5_REVC;
+        config.game = VIRTUA_FIGHTER_5_REVC;
         config.gameStatus = WORKING;
         return 0;
     }
-    
+
+    if (elf_crc == 0x3CC635EE)
+    {
+        config.game = SEGABOOT_2_4;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     config.game = UNKNOWN;
     return 1;
 }
 
 char *getGameName()
 {
+    char *unknownGameTitle = "Unknown Game";
     switch (config.game)
     {
+    case AFTER_BURNER_CLIMAX:
+        return "After Burner Climax";
+    case AFTER_BURNER_CLIMAX_REVA:
+        return "After Burner Climax Rev A";
+    case AFTER_BURNER_CLIMAX_REVB:
+        return "After Burner Climax Rev B";
+    case AFTER_BURNER_CLIMAX_SDX:
+        return "After Burner Climax SDX";
+    case AFTER_BURNER_CLIMAX_SDX_REVA:
+        return "After Burner Climax SDX Rev A";
+    case GHOST_SQUAD_EVOLUTION:
+        return "Ghost Squad Evolution";
+    case HARLEY_DAVIDSON:
+        return "Harley Davidson: King of the Road";
+    case HUMMER:
+        return "Hummer";
+    case HUMMER_EXTREME:
+        return "Hummer Extreme";
+    case HUMMER_EXTREME_MDX:
+        return "Hummer Extreme MDX";
+    case INITIALD_4:
+        return "Initial D Arcade Stage 4";
+    case INITIALD_5:
+        return "Initial D Arcade Stage 5";
+    case LETS_GO_JUNGLE:
+        return "Let's Go Jungle! Lost on the Island of Spice!";
+    case LETS_GO_JUNGLE_SPECIAL:
+        return "Let's Go Jungle! Special!";
+    case OUTRUN_2_SP_SDX:
+        return "Outrun 2 SP SDX";
+    case OUTRUN_2_SP_SDX_REVA:
+        return "Outrun 2 SP SDX Rev A";
+    case OUTRUN_2_SP_SDX_REVA_TEST:
+        return "Outrun 2 SP SDX Rev A Test Mode";
+    case OUTRUN_2_SP_SDX_TEST:
+        return "Outrun 2 SP SDX Test Mode";
+    case PRIMEVAL_HUNT:
+        return "Primeval Hunt";
+    case RAMBO:
+        return "Rambo";
+    case RAMBO_CHINA:
+        return "Rambo China Release";
+    case R_TUNED:
+        return "RTuned";
     case SEGABOOT:
-        return "SEGABOOT";
+        return "Segaboot";
     case SEGABOOT_2_4:
-        return "SEGABOOT 2.4";
+        return "Segaboot from 2.4 Kernel";
     case SEGABOOT_2_6:
-        return "SEGABOOT 2.6";
-    case OUTRUN:
-        return "Outrun 2 SP";
+        return "Segaboot from 2.6 Kernel";
+    case SEGA_RACE_TV:
+        return "SEGA Race TV";
     case THE_HOUSE_OF_THE_DEAD_4:
         return "The House of the Dead 4";
+    case THE_HOUSE_OF_THE_DEAD_4_SPECIAL:
+        return "The House of the Dead 4 Special";
+    case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:
+        return "The House of the Dead 4 Special Test Mode";
     case THE_HOUSE_OF_THE_DEAD_4_TEST:
-        return "The House of the Dead 4 - Test Menu";
-    case LETS_GO_JUNGLE:
-        return "Let's Go Jungle! Lost on the Island of Spice";
-    case LETS_GO_JUNGLE_SPECIAL:
-        return "Let's Go Jungle Special";
-    case ABC_2006:
-    case ABC_2007:
-        return "After Burner Climax";
-    case ID4:
-        return "Initial D 4";
-    case SRTV:
-        return "SEGA Race TV";
-    case RTUNED:
-        return "R-Tuned Ultimate Street Racing";
-    case VT3:
+        return "The House of the Dead 4 Test Mode";
+    case THE_HOUSE_OF_THE_DEAD_EX:
+        return "The House of the Dead Ex";
+    case TOO_SPICY:
+        return "2 Step : 2 Spicy";
+    case UNKNOWN:
+        return unknownGameTitle;
+    case VIRTUA_FIGHTER_5:
+        return "Virtua Fighter 5";
+    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN:
+        return "Virtua Fighter 5 Final Showdown";
+    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVA:
+        return "Virtua Fighter 5 Final Showdown Rev A";
+    case VIRTUA_FIGHTER_5_R:
+        return " Virtua Fighter 5 R";
+    case VIRTUA_FIGHTER_5_REVA:
+        return "Virtua Fighter 5 Rev A";
+    case VIRTUA_FIGHTER_5_REVB:
+        return "Virtua Fighter 5 Rev B";
+    case VIRTUA_FIGHTER_5_REVC:
+        return "Virtua Fighter 5 Rev C";
+    case VIRTUA_FIGHTER_5_R_REVD:
+        return "Virtua Fighter 5 Rev D";
+    case VIRTUA_TENNIS_3:
         return "Virtua Tennis 3";
-    case VF5_REVC:
-        return "Virtua Fighter 5 - RevC";
     default:
-        return "Unknown Game";
+        return unknownGameTitle;
     }
-    return "Unknown Game";
+    return unknownGameTitle;
 }
 
 int readConfig(FILE *configFile, EmulatorConfig *config)
@@ -223,6 +282,9 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "EMULATE_JVS") == 0)
             config->emulateJVS = atoi(getNextToken(NULL, " ", &saveptr));
 
+        else if (strcmp(command, "AMD_FIX") == 0)
+            config->amdFix = atoi(getNextToken(NULL, " ", &saveptr));
+
         else if (strcmp(command, "JVS_PATH") == 0)
             strcpy(config->jvsPath, getNextToken(NULL, " ", &saveptr));
 
@@ -246,6 +308,7 @@ int initConfig()
     config.emulateDriveboard = 0;
     config.emulateMotionboard = 0;
     config.emulateJVS = 1;
+    config.amdFix = 0;
     config.fullscreen = 0;
     config.lindberghColour = YELLOW;
     strcpy(config.eepromPath, "eeprom.bin");
@@ -257,9 +320,10 @@ int initConfig()
     config.width = 1024;
     config.height = 768;
     config.crc32 = elf_crc;
+
     if (detectGame(config.crc32) != 0)
     {
-        printf("Warning: Unsure what game this is, using default configuration values.\n");
+        printf("Warning: Unsure what game this is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32);
     }
 
     configFile = fopen(CONFIG_PATH, "r");

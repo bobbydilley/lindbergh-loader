@@ -8,6 +8,7 @@
         "stdarg.h": "c",
         "ioctl.h": "c",
         "segaeax.h": "c",
-        "passthrough.h": "c"
+        "passthrough.h": "c",
+        "pthread.h": "c"
     }
 }

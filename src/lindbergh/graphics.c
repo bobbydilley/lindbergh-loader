@@ -30,7 +30,8 @@ FGAPI int FGAPIENTRY glutEnterGameMode()
   glutCreateWindow(gameTitle);
 
   // Outrun doesn't run the glutMainLoop through, so we'll do that here
-  if (getConfig()->game == OUTRUN || getConfig()->game == OUTRUN_TEST)
+  Game game = getConfig()->game;
+  if (game == OUTRUN_2_SP_SDX || game == OUTRUN_2_SP_SDX_TEST || game == OUTRUN_2_SP_SDX_REVA || game == OUTRUN_2_SP_SDX_REVA_TEST)
   {
     pthread_t glutMainLoopID;
     pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);
@@ -163,7 +164,6 @@ int XNextEvent(Display *display, XEvent *event_return)
     {
     case 28:
       setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
-      //securityBoardSetSwitch(BUTTON_TEST, 1);
       break;
     case 39:
       setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);

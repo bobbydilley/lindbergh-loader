@@ -3,6 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h> /* POSIX threads API to create and manage threads in the program */
 
 /* The in and out packets used to read and write to and from*/
 JVSPacket inputPacket, outputPacket;
@@ -12,6 +13,8 @@ unsigned char outputBuffer[JVS_MAX_PACKET_SIZE], inputBuffer[JVS_MAX_PACKET_SIZE
 
 /* Holds the status of the sense line */
 int senseLine = 3;
+
+pthread_mutex_t jvsMutex = PTHREAD_MUTEX_INITIALIZER;
 
 JVSIO io = {0};
 
@@ -176,6 +179,8 @@ JVSStatus processPacket()
 
     /* Set the entire packet success line */
     outputPacket.data[outputPacket.length++] = STATUS_SUCCESS;
+
+    pthread_mutex_lock(&jvsMutex);
 
     while (index < inputPacket.length - 1)
     {
@@ -470,6 +475,8 @@ JVSStatus processPacket()
         index += size;
     }
 
+    pthread_mutex_unlock(&jvsMutex);
+
     writePacket(&outputPacket);
 
     return JVS_STATUS_SUCCESS;
@@ -559,6 +566,8 @@ JVSStatus readPacket(JVSPacket *packet)
  */
 JVSStatus writePacket(JVSPacket *packet)
 {
+
+   
     /* Get pointer to raw data in packet */
     unsigned char *packetPointer = (unsigned char *)packet;
 
@@ -600,7 +609,7 @@ JVSStatus writePacket(JVSPacket *packet)
 
 /**
  * Gets the sense line value
- * 
+ *
  * Values are:
  *  3 = no device, after a RESET
  *  1 = address assigned
@@ -638,7 +647,10 @@ int incrementCoin(JVSPlayer player, int amount)
 
 int setAnalogue(JVSInput channel, int value)
 {
+    pthread_mutex_lock(&jvsMutex);
     io.state.analogueChannel[channel] = value;
+    pthread_mutex_unlock(&jvsMutex);
+
     return 1;
 }
 
