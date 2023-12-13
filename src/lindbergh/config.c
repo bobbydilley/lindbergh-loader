@@ -68,6 +68,20 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x12266f81)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_SP;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+    
+    if (elf_crc == 0x83ba3b45)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_SP_TEST;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0x85c0c22a)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_EX;
@@ -217,6 +231,10 @@ char *getGameName()
         return "The House of the Dead 4 - Test Menu";
     case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
         return "The House of the Dead 4";
+    case THE_HOUSE_OF_THE_DEAD_SP:
+        return "House of the Dead 4 Special";
+    case THE_HOUSE_OF_THE_DEAD_SP_TEST:
+        return "House of the Dead 4 Special - Test Menu";
     case THE_HOUSE_OF_THE_DEAD_EX:
         return "The House of the Dead EX";
     case THE_HOUSE_OF_THE_DEAD_EX_TEST:

@@ -378,6 +378,34 @@ int initPatch()
         setVariable(0x08072195, cpu_vendor.ecx);
     }
     break;
+    case THE_HOUSE_OF_THE_DEAD_SP:
+    {
+        detourFunction(0x08363438, amDongleInit);
+        detourFunction(0x0836374b, amDongleIsAvailable);
+        detourFunction(0x083636b2, amDongleUpdate);
+        // Fixes
+        detourFunction(0x08360e93, amDipswGetData);
+        detourFunction(0x08360f0b, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x083cef0a, cpu_vendor.ebx);
+        setVariable(0x083cef1a, cpu_vendor.edx);
+        setVariable(0x083cef25, cpu_vendor.ecx);
+    }
+    break;
+    case THE_HOUSE_OF_THE_DEAD_SP_TEST:
+    {
+        detourFunction(0x0806e914, amDongleInit);
+        detourFunction(0x0806ec27, amDongleIsAvailable);
+        detourFunction(0x0806eb8e, amDongleUpdate);
+        // Fixes
+        detourFunction(0x0806e7c7, amDipswGetData);
+        detourFunction(0x0806e83f, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x0807a3ba, cpu_vendor.ebx);
+        setVariable(0x0807a3ca, cpu_vendor.edx);
+        setVariable(0x0807a3d5, cpu_vendor.ecx);
+    }
+    break;
     case THE_HOUSE_OF_THE_DEAD_EX:
     {
         detourFunction(0x084ba886, amDongleInit);
