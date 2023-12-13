@@ -29,10 +29,7 @@
 #include "securityboard.h"
 #include "patch.h"
 #include "pcidata.h"
-<<<<<<< HEAD
 #include "input.h"
-    =======
->>>>>>> More-patching
 
 #define HOOK_FILE_NAME "/dev/zero"
 
