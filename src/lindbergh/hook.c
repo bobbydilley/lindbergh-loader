@@ -31,7 +31,7 @@
 #include "pcidata.h"
 <<<<<<< HEAD
 #include "input.h"
-=======
+    =======
 >>>>>>> More-patching
 
 #define HOOK_FILE_NAME "/dev/zero"
@@ -45,7 +45,7 @@
 #define OSRELEASE 1
 #define PCI_CARD_1F0 2
 
-int hooks[5] = {-1, -1, -1, -1};
+    int hooks[5] = {-1, -1, -1, -1};
 FILE *fileHooks[3] = {NULL, NULL, NULL};
 int fileRead[3] = {0, 0, 0};
 char envpath[100];
@@ -140,10 +140,10 @@ void __attribute__((constructor)) hook_init()
 {
     printf("SEGA Lindbergh Loader\nRobert Dilley 2023\nNot for public consumption\n\n");
 
-    // Get offsets of the Game's ELF and calculate CRC32. 
+    // Get offsets of the Game's ELF and calculate CRC32.
     dl_iterate_phdr(callback, NULL);
 
-    // Get CPU ID 
+    // Get CPU ID
     getCPUID();
 
     // Implement SIGSEGV handler
@@ -181,7 +181,7 @@ void __attribute__((constructor)) hook_init()
             exit(1);
     }
 
-    if(initInput() != 0)
+    if (initInput() != 0)
         exit(1);
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
@@ -674,17 +674,13 @@ int setenv(const char *name, const char *value, int overwrite)
 
 /**
  * Fake the TEA_DIR environment variable to games that require it to run
-*/
+ */
 char *getenv(const char *name)
 {
     char *(*_getenv)(const char *name) = dlsym(RTLD_NEXT, "getenv");
 
-<<<<<<< HEAD
-    if ((strcmp(name, "TEA_DIR") == 0) && getConfig()->game == VIRTUA_TENNIS_3)
-=======
-    if ((strcmp(name, "TEA_DIR") == 0) && ((getConfig()->game == VT3) || (getConfig()->game == VT3_TESTMODE) ||
-                                          ((getConfig()->game == RAMBO)) || (getConfig()->game == TOO_SPICY)))
->>>>>>> More-patching
+    if ((strcmp(name, "TEA_DIR") == 0) && ((getConfig()->game == VIRTUA_TENNIS_3) || (getConfig()->game == VIRTUA_TENNIS_3_TEST) ||
+                                           ((getConfig()->game == RAMBO)) || (getConfig()->game == TOO_SPICY)))
     {
         if (getcwd(envpath, 100) == NULL)
             return "";
