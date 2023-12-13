@@ -4,6 +4,7 @@
 #include <fcntl.h>  /* File control definitions */
 #include <errno.h>  /* Error number definitions */
 #include <stdlib.h> /* Standard library functions like malloc, free, exit, and atoi */
+#include <sys/select.h>
 
 #include "baseboard.h"
 

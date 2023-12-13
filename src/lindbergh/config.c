@@ -54,9 +54,30 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x5df569f5)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_4_STRIPPED;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0x7235bda8)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4_TEST;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x85c0c22a)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_EX;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+    
+    if (elf_crc == 0xb9a166bb)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_EX_TEST;
         config.gameStatus = WORKING;
         return 0;
     }
@@ -114,11 +135,24 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x7f3f9f0c)
+    {
+        config.game = ID4_E;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xfb096f81)
     {
         config.game = SRTV;
         config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x77ebac34)
+    {
+        config.game = RAMBO;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
@@ -127,11 +161,17 @@ static int detectGame(uint32_t elf_crc)
     {
         config.game = RTUNED;
         config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
     
+    if (elf_crc == 0x4c768eb4)
+    {
+        config.game = TOO_SPICY;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xc4b7e89)
     {
         config.game = VT3;
@@ -175,6 +215,12 @@ char *getGameName()
         return "The House of the Dead 4";
     case THE_HOUSE_OF_THE_DEAD_4_TEST:
         return "The House of the Dead 4 - Test Menu";
+    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
+        return "The House of the Dead 4";
+    case THE_HOUSE_OF_THE_DEAD_EX:
+        return "The House of the Dead EX";
+    case THE_HOUSE_OF_THE_DEAD_EX_TEST:
+        return "The House of the Dead EX - Test Menu";
     case LETS_GO_JUNGLE:
         return "Let's Go Jungle! Lost on the Island of Spice";
     case LETS_GO_JUNGLE_SPECIAL:
@@ -184,10 +230,16 @@ char *getGameName()
         return "After Burner Climax";
     case ID4:
         return "Initial D 4";
+    case ID4_E:
+        return "Initial D 4 Export";
     case SRTV:
         return "SEGA Race TV";
+    case RAMBO:
+        return "Rambo";
     case RTUNED:
         return "R-Tuned Ultimate Street Racing";
+    case TOO_SPICY:
+        return "Too Spicy";   
     case VT3:
         return "Virtua Tennis 3";
     case VT3_TESTMODE:

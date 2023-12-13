@@ -10,5 +10,7 @@
         "segaeax.h": "c",
         "passthrough.h": "c"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-x86",
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc"
 }

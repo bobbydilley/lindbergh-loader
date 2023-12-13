@@ -260,10 +260,13 @@ JVSStatus processPacket()
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
             outputPacket.data[outputPacket.length + 1] = io.state.inputSwitch[0];
             outputPacket.length += 2;
+
+            //printf("SW=%08d\r", io.state.inputSwitch[0]);
+            
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
                 for (int j = 0; j < inputPacket.data[index + 2]; j++)
-                {
+                {       
                     outputPacket.data[outputPacket.length++] = io.state.inputSwitch[i + 1] >> (8 - (j * 8));
                 }
             }
@@ -623,7 +626,6 @@ int setSwitch(JVSPlayer player, JVSInput switchNumber, int value)
     {
         io.state.inputSwitch[player] &= ~switchNumber;
     }
-
     return 1;
 }
 

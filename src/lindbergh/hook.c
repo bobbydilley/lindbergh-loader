@@ -673,7 +673,8 @@ char *getenv(const char *name)
 {
     char *(*_getenv)(const char *name) = dlsym(RTLD_NEXT, "getenv");
 
-    if ((strcmp(name, "TEA_DIR") == 0) && getConfig()->game == VT3)
+    if ((strcmp(name, "TEA_DIR") == 0) && ((getConfig()->game == VT3) || (getConfig()->game == VT3_TESTMODE) ||
+                                          ((getConfig()->game == RAMBO)) || (getConfig()->game == TOO_SPICY)))
     {
         if (getcwd(envpath, 100) == NULL)
             return "";

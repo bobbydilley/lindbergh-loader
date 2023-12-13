@@ -163,11 +163,11 @@ int XNextEvent(Display *display, XEvent *event_return)
     {
     case 28:
       setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
-      //securityBoardSetSwitch(BUTTON_TEST, event_return->type == KeyPress);
+      // securityBoardSetSwitch(BUTTON_TEST, event_return->type == KeyPress);
       break;
     case 39:
       setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);
-      //securityBoardSetSwitch(BUTTON_SERVICE, event_return->type == KeyPress);
+      // securityBoardSetSwitch(BUTTON_SERVICE, event_return->type == KeyPress);
       break;
     case 14:
       incrementCoin(PLAYER_1, event_return->type == KeyPress);
@@ -248,9 +248,27 @@ int XSetStandardProperties(Display *display, Window window, const char *window_n
   return _XSetStandardProperties(display, window, gameTitle, icon_name, icon_pixmap, argv, argc, hints);
 }
 
-Bool XF86VidModeSwitchToMode(Display *display, int screen, XF86VidModeModeInfo *modeline)
+Bool XF86VidModeSwitchToMode(Display *display, int screen, XF86VidModeModeInfo *modesinfo)
 {
   return 0;
+}
+
+int XF86VidModeGetAllModeLines(Display *display, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo)
+{
+  int (*_XF86VidModeGetAllModeLines)(Display *display, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo) = dlsym(RTLD_NEXT, "XF86VidModeGetAllModeLines");
+
+  if (_XF86VidModeGetAllModeLines(display, screen, modecount_return, modesinfo) != 1)
+  {
+    printf("Error: Could not get list of screen modes.\n");
+    exit(1);
+  }
+  else
+  {
+    XF86VidModeModeInfo **modes = *modesinfo;
+    modes[0]->hdisplay = getConfig()->width;
+    modes[0]->vdisplay = getConfig()->height;
+  }
+  return true;
 }
 
 typedef unsigned int uint;
