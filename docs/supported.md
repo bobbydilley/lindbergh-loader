@@ -23,7 +23,7 @@ Working is defined by getting into attract mode and running the game, but not ne
 - Initial D 4
 - Virtua Tennis 3
 
-## Games that current do not work
+## Games that currently do not work
 
 - Hummer
 - Initial D 5

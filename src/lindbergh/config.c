@@ -47,6 +47,13 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x3cc635ee)
+    {
+        config.game = SEGABOOT_2_4_SYM;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xbc0c9ffa)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4;
@@ -54,9 +61,44 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x5df569f5)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_4_STRIPPED;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0x7235bda8)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4_TEST;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x12266f81)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_4_SPECIAL;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x83ba3b45)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x85c0c22a)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_EX;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0xb9a166bb)
+    {
+        config.game = THE_HOUSE_OF_THE_DEAD_EX_TEST;
         config.gameStatus = WORKING;
         return 0;
     }
@@ -114,16 +156,39 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x7f3f9f0c)
+    {
+        config.game = INITIALD_4_REVE;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xfb096f81)
     {
         config.game = SEGA_RACE_TV;
-        config.gameStatus = WORKING;
+        config.emulateDriveboard = 1;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x77ebac34)
+    {
+        config.game = RAMBO;
+        config.gameStatus = NOT_WORKING;
         return 0;
     }
 
     if (elf_crc == 0xb05d9bbe)
     {
         config.game = R_TUNED;
+        config.emulateDriveboard = 1;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x4c768eb4)
+    {
+        config.game = TOO_SPICY;
         config.gameStatus = WORKING;
         return 0;
     }
@@ -208,7 +273,7 @@ char *getGameName()
     case RAMBO_CHINA:
         return "Rambo China Release";
     case R_TUNED:
-        return "RTuned";
+        return "R-Tuned Ultimate Street Racing";
     case SEGABOOT:
         return "Segaboot";
     case SEGABOOT_2_4:
@@ -252,7 +317,9 @@ char *getGameName()
     case VIRTUA_TENNIS_3:
         return "Virtua Tennis 3";
     case VIRTUA_TENNIS_3_TEST:
-        return "Virtua Tennis 3 - Testmode";
+        return "Virtua Tennis 3 Test Mode";
+    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
+        return "The House of the Dead 4";
     default:
         return unknownGameTitle;
     }

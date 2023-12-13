@@ -70,9 +70,14 @@ static void detourFunction(uint32_t address, void *function)
     memcpy((void *)address, cave, 5);
 }
 
-int stub0()
+int stubRetZero()
 {
     return 0;
+}
+
+int stubRetOne()
+{
+    return 1;
 }
 
 int amDongleInit()
@@ -219,6 +224,7 @@ int initPatch()
     {
     case R_TUNED:
     {
+        // Security
         detourFunction(0x08366846, amDongleInit);
         detourFunction(0x08365301, amDongleIsAvailable);
         detourFunction(0x08365cf7, amDongleUpdate);
@@ -227,17 +233,25 @@ int initPatch()
 
     case SEGA_RACE_TV:
     {
+        // Security
         detourFunction(0x084d5b40, amDongleInit);
         detourFunction(0x084d45f9, amDongleIsAvailable);
         detourFunction(0x084d4fef, amDongleUpdate);
+<<<<<<< HEAD
         detourFunction(0x084d44fc, stub0);
         detourFunction(0x084d4485, amDipswGetData);
         detourFunction(0x084d9118, amLibInit);
         detourFunction(0x084d438c, amDipswInit);
+=======
+        // Fixes
+        detourFunction(0x084d44fc, stubRetZero); // Stub amDipswSetLed
+        detourFunction(0x084d4485, amDipswGetData);
+>>>>>>> More-patching
     }
     break;
     case AFTER_BURNER_CLIMAX_REVA:
     {
+        // Debug Messages
         setVariable(0x0a0a37e4, 2); // amBackupDebugLevel
         setVariable(0x0a0a3800, 2); // amCreditDebugLevel
         setVariable(0x0a0a3a58, 2); // amDipswDebugLevel
@@ -250,14 +264,24 @@ int initPatch()
         setVariable(0x0a0a3a74, 2); // amOsinfoDebugLevel
         setVariable(0x0a0a3a78, 2); // amSysDataDebugLevel
         setVariable(0x0a0a3a80, 2); // bcLibDebugLevel
+<<<<<<< HEAD
 
+=======
+        // Security
+>>>>>>> More-patching
         detourFunction(0x081e4980, amDongleInit);
         detourFunction(0x081e4cce, amDongleIsAvailable);
         detourFunction(0x081e4bfa, amDongleUpdate);
+        // Fixes
+        detourFunction(0x081e48b6, amDipswGetData);
+        detourFunction(0x081e492e, stubRetZero); // Stub amDipswSetLed
+        // Does not work
+        setVariable(0x08061c31, 0x0000000c); // Force HD resolution
     }
     break;
     case AFTER_BURNER_CLIMAX_REVB:
     {
+        // Debug Messages
         setVariable(0x0a0a0d24, 2); // amBackupDebugLevel
         setVariable(0x0a0a0d40, 2); // amCreditDebugLevel
         setVariable(0x0a0a0f98, 2); // amDipswDebugLevel
@@ -270,15 +294,26 @@ int initPatch()
         setVariable(0x0a0a0fb4, 2); // amOsinfoDebugLevel
         setVariable(0x0a0a0fb8, 2); // amSysDataDebugLevel
         setVariable(0x0a0a0fc0, 2); // bcLibDebugLevel
+<<<<<<< HEAD
 
         detourFunction(0x081e3424, amDongleInit);
         detourFunction(0x081e3772, amDongleIsAvailable);
         detourFunction(0x081e369e, amDongleUpdate);
         setVariable(0x081e7945, 0x00000001); // Test
+=======
+        // Security
+        detourFunction(0x081e3424, amDongleInit);
+        detourFunction(0x081e3772, amDongleIsAvailable);
+        detourFunction(0x081e369e, amDongleUpdate);
+        // Fixes
+        detourFunction(0x081e335a, amDipswGetData);
+        detourFunction(0x081e33d2, stubRetZero); // Stub amDipswSetLed
+>>>>>>> More-patching
     }
     break;
     case OUTRUN_2_SP_SDX_REVA:
     {
+        // Debug Messages
         setVariable(0x0893a24c, 2); // amBackupDebugLevel
         setVariable(0x0893a260, 2); // amCreditDebugLevel
         setVariable(0x0893a4b8, 2); // amDipswDebugLevel
@@ -291,15 +326,23 @@ int initPatch()
         setVariable(0x0893a4d4, 2); // amOsinfoDebugLevel
         setVariable(0x0893a4d8, 2); // amSysDataDebugLevel
         setVariable(0x0893a4e0, 2); // bcLibDebugLevel
+<<<<<<< HEAD
 
+=======
+        // Security
+>>>>>>> More-patching
         detourFunction(0x08190e80, amDongleInit);
         detourFunction(0x08191201, amDongleIsAvailable);
         detourFunction(0x08191125, amDongleUpdate);
+        // Fixes
+        detourFunction(0x08190db6, amDipswGetData);
+        detourFunction(0x08190e2e, stubRetZero); // Stub amDipswSetLed
     }
     break;
 
     case THE_HOUSE_OF_THE_DEAD_4:
     {
+        // Debug Messages
         setVariable(0x0a737c60, 2);          // amBackupDebugLevel
         setVariable(0x0a737c64, 2);          // amChunkDataDebugLevel
         setVariable(0x0a737c80, 2);          // amCreditDebugLevel
@@ -314,6 +357,7 @@ int initPatch()
         setVariable(0x0a737f1c, 2);          // amSysDataDebugLevel
         setVariable(0x0a737f20, 2);          // bcLibDebugLevel
         setVariable(0x0a737f24, 0x0FFFFFFF); // s_logMask
+<<<<<<< HEAD
 
         detourFunction(0x08320178, amDongleInit);
         detourFunction(0x08320459, amDongleIsAvailable);
@@ -325,6 +369,34 @@ int initPatch()
             setVariable(0x0837d6ba, cpu_vendor.edx);
             setVariable(0x0837d6c5, cpu_vendor.ecx);
         }
+=======
+        // Security
+        detourFunction(0x08320178, amDongleInit);
+        detourFunction(0x08320459, amDongleIsAvailable);
+        detourFunction(0x083203c0, amDongleUpdate);
+        // Fixes
+        detourFunction(0x0831ddd7, amDipswGetData);
+        detourFunction(0x0831de4f, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x0837d6aa, cpu_vendor.ebx);
+        setVariable(0x0837d6ba, cpu_vendor.edx);
+        setVariable(0x0837d6c5, cpu_vendor.ecx);
+>>>>>>> More-patching
+    }
+    break;
+    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
+    {
+        //// Security
+        detourFunction(0x0831ad04, amDongleInit);
+        detourFunction(0x0831b017, amDongleIsAvailable);
+        detourFunction(0x0831af7e, amDongleUpdate);
+        //// Fixes
+        detourFunction(0x0831875f, amDipswGetData);
+        detourFunction(0x083187d7, stubRetZero); // Stub amDipswSetLed
+        //// CPU patch to support AMD processors
+        setVariable(0x0837963a, cpu_vendor.ebx);
+        setVariable(0x0837964a, cpu_vendor.edx);
+        setVariable(0x08379655, cpu_vendor.ecx);
     }
     break;
     case THE_HOUSE_OF_THE_DEAD_4_TEST:
@@ -332,6 +404,7 @@ int initPatch()
         detourFunction(0x080677a0, amDongleInit);
         detourFunction(0x08067a81, amDongleIsAvailable);
         detourFunction(0x080679e8, amDongleUpdate);
+<<<<<<< HEAD
 
         if (config->amdFix)
         {
@@ -342,16 +415,97 @@ int initPatch()
     }
     break;
     case VIRTUA_FIGHTER_5_REVC:
+=======
+        // Fixes
+        detourFunction(0x08067653, amDipswGetData);
+        detourFunction(0x080676cb, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x0807217a, cpu_vendor.ebx);
+        setVariable(0x0807218a, cpu_vendor.edx);
+        setVariable(0x08072195, cpu_vendor.ecx);
+    }
+    break;
+    case THE_HOUSE_OF_THE_DEAD_SP:
     {
+        detourFunction(0x08363438, amDongleInit);
+        detourFunction(0x0836374b, amDongleIsAvailable);
+        detourFunction(0x083636b2, amDongleUpdate);
+        // Fixes
+        detourFunction(0x08360e93, amDipswGetData);
+        detourFunction(0x08360f0b, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x083cef0a, cpu_vendor.ebx);
+        setVariable(0x083cef1a, cpu_vendor.edx);
+        setVariable(0x083cef25, cpu_vendor.ecx);
+    }
+    break;
+    case THE_HOUSE_OF_THE_DEAD_SP_TEST:
+    {
+        detourFunction(0x0806e914, amDongleInit);
+        detourFunction(0x0806ec27, amDongleIsAvailable);
+        detourFunction(0x0806eb8e, amDongleUpdate);
+        // Fixes
+        detourFunction(0x0806e7c7, amDipswGetData);
+        detourFunction(0x0806e83f, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x0807a3ba, cpu_vendor.ebx);
+        setVariable(0x0807a3ca, cpu_vendor.edx);
+        setVariable(0x0807a3d5, cpu_vendor.ecx);
+    }
+    break;
+    case THE_HOUSE_OF_THE_DEAD_EX:
+    {
+        detourFunction(0x084ba886, amDongleInit);
+        detourFunction(0x084b9341, amDongleIsAvailable);
+        detourFunction(0x084b9d37, amDongleUpdate);
+        // Fixes
+        detourFunction(0x084b6a69, amDipswGetData);
+        detourFunction(0x084b6adf, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x0849E2AD, cpu_vendor.ebx);
+        setVariable(0x0849E2B7, cpu_vendor.edx);
+        setVariable(0x0849E2C1, cpu_vendor.ecx);
+    }
+    break;
+    case THE_HOUSE_OF_THE_DEAD_EX_TEST:
+    {
+        detourFunction(0x08078996, amDongleInit);
+        detourFunction(0x08077451, amDongleIsAvailable);
+        detourFunction(0x08077e47, amDongleUpdate);
+        // Fixes
+        detourFunction(0x080772dd, amDipswGetData);
+        detourFunction(0x08077353, stubRetZero); // Stub amDipswSetLed
+        // CPU patch to support AMD processors
+        setVariable(0x080847BD, cpu_vendor.ebx);
+        setVariable(0x080847C7, cpu_vendor.edx);
+        setVariable(0x080847D1, cpu_vendor.ecx);
+    }
+    break;
+    case VF5_REVC:
+>>>>>>> More-patching
+    {
+        // Security
         detourFunction(0x085c6010, amDongleInit);
         detourFunction(0x085c63cc, amDongleIsAvailable);
         detourFunction(0x085c62f0, amDongleUpdate);
+<<<<<<< HEAD
         detourFunction(0x080b3426, stub0);   // Stub returns 0
         detourFunction(0x080cb6d4, stub0);   // Stub returns 0
         detourFunction(0x0840889e, stub0);   // Stub returns 0
         detourFunction(0x0840ab90, stub0);   // Stub returns 0
         setVariable(0x080e17af, 0x000000b8); // Patch IDK what
         setVariable(0x080e17b3, 0x01e88300); // Patch IDK what
+=======
+        // Fixes and patches to bypss network check
+        detourFunction(0x085c5f46, amDipswGetData);
+        detourFunction(0x085c5fbe, stubRetZero); // Stub amDipswSetLed
+        detourFunction(0x080b3426, stubRetZero); // Stub returns 0
+        detourFunction(0x080cb6d4, stubRetZero); // Stub returns 0
+        detourFunction(0x0840889e, stubRetZero); // Stub returns 0
+        detourFunction(0x0840ab90, stubRetZero); // Stub returns 0
+        setVariable(0x080e17af, 0x000000b8);     // Patch IDK what
+        setVariable(0x080e17b3, 0x01e88300);     // Patch IDK what
+>>>>>>> More-patching
     }
     break;
 
@@ -371,6 +525,7 @@ int initPatch()
         setVariable(0x08c08634, 2);              // amOsinfoDebugLevel
         setVariable(0x08c08644, 0x0FFFFFFF);     // s_logMask
         detourFunction(0x08074a8c, _putConsole); // Debug Messages
+<<<<<<< HEAD
 
         detourFunction(0x084e50d8, amDongleInit);
         detourFunction(0x084e5459, amDongleIsAvailable);
@@ -396,6 +551,27 @@ int initPatch()
             setVariable(0x084032e0, 0x8b90c933); // fix shader compilation with AMD GPUs
             setVariable(0x08523950, 0x000000c3); // Remove ADXM_SetupFramework (Not necessary)
         }
+=======
+        // Security
+        detourFunction(0x084e50d8, amDongleInit);
+        detourFunction(0x084e5459, amDongleIsAvailable);
+        detourFunction(0x084e537d, amDongleUpdate);
+        setVariable(0x080d1f02, 0x90909090); // Patch acpSystem::checkDongle
+        setVariable(0x080d1f06, 0xE8C3C990); // Patch acpSystem::checkDongle
+        setVariable(0x0807b76a, 0xc2839090); // Patch initializeArcadeBackup
+        // Fixes
+        detourFunction(0x084e500e, amDipswGetData);
+        detourFunction(0x084e5086, stubRetZero); // Stub amDipswSetLed
+        setVariable(0x0840d858, 0x1c899090);     // No more Full Screen from the Game
+        // Set Resolution
+        // setVariable(0x082E006b, 0x00000780); // Set ResX
+        // setVariable(0x082E0078, 0x00000438); // Set ResY
+
+        // From Teknoparrot AMDFIX
+        // setVariable(0x083ef701, 0x00036ee9); // AMDFIX
+        // setVariable(0x084032e0, 0x8b90c933); // fix shader compilation with AMD GPUs
+        // setVariable(0x08523950, 0x000000c3); // Remove ADXM_SetupFramework (Not necessary)
+>>>>>>> More-patching
     }
     break;
 
@@ -414,18 +590,29 @@ int initPatch()
         setVariable(0x08c45680, 2);          // bcLibDebugLevel
         setVariable(0x08c45674, 2);          // amOsinfoDebugLevel
         setVariable(0x08c45684, 0x0FFFFFFF); // s_logMask
+        detourFunction(0x08075012, _putConsole);
+        // Security
         detourFunction(0x08510320, amDongleInit);
         detourFunction(0x085106dc, amDongleIsAvailable);
         detourFunction(0x08510600, amDongleUpdate);
+<<<<<<< HEAD
         detourFunction(0x08075012, _putConsole);
         // setVariable(0x08303C4B, 0x00000780); // Set ResX
         // setVariable(0x08303C58, 0x00000438); // Set ResY
+=======
+>>>>>>> More-patching
         setVariable(0x080dad63, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080dad67, 0xE8C3C990); // Patch acpSystem::checkDongle
-        setVariable(0x0807e609, 0x90909090); // Patch initializeArcadeBackup
-        setVariable(0x0807e60D, 0xC2839090); // Patch initializeArcadeBackup
-        setVariable(0x087d47f7, 0x62ab8500); // Seat Test??
-        setVariable(0x08438954, 0x1c899090); // No more Full Screen from the Game
+        setVariable(0x0807e609, 0xc2839090); // Patch initializeArcadeBackup
+        // Fixes
+        detourFunction(0x08510256, amDipswGetData);
+        detourFunction(0x085102ce, stubRetZero); // Stub amDipswSetLed
+        setVariable(0x08438954, 0x1c899090);     // No more Full Screen from the Game
+        // Set Resolution
+        // setVariable(0x08303C4B, 0x00000780); // Set ResX
+        // setVariable(0x08303C58, 0x00000438); // Set ResY
+
+        // setVariable(0x087d47f7, 0x62ab8500); // Seat Test??
     }
     break;
 
@@ -444,6 +631,7 @@ int initPatch()
         setVariable(0x08d719e0, 2);          // bcLibDebugLevel
         setVariable(0x08d719d4, 2);          // amOsinfoDebugLevel
         setVariable(0x08d719e4, 0x0FFFFFFF); // s_logMask
+<<<<<<< HEAD
 
         detourFunction(0x086e2336, amDongleInit);
         detourFunction(0x086e0d81, amDongleIsAvailable);
@@ -458,11 +646,81 @@ int initPatch()
         setVariable(0x0807e60D, 0xC2839090); // Patch initializeArcadeBackup
     }
     break;
+=======
+        // detourFunction(0x0808f9a8, _putConsole); // Crashes the game sometimes.
+        // Security
+        detourFunction(0x086e2336, amDongleInit);
+        detourFunction(0x086e0d81, amDongleIsAvailable);
+        detourFunction(0x086e17e5, amDongleUpdate);
+        // Fixes
+        detourFunction(0x086e0c0d, amDipswGetData);
+        detourFunction(0x086e0c84, stubRetZero); // amDipswSetLED
+        detourFunction(0x0821e6dc, stubRetOne);  // isEthLinkUp
+        setVariable(0x082cb411, 0x0927c020);     // tickInitStoreNetwork
+        setVariable(0x082cb6d9, 0x000150e9);     // tickWaitDHCP
+        setVariable(0x082cb6dd, 0x448b5100);     // tickWaitDHCP
+        // Set Resolution
+        setVariable(0x0835664d, 0x0000f0e9); // Force resolution set
+        setVariable(0x08356743, 0x00000780); // Set ResX
+        setVariable(0x08356748, 0x00000438); // Set ResY
+        // FrameBuffer Resolution (No effect that I know)
+        /*
+        setVariable(0x08248037, 0x00000780);       // Set ResX
+        setVariable(0x0824802f, 0x00000438);       // Set ResY
+        setVariable(0x082480f7, 0x00000780);       // Set ResX
+        setVariable(0x082480ef, 0x00000438);       // Set ResY
+        setVariable(0x082481b7, 0x00000780);       // Set ResX
+        setVariable(0x082481af, 0x00000438);       // Set ResY
+        setVariable(0x08248216, 0x00000780);       // Set ResX
+        setVariable(0x0824820e, 0x00000438);       // Set ResY
+
+        setVariable(0x082489a7, 0x00000780);       // Set ResX
+        setVariable(0x0824899f, 0x00000438);       // Set ResY
+        setVariable(0x08248a32, 0x00000780);       // Set ResX
+        setVariable(0x08248a2a, 0x00000438);       // Set ResY
+        */
+
+        
+        // Hooked in graphics.c
+        //setVariable(0x085599f2, 0x0001d2e9); // Force not supported resolutions
+        //setVariable(0x085599f6, 0x01bb0000); // Force not supported resolutions
+
+        // IDK if the following work (taken from TP)
+        // setVariable(0x08548ef3, 0x8990c031);       // Shader Compiler
+        // setVariable(0x08799d8c, 0x082c9f52);       // childTerminationHanlder
+    }
+    break;
+    case ID4_E:
+    {
+        // Debug
+        // detourFunction(0x08090478, _putConsole);  // Crashes the game sometimes.
+        // Security
+        detourFunction(0x087106e6, amDongleInit);
+        detourFunction(0x0870f131, amDongleIsAvailable);
+        detourFunction(0x0870fb95, amDongleUpdate);
+        // Fixes
+        detourFunction(0x0870efbd, amDipswGetData);
+        detourFunction(0x0870f034, stubRetZero); // amDipswSetLed
+        setVariable(0x087a05e8, 0x08194748);     // PTR_~cRealCardIF SIGSEV
+        detourFunction(0x08230fde, stubRetOne);  // isEthLinkUp
+        setVariable(0x082df87d, 0x000154e9);     // tickWaitDHCP
+        setVariable(0x082df881, 0x448b5100);     // tickWaitDHCP
+        setVariable(0x082e0ec9, 0x3d8960eb);     // tickInitAddress
+        // setVariable(0x08580979, 0x000126e9);         // Avoid Full Screen set from Game
+        // Set Resolution
+        // setVariable(0x0837b12d, 0x0000f0e9);         // Force set resolution
+        // setVariable(0x0837b223, 0x00000550);         // Set ResX
+        // setVariable(0x0837b228, 0x00000300);         // Set ResY
+        // setVariable(0x085700d3, 0x8990c031);         // Fix something with the Shaders??
+    }
+    break;
+>>>>>>> More-patching
     case SEGABOOT_2_4_SYM:
     {
         detourFunction(0x0805e8b0, amDongleInit);
         detourFunction(0x0805ebc3, amDongleIsAvailable);
         detourFunction(0x0805eb2a, amDongleUpdate);
+<<<<<<< HEAD
         // detourFunction(0x08062cf8, amLibInit);
         // detourFunction(0x0805c200, amDipswInit);
         detourFunction(0x0805c30b, amDipswGetData);
@@ -485,6 +743,58 @@ int initPatch()
         detourFunction(0x0815d06b, amDipswGetData);
         detourFunction(0x0815d0e3, stub0);
         // setVariable(0x0827ae1b, 0x34891beb); //Disable Fullscreen
+=======
+        detourFunction(0x0805c30b, amDipswGetData);
+    }
+    break;
+    case VT3:
+    {
+        // Security
+        detourFunction(0x0831c724, amDongleInit);
+        detourFunction(0x0831ca37, amDongleIsAvailable);
+        detourFunction(0x0831c99e, amDongleUpdate);
+        // Fixes
+        detourFunction(0x0831c5d7, amDipswGetData);
+        detourFunction(0x0831c64f, stubRetZero);
+        setVariable(0x0827ae1b, 0x34891beb); // Disable Fullscreen set from the game
+    }
+    break;
+    case VT3_TESTMODE:
+    {
+        // Security
+        detourFunction(0x0815f610, amDongleInit);
+        detourFunction(0x0815f923, amDongleIsAvailable);
+        detourFunction(0x0815f88a, amDongleUpdate);
+        // Fixes
+        detourFunction(0x0815d06b, amDipswGetData);
+        detourFunction(0x0815d0e3, stubRetZero);
+    }
+    break;
+    case RAMBO:
+    {
+        // Security
+        detourFunction(0x082c4746, amDongleInit);
+        detourFunction(0x082c3201, amDongleIsAvailable);
+        detourFunction(0x082c3bf7, amDongleUpdate);
+        // Fixes
+        detourFunction(0x082c308d, amDipswGetData);
+        detourFunction(0x082c3103, stubRetZero);
+    }
+    break;
+    case TOO_SPICY:
+    {
+        // Security
+        detourFunction(0x0831cf02, amDongleInit);
+        detourFunction(0x0831b94d, amDongleIsAvailable);
+        detourFunction(0x0831c3b1, amDongleUpdate);
+        // Fixes        
+        detourFunction(0x0831907d, amDipswGetData);
+        detourFunction(0x083190f4, stubRetZero);
+        // CPU patch to support AMD processors
+        setVariable(0x08399ADA, cpu_vendor.ebx);
+        setVariable(0x08399AEA, cpu_vendor.edx);
+        setVariable(0x08399AF5, cpu_vendor.ecx);
+>>>>>>> More-patching
     }
     break;
     default:
