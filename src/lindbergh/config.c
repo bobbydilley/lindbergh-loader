@@ -358,8 +358,8 @@ int initConfig()
     config.width = 1024;
     config.height = 768;
     config.crc32 = elf_crc;
-    config.region = US;
-    config.freeplay = 1;
+    config.region = -1;
+    config.freeplay = -1;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game this is, using default configuration values.\n");

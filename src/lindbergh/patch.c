@@ -473,7 +473,7 @@ int initPatch()
         detourFunction(0x084e537d, amDongleUpdate);
         setVariable(0x080d1f02, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080d1f06, 0xE8C3C990); // Patch acpSystem::checkDongle
-        setVariable(0x0807b76a, 0xc2839090); // Patch initializeArcadeBackup
+        setVariable(0x0807b76d, 0xc2839090); // Patch initializeArcadeBackup
         // Fixes
         detourFunction(0x084e500e, amDipswGetData);
         detourFunction(0x084e5086, stubRetZero); // Stub amDipswSetLed
@@ -510,7 +510,8 @@ int initPatch()
         detourFunction(0x08510600, amDongleUpdate);
         setVariable(0x080dad63, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080dad67, 0xE8C3C990); // Patch acpSystem::checkDongle
-        setVariable(0x0807e609, 0xc2839090); // Patch initializeArcadeBackup
+        setVariable(0x0807e609, 0x90909090); // Patch initializeArcadeBackup
+        setVariable(0x0807e60d, 0xc2839090); // Patch initializeArcadeBackup
         // Fixes
         detourFunction(0x08510256, amDipswGetData);
         detourFunction(0x085102ce, stubRetZero); // Stub amDipswSetLed
@@ -626,6 +627,8 @@ int initPatch()
     break;
     case VT3_TESTMODE:
     {
+        // Debug
+        detourFunction(0x08054d14, _putConsole); // Crashes the game sometimes.
         // Security
         detourFunction(0x0815f610, amDongleInit);
         detourFunction(0x0815f923, amDongleIsAvailable);

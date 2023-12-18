@@ -6,7 +6,7 @@
 #include "eeprom_settings.h"
 #include "config.h"
 
-#define I2C_SMBUS_BLOCK_MAX	32
+#define I2C_SMBUS_BLOCK_MAX 32
 #define I2C_GET_FUNCTIONS 0x705
 #define I2C_SMBUS_TRANSFER 0x720
 #define I2C_SET_SLAVE_MODE 0x703
@@ -15,17 +15,19 @@
 #define I2C_SEEK 2
 #define I2C_WRITE 3
 
-union i2c_smbus_data {
-	uint8_t byte;
-	uint16_t word;
-	uint8_t block[I2C_SMBUS_BLOCK_MAX + 2];
+union i2c_smbus_data
+{
+    uint8_t byte;
+    uint16_t word;
+    uint8_t block[I2C_SMBUS_BLOCK_MAX + 2];
 };
 
-struct i2c_smbus_ioctl_data {
-	uint8_t read_write;
-	uint8_t command;
-	uint32_t size;
-	union i2c_smbus_data *data;
+struct i2c_smbus_ioctl_data
+{
+    uint8_t read_write;
+    uint8_t command;
+    uint32_t size;
+    union i2c_smbus_data *data;
 };
 
 FILE *eeprom = NULL;
@@ -47,19 +49,24 @@ int initEeprom()
 
     eeprom = fopen(eepromPath, "rb+");
 
-    if(eepromSettingsInit(eeprom) !=0)
+    if (eepromSettingsInit(eeprom) != 0)
     {
         printf("Error initializing eeprom settings.");
         fclose(eeprom);
         return 1;
     }
-    
-    if(getRegion() != getConfig()->region)
-        setRegion(eeprom, getConfig()->region);
-    
-    if(getFreeplay() != getConfig()->freeplay)
-        setFreeplay(eeprom, getConfig()->freeplay);
 
+    if (getConfig->region != -1)
+    {
+        if (getRegion() != getConfig()->region)
+            setRegion(eeprom, getConfig()->region);
+    }
+
+    if (getConfig()->freeplay != -1)
+    {
+        if (getFreeplay() != getConfig()->freeplay)
+            setFreeplay(eeprom, getConfig()->freeplay);
+    }
     fseek(eeprom, 0, SEEK_SET);
 
     return 0;
