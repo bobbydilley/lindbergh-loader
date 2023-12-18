@@ -35,7 +35,7 @@ int initJVS()
     io.capabilities.players = 2;
     io.capabilities.analogueInBits = 8;
     io.capabilities.rightAlignBits = 0;
-    io.capabilities.analogueInChannels = 20;
+    io.capabilities.analogueInChannels = 8;
     io.capabilities.generalPurposeOutputs = 20;
     io.capabilities.commandVersion = 19;
     io.capabilities.jvsVersion = 48;
@@ -265,8 +265,6 @@ JVSStatus processPacket()
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
             outputPacket.data[outputPacket.length + 1] = io.state.inputSwitch[0];
             outputPacket.length += 2;
-
-            //printf("SW=%08d\r", io.state.inputSwitch[0]);
             
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
@@ -569,8 +567,6 @@ JVSStatus readPacket(JVSPacket *packet)
  */
 JVSStatus writePacket(JVSPacket *packet)
 {
-
-   
     /* Get pointer to raw data in packet */
     unsigned char *packetPointer = (unsigned char *)packet;
 

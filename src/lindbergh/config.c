@@ -430,8 +430,8 @@ int initConfig()
     config.width = 1024;
     config.height = 768;
     config.crc32 = elf_crc;
-    config.region = US;
-    config.freeplay = 1;
+    config.region = -1;
+    config.freeplay = -1;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);

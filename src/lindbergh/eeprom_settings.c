@@ -199,6 +199,19 @@ int setFreeplay(FILE *eeprom, int freeplay)
     return 0;
 }
 
+int fixCreditSection(FILE *eeprom)
+{
+    eepromBuffer[eepromOffsetTable[CREDIT].offset + 36] = 0;
+    eepromBuffer[eepromOffsetTable[CREDIT].offset + 39] = 0;
+    addCRCtoBuffer(CREDIT);
+    if (writeSectiontoFile(eeprom, CREDIT) != 0)
+    {
+        printf("Error setting Free Play.");
+        return 1;
+    }
+    return 0;
+}
+
 int eepromSettingsInit( FILE *eeprom)
 {
     build_crc32_table();

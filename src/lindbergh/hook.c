@@ -42,7 +42,7 @@
 #define OSRELEASE 1
 #define PCI_CARD_1F0 2
 
-    int hooks[5] = {-1, -1, -1, -1};
+int hooks[5] = {-1, -1, -1, -1};
 FILE *fileHooks[3] = {NULL, NULL, NULL};
 int fileRead[3] = {0, 0, 0};
 char envpath[100];
