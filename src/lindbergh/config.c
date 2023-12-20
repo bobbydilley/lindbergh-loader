@@ -367,9 +367,6 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "EMULATE_JVS") == 0)
             config->emulateJVS = atoi(getNextToken(NULL, " ", &saveptr));
 
-        else if (strcmp(command, "AMD_FIX") == 0)
-            config->amdFix = atoi(getNextToken(NULL, " ", &saveptr));
-
         else if (strcmp(command, "JVS_PATH") == 0)
             strcpy(config->jvsPath, getNextToken(NULL, " ", &saveptr));
 
@@ -405,6 +402,9 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
                 config->region = EX;
         }
 
+        else if (strcmp(command, "DEBUG_MSGS") == 0)
+            config->debug_msgs = atoi(getNextToken(NULL, " ", &saveptr));
+
         else
             printf("Error: Unknown settings command %s\n", command);
     }
@@ -418,7 +418,6 @@ int initConfig()
     config.emulateDriveboard = 0;
     config.emulateMotionboard = 0;
     config.emulateJVS = 1;
-    config.amdFix = 0;
     config.fullscreen = 0;
     config.lindberghColour = YELLOW;
     strcpy(config.eepromPath, "eeprom.bin");
@@ -432,6 +431,7 @@ int initConfig()
     config.crc32 = elf_crc;
     config.region = -1;
     config.freeplay = -1;
+    config.debug_msgs = 1;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);

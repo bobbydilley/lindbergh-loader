@@ -6,4 +6,5 @@ typedef struct
     unsigned ebx;
     unsigned edx;
     unsigned ecx;
+    char cpuid[20];
 }cpuvendor;

@@ -651,7 +651,8 @@ void getCPUID()
     unsigned eax;
     eax = 0;
     __get_cpuid(0, &eax, &cpu_vendor.ebx, &cpu_vendor.ecx, &cpu_vendor.edx);
-    printf("CPU Vendor: %.4s%.4s%.4s\n", (const char *)&cpu_vendor.ebx, (const char *)&cpu_vendor.edx, (const char *)&cpu_vendor.ecx);
+    sprintf(cpu_vendor.cpuid, "%.4s%.4s%.4s", (const char *)&cpu_vendor.ebx, (const char *)&cpu_vendor.edx, (const char *)&cpu_vendor.ecx);
+    printf("CPU Vendor: %s\n", cpu_vendor.cpuid);
 }
 
 /**

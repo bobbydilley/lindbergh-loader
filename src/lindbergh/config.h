@@ -87,13 +87,13 @@ typedef struct
   char driveboardPath[MAX_PATH_LENGTH];
   int width;
   int height;
-  int amdFix;
   Game game;
   Colour lindberghColour;
   GameStatus gameStatus;
   uint32_t crc32;
   GameRegion region;
   int freeplay;
+  int debug_msgs;
 } EmulatorConfig;
 
 int initConfig();
