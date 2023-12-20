@@ -391,6 +391,8 @@ int initPatch()
         detourFunction(0x08363438, amDongleInit);
         detourFunction(0x0836374b, amDongleIsAvailable);
         detourFunction(0x083636b2, amDongleUpdate);
+        setVariable(0x081f9491, 0x148b9090);
+        setVariable(0x081f9499, 0x01000000);
         // Fixes
         detourFunction(0x08360e93, amDipswGetData);
         detourFunction(0x08360f0b, stubRetZero); // Stub amDipswSetLed
@@ -401,9 +403,10 @@ int initPatch()
             setVariable(0x083cef1a, cpu_vendor.edx);
             setVariable(0x083cef25, cpu_vendor.ecx);
         }
-        // Workaround
-        if (remove("/var/tmp/atr_init") == 1)
+        // Workaroud
+        if(remove("/var/tmp/atr_init") == 1)
             printf("atr_init deleted.\n");
+        
     }
     break;
     case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:
@@ -497,7 +500,7 @@ int initPatch()
         detourFunction(0x084e537d, amDongleUpdate);
         setVariable(0x080d1f02, 0x90909090); // Patch acpSystem::checkDongle
         setVariable(0x080d1f06, 0xE8C3C990); // Patch acpSystem::checkDongle
-        setVariable(0x0807b76d, 0xc2839090); // Patch initializeArcadeBackup
+        setVariable(0x0807b76a, 0xc2839090); // Patch initializeArcadeBackup
         // Fixes
         detourFunction(0x084e500e, amDipswGetData);
         detourFunction(0x084e5086, stubRetZero); // Stub amDipswSetLed

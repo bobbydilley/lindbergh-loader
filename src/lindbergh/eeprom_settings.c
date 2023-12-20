@@ -171,7 +171,7 @@ int setRegion(FILE *eeprom, int region)
     addCRCtoBuffer(STATIC);
     if (writeSectiontoFile(eeprom, STATIC) != 0)
     {
-        printf("Error setting the .");
+        printf("Error writing to eeprom.");
         return 1;
     }
     return 0;
@@ -193,7 +193,7 @@ int setFreeplay(FILE *eeprom, int freeplay)
     addCRCtoBuffer(CREDIT);
     if (writeSectiontoFile(eeprom, CREDIT) != 0)
     {
-        printf("Error setting Free Play.");
+        printf("Error writing to eeprom.");
         return 1;
     }
     return 0;
@@ -206,7 +206,7 @@ int fixCreditSection(FILE *eeprom)
     addCRCtoBuffer(CREDIT);
     if (writeSectiontoFile(eeprom, CREDIT) != 0)
     {
-        printf("Error setting Free Play.");
+        printf("Error writing to eeprom.");
         return 1;
     }
     return 0;
