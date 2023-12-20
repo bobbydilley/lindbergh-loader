@@ -401,6 +401,9 @@ int initPatch()
             setVariable(0x083cef1a, cpu_vendor.edx);
             setVariable(0x083cef25, cpu_vendor.ecx);
         }
+        // Workaround
+        if (remove("/var/tmp/atr_init") == 1)
+            printf("atr_init deleted.\n");
     }
     break;
     case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:
