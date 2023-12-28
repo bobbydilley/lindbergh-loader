@@ -47,6 +47,8 @@ A default configuration file is provided in `docs/lindbergh.conf`. It should be 
 
 I recomend that you do not run this as root, and instead use the usergroups for input/dialout to give the emulator access to what it needs. The Lindbergh games expect full control of the Linux OS and with root privilages it is possible that they could cause damage to your computer.
 
+A `lindbergh` executable is provided in the build directory to easily run the games. Place it in the same directory as the game elf, and run `./lindbergh` to automatically start the game with the correct environment variables set, or run `./lindbergh -t` for test mode.
+
 ## Controls
 
 Currently the controls are set up for The House of the Dead 4.

@@ -11,7 +11,7 @@ Working is defined by getting into attract mode and running the game, but not ne
 - Ghost Squad Evolution
 - Harley Davidson
 - Let's Go Jungle
-- Let's Go Jungle Special (boots to ride error)
+- Let's Go Jungle Special
 - Outrun 2 SP SDX
 - R-Tuned
 - Race TV
