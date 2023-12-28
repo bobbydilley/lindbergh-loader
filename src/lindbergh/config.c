@@ -320,6 +320,8 @@ char *getGameName()
         return "Virtua Tennis 3 Test Mode";
     case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
         return "The House of the Dead 4";
+    case INITIALD_4_REVE:
+        return "Initial D 4 Exp Rev E";
     default:
         return unknownGameTitle;
     }
