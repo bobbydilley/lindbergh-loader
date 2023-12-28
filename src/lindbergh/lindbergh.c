@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
         }
 
         int index = 0;
-        while (1)
+        while (game == NULL)
         {
             if (strcmp(games[index], "END") == 0)
                 break;
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
             index++;
         }
 
-        if (game != NULL)
+        if (game != NULL && lindberghSharedObjectFound)
             break;
     }
 
