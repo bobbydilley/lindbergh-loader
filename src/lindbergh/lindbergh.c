@@ -73,6 +73,7 @@ void printUsage(char *argv[])
     printf("%s [GAME_PATH] [OPTIONS]\n", argv[0]);
     printf("Options:\n");
     printf("  --test | -t    Runs the test mode\n");
+    printf("  --gdb          Runs with GDB\n");
     printf("  --help         Displays this usage text\n");
 }
 
@@ -133,13 +134,10 @@ int main(int argc, char *argv[])
 
     closedir(dir);
 
-    if (argc > 1)
+    if (argc > 1 && strcmp(argv[1], "--help") == 0)
     {
-        if (strcmp(argv[1], "--help") == 0)
-        {
-            printUsage(argv);
-            return EXIT_SUCCESS;
-        }
+        printUsage(argv);
+        return EXIT_SUCCESS;
     }
 
     if (!lindberghSharedObjectFound)
@@ -159,11 +157,19 @@ int main(int argc, char *argv[])
     strcpy(command, "./");
     strcat(command, game);
 
-    if (argc > 1)
+    for (int i = 1; i < argc; i++)
     {
-        if (strcmp(argv[1], "-t") == 0 || strcmp(argv[1], "--test") == 0)
+        if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--test") == 0)
         {
             testModePath(command);
+        }
+
+        if (strcmp(argv[i], "--gdb") == 0)
+        {
+            char temp[128];
+            strcpy(temp, "gdb ");
+            strcat(temp, command);
+            strcpy(command, temp);
         }
     }
 
