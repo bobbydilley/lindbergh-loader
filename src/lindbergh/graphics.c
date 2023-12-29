@@ -86,6 +86,14 @@ FGAPI void FGAPIENTRY glutGameModeString(const char *string)
   }
 }
 
+/**
+ * Stop the house of the dead games turning keyboard repeating off.
+ */
+int XAutoRepeatOff(Display *display)
+{
+  return 0;
+}
+
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int class, Visual *visual, unsigned long valueMask, XSetWindowAttributes *attributes)
 {
 
