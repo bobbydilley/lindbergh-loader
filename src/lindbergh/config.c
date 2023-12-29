@@ -61,6 +61,12 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if(elf_crc == 0xDDECE1E9) {
+        config.game = THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0x7235bda8)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4_TEST;
@@ -313,6 +319,8 @@ char *getGameName()
         return "Virtua Tennis 3 Test Mode";
     case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
         return "The House of the Dead 4 Rev C";
+    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST:
+        return "The House of the Dead 4 Rev C Test Mode";
     case INITIALD_4_REVE:
         return "Initial D 4 Exp Rev E";
     default:

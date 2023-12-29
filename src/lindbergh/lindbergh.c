@@ -146,31 +146,57 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    if (game == NULL)
-    {
-        printf("Error: No lindbergh game found in this directory.\n");
-        return EXIT_FAILURE;
-    }
-
     // Build up the command to start the game
-    char command[128];
-    strcpy(command, "./");
-    strcat(command, game);
 
+    int testMode = 0;
+    int gdb = 0;
+    int forceGame = 0;
+
+    char forceGamePath[128] = {0};
     for (int i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "-t") == 0 || strcmp(argv[i], "--test") == 0)
         {
-            testModePath(command);
+            testMode = 1;
+            continue;
         }
 
         if (strcmp(argv[i], "--gdb") == 0)
         {
-            char temp[128];
-            strcpy(temp, "gdb ");
-            strcat(temp, command);
-            strcpy(command, temp);
+            gdb = 1;
+            continue;
         }
+
+        // Treat the argument as the game name
+        strcpy(forceGamePath, argv[i]);
+        forceGame = 1;
+    }
+
+    char command[128] = {0};
+    strcpy(command, "./");
+    if (forceGame)
+    {
+        strcat(command, forceGamePath);
+    }
+    else
+    {
+        if (game == NULL)
+        {
+            printf("Error: No lindbergh game found in this directory.\n");
+            return EXIT_FAILURE;
+        }
+        strcat(command, game);
+    }
+
+    if (testMode)
+        testModePath(command);
+
+    if (gdb)
+    {
+        char temp[128];
+        strcpy(temp, "gdb ");
+        strcat(temp, command);
+        strcpy(command, temp);
     }
 
     printf("$ %s\n", command);
