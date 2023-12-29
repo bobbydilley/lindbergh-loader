@@ -33,7 +33,7 @@ int initJVS()
     io.capabilities.switches = 14;
     io.capabilities.coins = 2;
     io.capabilities.players = 2;
-    io.capabilities.analogueInBits = 8;
+    io.capabilities.analogueInBits = 10;
     io.capabilities.rightAlignBits = 0;
     io.capabilities.analogueInChannels = 8;
     io.capabilities.generalPurposeOutputs = 20;
@@ -163,7 +163,7 @@ void writeFeatures(JVSPacket *outputPacket, JVSCapabilities *capabilities)
  *
  * @returns The status of the entire operation
  */
-JVSStatus processPacket()
+JVSStatus processPacket(int *packetSize)
 {
     readPacket(&inputPacket);
 
@@ -265,11 +265,11 @@ JVSStatus processPacket()
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
             outputPacket.data[outputPacket.length + 1] = io.state.inputSwitch[0];
             outputPacket.length += 2;
-            
+
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
                 for (int j = 0; j < inputPacket.data[index + 2]; j++)
-                {       
+                {
                     outputPacket.data[outputPacket.length++] = io.state.inputSwitch[i + 1] >> (8 - (j * 8));
                 }
             }
@@ -278,7 +278,7 @@ JVSStatus processPacket()
 
         case CMD_READ_COINS:
         {
-            ////printf("CMD_READ_COINS\n");
+            // printf("CMD_READ_COINS\n");
             size = 2;
             int numberCoinSlots = inputPacket.data[index + 1];
             outputPacket.data[outputPacket.length++] = REPORT_SUCCESS;
@@ -294,7 +294,7 @@ JVSStatus processPacket()
 
         case CMD_READ_ANALOGS:
         {
-            // printf("CMD_READ_ANALOGS\n");
+            // printf("CMD_READ_ANALOGS %d\n", inputPacket.data[index + 1]);
             size = 2;
 
             outputPacket.data[outputPacket.length++] = REPORT_SUCCESS;
@@ -478,7 +478,7 @@ JVSStatus processPacket()
 
     pthread_mutex_unlock(&jvsMutex);
 
-    writePacket(&outputPacket);
+    writePacket(&outputPacket, packetSize);
 
     return JVS_STATUS_SUCCESS;
 }
@@ -565,7 +565,7 @@ JVSStatus readPacket(JVSPacket *packet)
  *
  * @param packet The packet to send
  */
-JVSStatus writePacket(JVSPacket *packet)
+JVSStatus writePacket(JVSPacket *packet, int *packetSize)
 {
     /* Get pointer to raw data in packet */
     unsigned char *packetPointer = (unsigned char *)packet;
@@ -602,6 +602,9 @@ JVSStatus writePacket(JVSPacket *packet)
     {
         outputBuffer[outputIndex++] = checksum;
     }
+
+    // Communicate the output size based on the now escaped bytes
+    *packetSize = outputIndex;
 
     return JVS_STATUS_SUCCESS;
 }

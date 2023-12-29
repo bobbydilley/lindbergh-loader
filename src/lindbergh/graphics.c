@@ -26,7 +26,6 @@ FGAPI int FGAPIENTRY glutEnterGameMode()
 {
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
-  strcat(gameTitle, " (GLUT)");
   glutCreateWindow(gameTitle);
 
   // Outrun doesn't run the glutMainLoop through, so we'll do that here
@@ -53,7 +52,7 @@ FGAPI void FGAPIENTRY glutSetCursor(int cursor)
 
 FGAPI void FGAPIENTRY glutGameModeString(const char *string)
 {
-  printf("glutGameModeString: %s\n", string);
+  // printf("glutGameModeString: %s\n", string);
 
   char gameModeString[1024];
   strcpy(gameModeString, string);
@@ -100,7 +99,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   // attributes->override_redirect = False;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
-  printf("XCreateWindow Resolution %d %d %d %d\n", x, y, width, height);
+  printf("The resolution is %dx%d \n", width, height);
 
   if (getConfig()->fullscreen)
   {
@@ -138,7 +137,6 @@ int XStoreName(Display *display, Window w, const char *window_name)
   int (*_XStoreName)(Display *display, Window w, const char *window_name) = dlsym(RTLD_NEXT, "XStoreName");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
-  strcat(gameTitle, " (X11)");
   return _XStoreName(display, w, gameTitle);
 }
 
@@ -147,7 +145,6 @@ int XSetStandardProperties(Display *display, Window window, const char *window_n
   int (*_XSetStandardProperties)(Display *display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
-  strcat(gameTitle, " (X11)");
   return _XSetStandardProperties(display, window, gameTitle, icon_name, icon_pixmap, argv, argc, hints);
 }
 

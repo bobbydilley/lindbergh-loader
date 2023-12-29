@@ -47,13 +47,6 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
-    if (elf_crc == 0x3cc635ee)
-    {
-        config.game = SEGABOOT_2_4_SYM;
-        config.gameStatus = WORKING;
-        return 0;
-    }
-
     if (elf_crc == 0xbc0c9ffa)
     {
         config.game = THE_HOUSE_OF_THE_DEAD_4;
@@ -279,7 +272,7 @@ char *getGameName()
     case SEGABOOT_2_4:
         return "SEGABOOT 2.4";
     case SEGABOOT_2_4_SYM:
-        return "SEGABOOT 2.4 Symbols";
+        return "SEGABOOT 2.4 with Symbols";
     case SEGABOOT_2_6:
         return "SEGABOOT 2.6";
     case SEGA_RACE_TV:
@@ -319,7 +312,7 @@ char *getGameName()
     case VIRTUA_TENNIS_3_TEST:
         return "Virtua Tennis 3 Test Mode";
     case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
-        return "The House of the Dead 4";
+        return "The House of the Dead 4 Rev C";
     case INITIALD_4_REVE:
         return "Initial D 4 Exp Rev E";
     default:
@@ -405,7 +398,7 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         }
 
         else if (strcmp(command, "DEBUG_MSGS") == 0)
-            config->debug_msgs = atoi(getNextToken(NULL, " ", &saveptr));
+            config->showDebugMessages = atoi(getNextToken(NULL, " ", &saveptr));
 
         else
             printf("Error: Unknown settings command %s\n", command);
@@ -428,12 +421,12 @@ int initConfig()
     strcpy(config.driveboardPath, "none");
     strcpy(config.motionboardPath, "none");
     strcpy(config.rideboardPath, "none");
-    config.width = 1024;
-    config.height = 768;
+    config.width = 640;
+    config.height = 480;
     config.crc32 = elf_crc;
     config.region = -1;
     config.freeplay = -1;
-    config.debug_msgs = 1;
+    config.showDebugMessages = 0;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);

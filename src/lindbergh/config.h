@@ -93,7 +93,7 @@ typedef struct
   uint32_t crc32;
   GameRegion region;
   int freeplay;
-  int debug_msgs;
+  int showDebugMessages;
 } EmulatorConfig;
 
 int initConfig();

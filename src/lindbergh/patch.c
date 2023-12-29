@@ -30,19 +30,19 @@ static void setVariable(uint32_t address, uint32_t value)
 
 static void patchMemory(uint32_t address, char *value)
 {
-    
-    size_t size = strlen((void*)value);
+
+    size_t size = strlen((void *)value);
     printf("Size=%d\n", size);
-    if(size % 2 != 0)
+    if (size % 2 != 0)
     {
         printf("Patch value should be even.\n");
         exit(1);
     }
 
-    char buf[size/2];
+    char buf[size / 2];
     char tmpchr[3];
     char *p = value;
-    for(int i=0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
         memcpy(tmpchr, p, 2);
         tmpchr[2] = '\0';
@@ -61,7 +61,7 @@ static void patchMemory(uint32_t address, char *value)
         return;
     }
 
-    memcpy((uint32_t *)address, buf, size/2);
+    memcpy((uint32_t *)address, buf, size / 2);
 }
 
 static void detourFunction(uint32_t address, void *function)
@@ -263,7 +263,7 @@ int initPatch()
     break;
     case AFTER_BURNER_CLIMAX_REVA:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             // Debug Messages
             setVariable(0x0a0a37e4, 2); // amBackupDebugLevel
@@ -287,12 +287,12 @@ int initPatch()
         detourFunction(0x081e48b6, amDipswGetData);
         detourFunction(0x081e492e, stubRetZero); // Stub amDipswSetLed
         // Does not work
-        //setVariable(0x08061c31, 0x0000000c); // Force HD resolution
+        // setVariable(0x08061c31, 0x0000000c); // Force HD resolution
     }
     break;
     case AFTER_BURNER_CLIMAX_REVB:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             // Debug Messages
             setVariable(0x0a0a0d24, 2); // amBackupDebugLevel
@@ -319,7 +319,7 @@ int initPatch()
     break;
     case OUTRUN_2_SP_SDX_REVA:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             // Debug Messages
             setVariable(0x0893a24c, 2); // amBackupDebugLevel
@@ -347,7 +347,7 @@ int initPatch()
 
     case THE_HOUSE_OF_THE_DEAD_4:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             // Debug Messages
             setVariable(0x0a737c60, 2);          // amBackupDebugLevel
@@ -508,7 +508,7 @@ int initPatch()
 
     case LETS_GO_JUNGLE:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             setVariable(0x08c083a4, 2);              // amBackupDebugLevel
             setVariable(0x08c083c0, 2);              // amCreditDebugLevel
@@ -529,7 +529,7 @@ int initPatch()
         detourFunction(0x084e50d8, amDongleInit);
         detourFunction(0x084e5459, amDongleIsAvailable);
         detourFunction(0x084e537d, amDongleUpdate);
-        patchMemory(0x0807b76a, "9090");  // Patch initializeArcadeBackup
+        patchMemory(0x0807b76a, "9090"); // Patch initializeArcadeBackup
         // Fixes
         detourFunction(0x084e500e, amDipswGetData);
         detourFunction(0x084e5086, stubRetZero); // Stub amDipswSetLed
@@ -547,7 +547,7 @@ int initPatch()
 
     case LETS_GO_JUNGLE_SPECIAL:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             setVariable(0x08c453e4, 2);          // amBackupDebugLevel
             setVariable(0x08c45400, 2);          // amCreditDebugLevel
@@ -581,7 +581,7 @@ int initPatch()
 
     case INITIALD_4:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             setVariable(0x08d71750, 2);              // amBackupDebugLevel
             setVariable(0x08d71760, 2);              // amCreditDebugLevel
@@ -609,10 +609,10 @@ int initPatch()
         patchMemory(0x082cb412, "c0270900");     // tickInitStoreNetwork
         patchMemory(0x082cb6d9, "e950010000");   // tickWaitDHCP
         // Set Resolution
-        //patchMemory(0x0835664d, "e9f000");   // Force resolution set
-        //setVariable(0x08356743, 0x00000780); // Set ResX
-        //setVariable(0x08356748, 0x00000438); // Set ResY
-        
+        // patchMemory(0x0835664d, "e9f000");   // Force resolution set
+        // setVariable(0x08356743, 0x00000780); // Set ResX
+        // setVariable(0x08356748, 0x00000438); // Set ResY
+
         // FrameBuffer Resolution (No effect that I know)
         /*
         setVariable(0x08248037, 0x00000780);       // Set ResX
@@ -637,7 +637,7 @@ int initPatch()
     break;
     case INITIALD_4_REVE:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             // Debug
             detourFunction(0x08090478, _putConsole); // Crashes the game sometimes.
@@ -662,6 +662,27 @@ int initPatch()
     break;
     case SEGABOOT_2_4_SYM:
     {
+        if (config->showDebugMessages == 1)
+        {
+            setVariable(0x0808da48, 2);          // amAdtecDebugLevel
+            setVariable(0x0808cf8c, 2);          // amAtaDebugLevel
+            setVariable(0x0808cf90, 2);          // amBackupDebugLevel
+            setVariable(0x0808cf94, 2);          // amChunkDataDebugLevel
+            setVariable(0x0808cfa0, 2);          // amCreditDebugLevel
+            setVariable(0x0808d1f8, 2);          // amDipswDebugLevel
+            setVariable(0x0808d1fc, 2);          // amDiskDebugLevel
+            setVariable(0x0808d200, 2);          // amDongleDebugLevel
+            setVariable(0x0808d204, 2);          // amEepromDebugLevel
+            setVariable(0x0808d208, 2);          // amHmDebugLevel
+            setVariable(0x0808d210, 2);          // amJvsDebugLevel
+            setVariable(0x0808d214, 2);          // amLibDebugLevel
+            setVariable(0x0808d218, 2);          // amMiscDebugLevel
+            setVariable(0x0808d21c, 2);          // amSysDataDebugLevel
+            setVariable(0x0808d220, 2);          // bcLibDebugLevel
+            setVariable(0x0808cf58, 2);          // g_DebugLevel
+            setVariable(0x0808d224, 0x0FFFFFFF); // logmask
+        }
+
         detourFunction(0x0805e8b0, amDongleInit);
         detourFunction(0x0805ebc3, amDongleIsAvailable);
         detourFunction(0x0805eb2a, amDongleUpdate);
@@ -682,7 +703,7 @@ int initPatch()
     break;
     case VIRTUA_TENNIS_3_TEST:
     {
-        if (config->debug_msgs == 1)
+        if (config->showDebugMessages == 1)
         {
             // Debug
             detourFunction(0x08054d14, _putConsole); // Crashes the game sometimes.

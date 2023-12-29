@@ -13,11 +13,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <math.h>
 
 
 int initInput()
 {
-    return 0;
+  return 0;
 }
 
 int XNextEvent(Display *display, XEvent *event_return)
@@ -87,8 +88,8 @@ int XNextEvent(Display *display, XEvent *event_return)
 
   case MotionNotify:
   {
-    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 255);
-    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 255);
+    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * pow(2, 10));
+    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * pow(2, 10));
   }
   break;
 

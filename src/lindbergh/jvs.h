@@ -223,10 +223,10 @@ typedef enum
 
 int initJVS();
 
-JVSStatus processPacket();
+JVSStatus processPacket(int* packetSize);
 
 JVSStatus readPacket(JVSPacket *packet);
-JVSStatus writePacket(JVSPacket *packet);
+JVSStatus writePacket(JVSPacket *packet, int* packetSize);
 
 /* The in and out packets used to read and write to and from*/
 extern JVSPacket inputPacket, outputPacket;

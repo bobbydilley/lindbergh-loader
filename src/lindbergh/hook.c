@@ -183,14 +183,14 @@ void __attribute__((constructor)) hook_init()
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
-    printf("Now emulating %s", getGameName());
+    printf("Now starting %s", getGameName());
     if (getConfig()->gameStatus == WORKING)
     {
-        printf((" - Game is in working state.\n"));
+        printf((", this game is working.\n"));
     }
     else
     {
-        printf((" - Game is in NOT WORKING state.\n"));
+        printf((", this game is NOT working.\n"));
     }
 }
 
@@ -545,13 +545,12 @@ int system(const char *command)
         return 0;
 
     if (strcmp(command, "uname -r | grep mvl") == 0)
-    {
-        EmulatorConfig *config = getConfig();
-        config->game = SEGABOOT_2_4;
         return 0;
-    }
 
     if (strstr(command, "hwclock") != NULL)
+        return 0;
+
+    if (strstr(command, "losetup") != NULL)
         return 0;
 
     return _system(command);
@@ -607,7 +606,10 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
     // Change the IP to connect to to 127.0.0.1
     // in_pointer->sin_addr.s_addr = inet_addr("127.0.0.1");
     char *some_addr = inet_ntoa(in_pointer->sin_addr);
-    printf("Connecting to %s\n", some_addr);
+    if (getConfig()->showDebugMessages)
+    {
+        printf("Connecting to %s\n", some_addr);
+    }
 
     return _connect(sockfd, addr, addrlen);
 }
@@ -652,7 +654,10 @@ void getCPUID()
     eax = 0;
     __get_cpuid(0, &eax, &cpu_vendor.ebx, &cpu_vendor.ecx, &cpu_vendor.edx);
     sprintf(cpu_vendor.cpuid, "%.4s%.4s%.4s", (const char *)&cpu_vendor.ebx, (const char *)&cpu_vendor.edx, (const char *)&cpu_vendor.ecx);
-    printf("CPU Vendor: %s\n", cpu_vendor.cpuid);
+    if (getConfig()->showDebugMessages)
+    {
+        printf("Detected CPU Vendor: %s\n", cpu_vendor.cpuid);
+    }
 }
 
 /**
