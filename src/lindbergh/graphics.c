@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <GL/freeglut.h>
 #include <GL/glx.h>
 #include <X11/extensions/xf86vmode.h>
@@ -25,11 +26,11 @@ FGAPI int FGAPIENTRY glutEnterGameMode()
 {
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
-  strcat(gameTitle, " (GLUT)");
   glutCreateWindow(gameTitle);
 
   // Outrun doesn't run the glutMainLoop through, so we'll do that here
-  if (getConfig()->game == OUTRUN || getConfig()->game == OUTRUN_TEST)
+  Game game = getConfig()->game;
+  if (game == OUTRUN_2_SP_SDX || game == OUTRUN_2_SP_SDX_TEST || game == OUTRUN_2_SP_SDX_REVA || game == OUTRUN_2_SP_SDX_REVA_TEST)
   {
     pthread_t glutMainLoopID;
     pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);
@@ -51,7 +52,7 @@ FGAPI void FGAPIENTRY glutSetCursor(int cursor)
 
 FGAPI void FGAPIENTRY glutGameModeString(const char *string)
 {
-  printf("glutGameModeString: %s\n", string);
+  // printf("glutGameModeString: %s\n", string);
 
   char gameModeString[1024];
   strcpy(gameModeString, string);
@@ -85,6 +86,14 @@ FGAPI void FGAPIENTRY glutGameModeString(const char *string)
   }
 }
 
+/**
+ * Stop the house of the dead games turning keyboard repeating off.
+ */
+int XAutoRepeatOff(Display *display)
+{
+  return 0;
+}
+
 Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int class, Visual *visual, unsigned long valueMask, XSetWindowAttributes *attributes)
 {
 
@@ -98,7 +107,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   // attributes->override_redirect = False;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
-  printf("XCreateWindow Resolution %d %d %d %d\n", x, y, width, height);
+  printf("The resolution is %dx%d \n", width, height);
 
   if (getConfig()->fullscreen)
   {
@@ -136,104 +145,7 @@ int XStoreName(Display *display, Window w, const char *window_name)
   int (*_XStoreName)(Display *display, Window w, const char *window_name) = dlsym(RTLD_NEXT, "XStoreName");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
-  strcat(gameTitle, " (X11)");
   return _XStoreName(display, w, gameTitle);
-}
-
-int XNextEvent(Display *display, XEvent *event_return)
-{
-
-  int (*_XNextEvent)(Display *display, XEvent *event_return) = dlsym(RTLD_NEXT, "XNextEvent");
-  int returnValue = _XNextEvent(display, event_return);
-
-  // Return now if we're not emulating JVS
-  if (!getConfig()->emulateJVS)
-  {
-    return returnValue;
-  }
-
-  switch (event_return->type)
-  {
-
-  case KeyRelease:
-  case KeyPress:
-  {
-    switch (event_return->xkey.keycode)
-    {
-    case 28:
-      setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
-      break;
-    case 39:
-      setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);
-      break;
-    case 14:
-      incrementCoin(PLAYER_1, event_return->type == KeyPress);
-      break;
-    case 15:
-      incrementCoin(PLAYER_2, event_return->type == KeyPress);
-      break;
-    case 111:
-      setSwitch(PLAYER_1, BUTTON_UP, event_return->type == KeyPress);
-      break;
-    case 116:
-      setSwitch(PLAYER_1, BUTTON_DOWN, event_return->type == KeyPress);
-      break;
-    case 113:
-      setSwitch(PLAYER_1, BUTTON_LEFT, event_return->type == KeyPress);
-      break;
-    case 114:
-      setSwitch(PLAYER_1, BUTTON_RIGHT, event_return->type == KeyPress);
-      break;
-    case 10:
-      setSwitch(PLAYER_1, BUTTON_START, event_return->type == KeyPress);
-      break;
-    case 24:
-      setSwitch(PLAYER_1, BUTTON_1, event_return->type == KeyPress);
-      break;
-    case 25:
-      setSwitch(PLAYER_1, BUTTON_2, event_return->type == KeyPress);
-      break;
-    case 26:
-      setSwitch(PLAYER_1, BUTTON_3, event_return->type == KeyPress);
-      break;
-    case 27:
-      setSwitch(PLAYER_1, BUTTON_4, event_return->type == KeyPress);
-      break;
-    default:
-      break;
-    }
-  }
-  break;
-
-  case MotionNotify:
-  {
-    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * 255);
-    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * 255);
-  }
-  break;
-
-  case ButtonPress:
-  case ButtonRelease:
-  {
-    switch (event_return->xbutton.button)
-    {
-    case 1: // Trigger
-      setSwitch(PLAYER_1, BUTTON_1, event_return->type == ButtonPress);
-      break;
-    case 3: // Reload
-      setSwitch(PLAYER_1, BUTTON_2, event_return->type == ButtonPress);
-      break;
-    case 9: // Gun Button
-      setSwitch(PLAYER_1, BUTTON_3, event_return->type == ButtonPress);
-      break;
-    default:
-      break;
-    }
-  }
-  break;
-  }
-
-  return returnValue;
 }
 
 int XSetStandardProperties(Display *display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints)
@@ -241,13 +153,30 @@ int XSetStandardProperties(Display *display, Window window, const char *window_n
   int (*_XSetStandardProperties)(Display *display, Window window, const char *window_name, const char *icon_name, Pixmap icon_pixmap, char **argv, int argc, XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
-  strcat(gameTitle, " (X11)");
   return _XSetStandardProperties(display, window, gameTitle, icon_name, icon_pixmap, argv, argc, hints);
 }
 
-Bool XF86VidModeSwitchToMode(Display *display, int screen, XF86VidModeModeInfo *modeline)
+Bool XF86VidModeSwitchToMode(Display *display, int screen, XF86VidModeModeInfo *modesinfo)
 {
   return 0;
+}
+
+int XF86VidModeGetAllModeLines(Display *display, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo)
+{
+  int (*_XF86VidModeGetAllModeLines)(Display *display, int screen, int *modecount_return, XF86VidModeModeInfo ***modesinfo) = dlsym(RTLD_NEXT, "XF86VidModeGetAllModeLines");
+
+  if (_XF86VidModeGetAllModeLines(display, screen, modecount_return, modesinfo) != 1)
+  {
+    printf("Error: Could not get list of screen modes.\n");
+    exit(1);
+  }
+  else
+  {
+    XF86VidModeModeInfo **modes = *modesinfo;
+    modes[0]->hdisplay = getConfig()->width;
+    modes[0]->vdisplay = getConfig()->height;
+  }
+  return true;
 }
 
 typedef unsigned int uint;

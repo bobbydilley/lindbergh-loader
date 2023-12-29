@@ -3,6 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h> /* POSIX threads API to create and manage threads in the program */
 
 /* The in and out packets used to read and write to and from*/
 JVSPacket inputPacket, outputPacket;
@@ -12,6 +13,8 @@ unsigned char outputBuffer[JVS_MAX_PACKET_SIZE], inputBuffer[JVS_MAX_PACKET_SIZE
 
 /* Holds the status of the sense line */
 int senseLine = 3;
+
+pthread_mutex_t jvsMutex = PTHREAD_MUTEX_INITIALIZER;
 
 JVSIO io = {0};
 
@@ -30,9 +33,9 @@ int initJVS()
     io.capabilities.switches = 14;
     io.capabilities.coins = 2;
     io.capabilities.players = 2;
-    io.capabilities.analogueInBits = 8;
+    io.capabilities.analogueInBits = 10;
     io.capabilities.rightAlignBits = 0;
-    io.capabilities.analogueInChannels = 20;
+    io.capabilities.analogueInChannels = 8;
     io.capabilities.generalPurposeOutputs = 20;
     io.capabilities.commandVersion = 19;
     io.capabilities.jvsVersion = 48;
@@ -160,7 +163,7 @@ void writeFeatures(JVSPacket *outputPacket, JVSCapabilities *capabilities)
  *
  * @returns The status of the entire operation
  */
-JVSStatus processPacket()
+JVSStatus processPacket(int *packetSize)
 {
     readPacket(&inputPacket);
 
@@ -176,6 +179,8 @@ JVSStatus processPacket()
 
     /* Set the entire packet success line */
     outputPacket.data[outputPacket.length++] = STATUS_SUCCESS;
+
+    pthread_mutex_lock(&jvsMutex);
 
     while (index < inputPacket.length - 1)
     {
@@ -260,6 +265,7 @@ JVSStatus processPacket()
             outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
             outputPacket.data[outputPacket.length + 1] = io.state.inputSwitch[0];
             outputPacket.length += 2;
+
             for (int i = 0; i < inputPacket.data[index + 1]; i++)
             {
                 for (int j = 0; j < inputPacket.data[index + 2]; j++)
@@ -272,7 +278,7 @@ JVSStatus processPacket()
 
         case CMD_READ_COINS:
         {
-            ////printf("CMD_READ_COINS\n");
+            // printf("CMD_READ_COINS\n");
             size = 2;
             int numberCoinSlots = inputPacket.data[index + 1];
             outputPacket.data[outputPacket.length++] = REPORT_SUCCESS;
@@ -288,7 +294,7 @@ JVSStatus processPacket()
 
         case CMD_READ_ANALOGS:
         {
-            // printf("CMD_READ_ANALOGS\n");
+            // printf("CMD_READ_ANALOGS %d\n", inputPacket.data[index + 1]);
             size = 2;
 
             outputPacket.data[outputPacket.length++] = REPORT_SUCCESS;
@@ -470,7 +476,9 @@ JVSStatus processPacket()
         index += size;
     }
 
-    writePacket(&outputPacket);
+    pthread_mutex_unlock(&jvsMutex);
+
+    writePacket(&outputPacket, packetSize);
 
     return JVS_STATUS_SUCCESS;
 }
@@ -557,7 +565,7 @@ JVSStatus readPacket(JVSPacket *packet)
  *
  * @param packet The packet to send
  */
-JVSStatus writePacket(JVSPacket *packet)
+JVSStatus writePacket(JVSPacket *packet, int *packetSize)
 {
     /* Get pointer to raw data in packet */
     unsigned char *packetPointer = (unsigned char *)packet;
@@ -595,12 +603,15 @@ JVSStatus writePacket(JVSPacket *packet)
         outputBuffer[outputIndex++] = checksum;
     }
 
+    // Communicate the output size based on the now escaped bytes
+    *packetSize = outputIndex;
+
     return JVS_STATUS_SUCCESS;
 }
 
 /**
  * Gets the sense line value
- * 
+ *
  * Values are:
  *  3 = no device, after a RESET
  *  1 = address assigned
@@ -623,7 +634,6 @@ int setSwitch(JVSPlayer player, JVSInput switchNumber, int value)
     {
         io.state.inputSwitch[player] &= ~switchNumber;
     }
-
     return 1;
 }
 
@@ -638,7 +648,10 @@ int incrementCoin(JVSPlayer player, int amount)
 
 int setAnalogue(JVSInput channel, int value)
 {
+    pthread_mutex_lock(&jvsMutex);
     io.state.analogueChannel[channel] = value;
+    pthread_mutex_unlock(&jvsMutex);
+
     return 1;
 }
 

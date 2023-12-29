@@ -10,7 +10,8 @@ Working is defined by getting into attract mode and running the game, but not ne
 - After Burner Climax
 - Ghost Squad Evolution
 - Harley Davidson
-- Let's Go Jungle Special (boots to ride error)
+- Let's Go Jungle
+- Let's Go Jungle Special
 - Outrun 2 SP SDX
 - R-Tuned
 - Race TV
@@ -19,20 +20,12 @@ Working is defined by getting into attract mode and running the game, but not ne
 - The House Of The Dead 4 Special
 - The House Of The Dead Ex
 - Virtua Fighter 5
-
-## Games that do not work or haven't been tested
-
-- Hummer
 - Initial D 4
-- Initial D 5
-- Let's Go Jungle
-- Primevil
 - Virtua Tennis 3
 
-## How to run specific games
+## Games that currently do not work
 
-### Let's Go Jungle
+- Hummer
+- Initial D 5
+- Primevil
 
-No, this game will not start.
-
-```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. LD_PRELOAD=lindbergh.so TEA_DIR=`pwd` ./lgj_final```

@@ -4,6 +4,7 @@
 #include <fcntl.h>  /* File control definitions */
 #include <errno.h>  /* Error number definitions */
 #include <stdlib.h> /* Standard library functions like malloc, free, exit, and atoi */
+#include <sys/select.h>
 
 #include "baseboard.h"
 
@@ -59,6 +60,7 @@ uint8_t sharedMemory[1024 * 32] = {0};
 
 int selectReply = -1;
 int jvsFileDescriptor = -1;
+int jvsPacketSize = -1;
 
 int initBaseboard()
 {
@@ -191,7 +193,7 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
 
       if (getConfig()->emulateJVS)
       {
-        processPacket();
+        processPacket(&jvsPacketSize);
       }
       else if (jvsFileDescriptor >= 0)
       {
@@ -250,9 +252,9 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
     {
       if (getConfig()->emulateJVS)
       {
-        memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, outputPacket.length + 3);
+        memcpy(&sharedMemory[jvsCommand.destAddress], outputBuffer, jvsPacketSize);
         _data[2] = jvsCommand.destAddress;
-        _data[3] = outputPacket.length + 3;
+        _data[3] = jvsPacketSize;
         _data[1] = 1; // Set the status to success
       }
       else if (jvsFileDescriptor >= 0)

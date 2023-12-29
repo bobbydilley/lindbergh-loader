@@ -106,26 +106,26 @@ int securityBoardIn(uint16_t port, uint32_t *data)
     case SECURITY_BOARD_FRONT_PANEL:
     {
         uint32_t result = 0xFFFFFFFF;
-        if (securityBoard.serviceSwitch)
-            result &= ~0x08;
-        if (securityBoard.testSwitch)
-            result &= ~0x04;
-        if (securityBoard.dipSwitch[6])
+        if (securityBoard.dipSwitch[6])  // bit12
             result &= ~0x800; // DIP 6
-        if (securityBoard.dipSwitch[5])
+        if (securityBoard.dipSwitch[5])  // bit11
             result &= ~0x400; // DIP 5
-        if (securityBoard.dipSwitch[4])
+        if (securityBoard.dipSwitch[4])  // bit10
             result &= ~0x200; //  DIP 4
-        if (securityBoard.dipSwitch[3])
+        if (securityBoard.dipSwitch[3])  // bit9
             result &= ~0x100; //  DIP 3
-        if (securityBoard.dipSwitch[2])
+        if (securityBoard.dipSwitch[2])  // bit8
             result &= ~0x80; // DIP 2
-        if (securityBoard.dipSwitch[1])
+        if (securityBoard.dipSwitch[1])  // bit7
             result &= ~0x40; // DIP 1
-        if (securityBoard.dipSwitch[8])
+        if (securityBoard.dipSwitch[8])  // bit6
             result &= ~0x20;
-        if (securityBoard.dipSwitch[7])
+        if (securityBoard.dipSwitch[7])  // bit5
             result &= ~0x10;
+        if (securityBoard.serviceSwitch) // bit4
+            result &= ~0x08;
+        if (securityBoard.testSwitch)    // bit3
+            result &= ~0x04;
         *data = result;
     }
     break;

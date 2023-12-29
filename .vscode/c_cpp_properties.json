@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${default}"
+            ],
+            "defines": [
+                "__USE_POSIX",
+                "__USE_MISC"
+            ],
+            "cppStandard": "gnu++17",
+            "cStandard": "c99",
+            "intelliSenseMode": "linux-gcc-x86",
+            "forcedInclude": [
+                "${workspaceFolder}/../vscode-preinclude.h"
+            ],
+            "compilerArgs": []
+        }
+    ],
+    "version": 4
+}
