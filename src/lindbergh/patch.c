@@ -32,7 +32,7 @@ static void patchMemory(uint32_t address, char *value)
 {
 
     size_t size = strlen((void *)value);
-    printf("Size=%d\n", size);
+    // printf("Size=%d\n", size);
     if (size % 2 != 0)
     {
         printf("Patch value should be even.\n");
@@ -433,9 +433,6 @@ int initPatch()
             setVariable(0x083cef1a, cpu_vendor.edx);
             setVariable(0x083cef25, cpu_vendor.ecx);
         }
-        // Workaroud
-        if (remove("/var/tmp/atr_init") == 1)
-            printf("atr_init deleted.\n");
     }
     break;
     case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:

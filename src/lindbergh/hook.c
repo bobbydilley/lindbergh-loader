@@ -183,7 +183,7 @@ void __attribute__((constructor)) hook_init()
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
-    printf("Now starting %s", getGameName());
+    printf("Now starting \"%s\"", getGameName());
     if (getConfig()->gameStatus == WORKING)
     {
         printf((", this game is working.\n"));
