@@ -94,7 +94,7 @@ int eepromIoctl(int fd, unsigned int request, void *data)
         uint32_t *functions = data;
         functions[0] = 0x20000 | 0x40000 | 0x100000 | 0x400000 | 0x8000000;
 
-        // The following is taken from the eeprom init sequence in The House Of The Dead 4 so lets add em on!
+        // The following is taken from the eeprom init sequence in The House Of The Dead 4 so let's add em on!
         functions[0] = functions[0] | 0x20000 | 0x40000 | 0x80000 | 0x100000 | 0x200000 | 0x400000 | 0x1000000 | 0x2000000;
     }
     break;

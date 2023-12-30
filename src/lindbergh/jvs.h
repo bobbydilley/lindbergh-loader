@@ -34,7 +34,7 @@
 #define REPORT_PARAMETER_ERROR2 0x03
 #define REPORT_BUSY 0x04 // some attached hardware was busy, causing the request to fail
 
-/* All of the commands */
+/* All the commands */
 #define CMD_RESET 0xF0            // reset bus
 #define CMD_RESET_ARG 0xD9        // fixed argument to reset command
 #define CMD_ASSIGN_ADDR 0xF1      // assign address to slave

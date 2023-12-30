@@ -603,7 +603,7 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 
     struct sockaddr_in *in_pointer = (struct sockaddr_in *)addr;
 
-    // Change the IP to connect to to 127.0.0.1
+    // Change the IP to connect to 127.0.0.1
     // in_pointer->sin_addr.s_addr = inet_addr("127.0.0.1");
     char *some_addr = inet_ntoa(in_pointer->sin_addr);
     if (getConfig()->showDebugMessages)
