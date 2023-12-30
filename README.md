@@ -6,11 +6,12 @@ You can view the supported titles [here.](docs/supported.md)
 
 ## Dependencies
 
-First make sure you have up to date NVIDIA drivers and then install the following:
+First make sure you have up-to-date NVIDIA drivers and then install the following:
 
 ```
 sudo dpkg --add-architecture i386 
 sudo apt install gcc-multilib
+sudo apt install build-essentials
 sudo apt install freeglut3:i386 freeglut3-dev:i386 libglew-dev
 sudo apt install xorg-dev
 sudo apt install libopenal1 libopenal-dev
@@ -19,13 +20,14 @@ sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
 ```
 
+Note: `freeglut3:i386` is not available anymore on Debian Trixxie. You might need to omit this package for future distributions.
+
 ## Building & Running
 
 This emulator will need access to the input devices and serial devices on Linux. Before running this emulator you should add your user account to the following groups and then _restart your computer_.
 
 ```
-sudo addgroup $USER dialout
-sudo addgroup $USER input
+sudo usermod -a -G dialout,input $USER
 ```
 
 To build, run the makefile, and then copy the contents of the build directory into the game directory and run.
