@@ -149,6 +149,20 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0x5c18953c)
+    {
+        config.game = AFTER_BURNER_CLIMAX_SDX;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x9af7cb29)
+    {
+        config.game = AFTER_BURNER_CLIMAX_CE;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0x4e9ccf33)
     {
         config.game = INITIALD_4;
@@ -221,6 +235,34 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0xcdbc8069)
+    {
+        config.game = PRIMEVAL_HUNT;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0xe60d8e04)
+    {
+        config.game = GHOST_SQUAD_EVOLUTION;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x14d1292a)
+    {
+        config.game = INITIALD_5;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0xc85f106a)
+    {
+        config.game = HUMMER_EXTREME;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
     config.game = UNKNOWN;
     return 1;
 }
@@ -240,6 +282,8 @@ char *getGameName()
         return "After Burner Climax SDX";
     case AFTER_BURNER_CLIMAX_SDX_REVA:
         return "After Burner Climax SDX Rev A";
+    case AFTER_BURNER_CLIMAX_CE:
+        return "After Burner Climax CE2";
     case GHOST_SQUAD_EVOLUTION:
         return "Ghost Squad Evolution";
     case HARLEY_DAVIDSON:
@@ -252,6 +296,8 @@ char *getGameName()
         return "Hummer Extreme MDX";
     case INITIALD_4:
         return "Initial D Arcade Stage 4";
+    case INITIALD_4_REVE:
+        return "Initial D Arcade Stage 4 EXP";
     case INITIALD_5:
         return "Initial D Arcade Stage 5";
     case LETS_GO_JUNGLE:
