@@ -37,12 +37,13 @@
 #define EEPROM 1
 #define SERIAL0 2
 #define SERIAL1 3
+#define PCI_CARD_000 4
 
 #define CPUINFO 0
 #define OSRELEASE 1
 #define PCI_CARD_1F0 2
 
-int hooks[5] = {-1, -1, -1, -1};
+int hooks[5] = {-1, -1, -1, -1, -1};
 FILE *fileHooks[3] = {NULL, NULL, NULL};
 int fileRead[3] = {0, 0, 0};
 char envpath[100];
@@ -238,6 +239,12 @@ int open(const char *pathname, int flags)
         return _open(pathname + 1, flags);
     }
 
+    if (strcmp(pathname, "/proc/bus/pci/01/00.0") == 0)
+    {
+        hooks[PCI_CARD_000] = _open(HOOK_FILE_NAME, flags);
+        return hooks[PCI_CARD_000];
+    }
+
     return _open(pathname, flags);
 }
 
@@ -297,6 +304,17 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
         fileHooks[PCI_CARD_1F0] = _fopen(HOOK_FILE_NAME, mode);
         return fileHooks[PCI_CARD_1F0];
     }
+
+    char* result;
+    if((result = strstr(pathname, "/home/disk0")) != NULL)
+    {
+        memmove(result + 2, result + 11, strlen(result + 11) + 1);
+        memcpy(result, "..", 2);
+        return _fopen(result, mode);
+    }
+
+    //printf("Path= %s\n", pathname); 
+    
     return _fopen(pathname, mode);
 }
 
@@ -438,6 +456,12 @@ ssize_t read(int fd, void *buf, size_t count)
         return -1;
     }
 
+    if (fd == hooks[PCI_CARD_000])
+    {
+        memcpy(buf, pci_000, count);
+        return count;
+    }
+
     return _read(fd, buf, count);
 }
 
@@ -447,8 +471,8 @@ size_t fread(void *buf, size_t size, size_t count, FILE *stream)
 
     if (stream == fileHooks[PCI_CARD_1F0])
     {
-        memcpy(buf, pcidata, 68);
-        return 68;
+        memcpy(buf, pci_1f0, size*count);
+        return size*count;
     }
     return _fread(buf, size, count, stream);
 }
@@ -488,6 +512,8 @@ int ioctl(int fd, unsigned int request, void *data)
 
     if (fd == hooks[EEPROM])
     {
+        if(request == 0xC04064A0)
+            return _ioctl(fd, request, data);
         return eepromIoctl(fd, request, data);
     }
 
