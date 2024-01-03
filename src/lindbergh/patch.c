@@ -549,6 +549,19 @@ int initPatch()
     }
     break;
 
+    case LETS_GO_JUNGLE_REVA:
+    {
+        // Security
+        detourFunction(0x084e9fbc, amDongleInit);
+        detourFunction(0x084ea378, amDongleIsAvailable);
+        detourFunction(0x084ea29c, amDongleUpdate);
+        // patchMemory(0x0807b76a, "9090"); // Patch initializeArcadeBackup
+        // Fixes
+        detourFunction(0x084e9ef2, amDipswGetData);
+        detourFunction(0x084e9f6a, stubRetZero); // Stub amDipswSetLed
+        // patchMemory(0x0840d858, "9090");         // No more Full Screen from the Game
+    }
+
     case LETS_GO_JUNGLE:
     {
         if (config->showDebugMessages == 1)

@@ -61,7 +61,8 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
-    if(elf_crc == 0xDDECE1E9) {
+    if (elf_crc == 0xDDECE1E9)
+    {
         config.game = THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST;
         config.gameStatus = WORKING;
         return 0;
@@ -262,6 +263,13 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if (elf_crc == 0xB6479554)
+    {
+        config.game = LETS_GO_JUNGLE_REVA;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
     config.game = UNKNOWN;
     return 1;
 }
@@ -299,6 +307,8 @@ char *getGameName()
         return "Initial D Arcade Stage 4 EXP Rev E";
     case INITIALD_5:
         return "Initial D Arcade Stage 5";
+    case LETS_GO_JUNGLE_REVA:
+        return "Let's Go Jungle! Lost on the Island of Spice! Rev A";
     case LETS_GO_JUNGLE:
         return "Let's Go Jungle! Lost on the Island of Spice!";
     case LETS_GO_JUNGLE_SPECIAL:
