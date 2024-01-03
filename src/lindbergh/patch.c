@@ -144,17 +144,17 @@ int amLibInit()
 
 int amDipswInit()
 {
-    uint32_t *amDipswContext = (uint32_t *)0x080980e8;         // 0x0809c12c;
-    uint32_t *amDipswContext1 = (uint32_t *)(0x080980e8 + 4);  //(0x0809c12c + 4);
-    uint32_t *amDipswContext2 = (uint32_t *)(0x080980e8 + 8);  //(0x0809c12c + 8);
-    uint32_t *amDipswContext3 = (uint32_t *)(0x080980e8 + 12); //(0x0809c12c + 12);
+    //uint32_t *amDipswContext = (uint32_t *)0x080980e8;         // 0x0809c12c;
+    //uint32_t *amDipswContext1 = (uint32_t *)(0x080980e8 + 4);  //(0x0809c12c + 4);
+    //uint32_t *amDipswContext2 = (uint32_t *)(0x080980e8 + 8);  //(0x0809c12c + 8);
+    //uint32_t *amDipswContext3 = (uint32_t *)(0x080980e8 + 12); //(0x0809c12c + 12);
     // typedef void *(*___constant_c_and_count_memset)(uint32_t *, int, size_t);
     //___constant_c_and_count_memset func = (___constant_c_and_count_memset)//0x0805c3d5;
     // func(amDipswContext, 0, 4);
-    *amDipswContext = 1;
-    *amDipswContext1 = 1;
-    *amDipswContext2 = 1;
-    *amDipswContext3 = 1;
+    //*amDipswContext = 1;
+    //*amDipswContext1 = 1;
+    //*amDipswContext2 = 1;
+    //*amDipswContext3 = 1;
     return 0;
 }
 
@@ -374,9 +374,19 @@ int initPatch()
         detourFunction(0x08190e80, amDongleInit);
         detourFunction(0x08191201, amDongleIsAvailable);
         detourFunction(0x08191125, amDongleUpdate);
+        detourFunction(0x08191221, stubRetOne);
         // Fixes
+        detourFunction(0x08190ca4, amDipswInit);
         detourFunction(0x08190db6, amDipswGetData);
         detourFunction(0x08190e2e, stubRetZero); // Stub amDipswSetLed
+
+        // Not sure what this does
+        patchMemory(0x8105317, "909090909090909090909090909090909090909090909090909090909090909090909090");
+        patchMemory(0x8048000 + 0x000C1593, "9090");
+        patchMemory(0x8048000 + 0x000C1597, "9090");
+        patchMemory(0x8048000 + 0x000C159D, "77");
+
+
     }
     break;
     case OUTRUN_2_SP_SDX_REVA_TEST:
