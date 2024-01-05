@@ -9,13 +9,16 @@ You can view the supported titles [here.](docs/supported.md)
 First make sure you have up-to-date NVIDIA drivers and then install the following:
 
 ```
-sudo dpkg --add-architecture i386 
+sudo dpkg --add-architecture i386
+sudo apt update
 sudo apt install gcc-multilib
-sudo apt install build-essentials
-sudo apt install freeglut3:i386 freeglut3-dev:i386 libglew-dev
+sudo apt install build-essential
+sudo apt install freeglut3:i386 // Find this one online
+sudo apt install freeglut3-dev:i386
+sudo apt install libglew-dev
 sudo apt install xorg-dev
 sudo apt install libopenal1 libopenal-dev
-sudo apt install libalut-dev:i386
+sudo apt install libalut-dev:i386 // Find this one online
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
 ```
