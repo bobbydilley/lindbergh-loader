@@ -63,6 +63,10 @@ void setEnvironmentVariables()
 
     // Ensure the preload path is set correctly
     setenv(LD_PRELOAD, PRELOAD_FILE_NAME, 1);
+
+    // Ensure the game runs on the NVidia Graphics Card
+    setenv("__NV_PRIME_RENDER_OFFLOAD", "1", 1);
+    setenv("__GLX_VENDOR_LIBRARY_NAME", "nvidia", 1);
 }
 
 /**
