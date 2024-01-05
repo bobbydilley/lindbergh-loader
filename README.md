@@ -13,17 +13,17 @@ sudo dpkg --add-architecture i386
 sudo apt update
 sudo apt install gcc-multilib
 sudo apt install build-essential
-sudo apt install freeglut3:i386 // Find this one online
+sudo apt install freeglut3:i386
 sudo apt install freeglut3-dev:i386
 sudo apt install libglew-dev
 sudo apt install xorg-dev
 sudo apt install libopenal1 libopenal-dev
-sudo apt install libalut-dev:i386 // Find this one online
+sudo apt install libalut-dev:i386 // You will need to find libalut-dev:i386, libalut0:i386 and multiarch-support:i386 from Ubuntu Xenial.
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
 ```
 
-Note: `freeglut3:i386` is not available anymore on Debian Trixxie. You might need to omit this package for future distributions.
+Note: The project has been tested to work on Ubuntu 22.04, and doesn't currently work on Ubuntu 23.10. Multiple packages such as `freeglut3:i386` are not available anymore on Debian Trixxie or Ubuntu 23.10.
 
 ## Building & Running
 
