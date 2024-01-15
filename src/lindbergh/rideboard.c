@@ -369,6 +369,7 @@ void printStatus(RideState *state)
 
 int initRideboard()
 {
+    rideState.CommandReply = 10;
     return 0;
 }
 
