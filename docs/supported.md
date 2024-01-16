@@ -8,8 +8,9 @@ Working is defined by getting into attract mode and running the game, but not ne
 
 - 2 Step 2 Spicy
 - After Burner Climax
-- Ghost Squad Evolution
+- Ghost Squad Evolution (Only works on Ubuntu 16)
 - Harley Davidson
+- Hummer Extreme
 - Let's Go Jungle
 - Let's Go Jungle Special
 - Outrun 2 SP SDX
@@ -25,7 +26,6 @@ Working is defined by getting into attract mode and running the game, but not ne
 
 ## Games that currently do not work
 
-- Hummer
-- Initial D 5
-- Primevil
+- Initial D 5 (Black Screen)
+- Primevil (No Textures)
 
