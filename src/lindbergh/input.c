@@ -210,6 +210,7 @@ int XNextEvent(Display *display, XEvent *event_return)
   case OUTRUN_2_SP_SDX_REVA:
   case OUTRUN_2_SP_SDX_REVA_TEST:
   case SEGA_RACE_TV:
+  case HUMMER_EXTREME:
   case R_TUNED:
     return XNextEventDriving(display, event_return, returnValue);
     break;
@@ -233,6 +234,7 @@ int XNextEvent(Display *display, XEvent *event_return)
   case VIRTUA_TENNIS_3:
   case VIRTUA_TENNIS_3_TEST:
   case VIRTUA_FIGHTER_5: // TODO: Add in all the other VFs
+  case VIRTUA_FIGHTER_5_EXPORT:
 
   default:
     return XNextEventShooting(display, event_return, returnValue);

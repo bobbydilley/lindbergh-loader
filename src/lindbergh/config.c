@@ -121,6 +121,12 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if(elf_crc == 0x157B0576) {
+        config.game = VIRTUA_FIGHTER_5_EXPORT;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0xd4726d61)
     {
         config.game = LETS_GO_JUNGLE;
@@ -228,6 +234,12 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    if(elf_crc == 0xC4B05D40) {
+        config.game = VIRTUA_FIGHTER_5_REVE;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
     if (elf_crc == 0x3CC635EE)
     {
         config.game = SEGABOOT_2_4;
@@ -313,6 +325,8 @@ char *getGameName()
         return "Let's Go Jungle! Lost on the Island of Spice!";
     case LETS_GO_JUNGLE_SPECIAL:
         return "Let's Go Jungle! Special!";
+    case VIRTUA_FIGHTER_5_EXPORT:
+        return "Virtua Fighter 5 Export";
     case OUTRUN_2_SP_SDX:
         return "Outrun 2 SP SDX";
     case OUTRUN_2_SP_SDX_REVA:
@@ -367,6 +381,8 @@ char *getGameName()
         return "Virtua Fighter 5 Rev B";
     case VIRTUA_FIGHTER_5_REVC:
         return "Virtua Fighter 5 Rev C";
+    case VIRTUA_FIGHTER_5_REVE:
+        return "Virtua Fighter 5 Rev E";
     case VIRTUA_FIGHTER_5_R_REVD:
         return "Virtua Fighter 5 Rev D";
     case VIRTUA_TENNIS_3:

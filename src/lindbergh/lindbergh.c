@@ -8,7 +8,7 @@
 #define PRELOAD_FILE_NAME "lindbergh.so"
 
 // List of all lindbergh executables known, not including the test executables
-char *games[] = {"drive.elf", "chopperM.elf", "vsg", "Jennifer", "segaboot", "amiM.elf", "abc", "hod4M.elf", "lgj_final", "vt3", "id4.elf", "id5.elf", "lgjsp_app", "gsevo", "vf5", "apacheM.elf", "END"};
+char *games[] = {"hummer_Master.elf", "drive.elf", "chopperM.elf", "vsg", "Jennifer", "amiM.elf", "abc", "hod4M.elf", "lgj_final", "vt3", "id4.elf", "id5.elf", "lgjsp_app", "gsevo", "vf5", "apacheM.elf", "segaboot", "END"};
 
 /**
  * Tests if the game uses a seperate elf for test mode
