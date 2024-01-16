@@ -125,11 +125,11 @@ int amDongleUpdate()
 
 int amDongleUserInfoEx(int a, int b, char *_arcadeContext)
 {
-    if (getConfig()->game == INITIALD_4_REVE)
+    if (getConfig()->crc32 == INITIALD_4_REVE)
         memcpy(_arcadeContext, "SBNK", 4);
-    else if (getConfig()->game == INITIALD_5_EXP_20)
+    else if (getConfig()->crc32 == INITIALD_5_EXP_20)
         memcpy(_arcadeContext, "SBPF", 4);
-    else if (getConfig()->game == HUMMER_EXTREME)
+    else if (getConfig()->crc32 == HUMMER_EXTREME)
         memcpy(_arcadeContext, "SBST", 4);
     return 0;
 }
@@ -239,7 +239,7 @@ int initPatch()
 {
     EmulatorConfig *config = getConfig();
 
-    switch (config->game)
+    switch (config->crc32)
     {
     case R_TUNED:
     {

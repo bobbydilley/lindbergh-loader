@@ -136,7 +136,6 @@ static void handleSegfault(int signal, siginfo_t *info, void *ptr)
 
 void __attribute__((constructor)) hook_init()
 {
-    printf("SEGA Lindbergh Loader\nRobert Dilley 2023\nNot for public consumption\n\n");
 
     // Get offsets of the Game's ELF and calculate CRC32.
     dl_iterate_phdr(callback, NULL);
@@ -184,15 +183,12 @@ void __attribute__((constructor)) hook_init()
 
     securityBoardSetDipResolution(getConfig()->width, getConfig()->height);
 
-    printf("Now starting \"%s\"", getGameName());
-    if (getConfig()->gameStatus == WORKING)
-    {
-        printf((", this game is working.\n"));
-    }
-    else
-    {
-        printf((", this game is NOT working.\n"));
-    }
+    printf("\nSEGA Lindbergh Emulator\nRobert Dilley 2023\n\n");
+    printf("  GAME:       %s\n", getGameName());
+    printf("  GAME ID:    %s\n", getGameID());
+    printf("  DVP:        %s\n", getDVPName());
+    printf("  STATUS:     %s\n", getConfig()->gameStatus == WORKING ? "WORKING" : "NOT WORKING");
+   
 }
 
 int open(const char *pathname, int flags)
@@ -326,7 +322,6 @@ FILE *fopen64(const char *pathname, const char *mode)
     if (strcmp(pathname, "/proc/sys/kernel/osrelease") == 0)
     {
         EmulatorConfig *config = getConfig();
-        config->game = SEGABOOT_2_6;
         fileRead[OSRELEASE] = 0;
         fileHooks[OSRELEASE] = _fopen64(HOOK_FILE_NAME, mode);
         return fileHooks[OSRELEASE];
@@ -708,8 +703,8 @@ char *getenv(const char *name)
 {
     char *(*_getenv)(const char *name) = dlsym(RTLD_NEXT, "getenv");
 
-    if ((strcmp(name, "TEA_DIR") == 0) && ((getConfig()->game == VIRTUA_TENNIS_3) || (getConfig()->game == VIRTUA_TENNIS_3_TEST) ||
-                                           ((getConfig()->game == RAMBO)) || (getConfig()->game == TOO_SPICY)))
+    if ((strcmp(name, "TEA_DIR") == 0) && ((getConfig()->crc32 == VIRTUA_TENNIS_3) || (getConfig()->crc32 == VIRTUA_TENNIS_3_TEST) ||
+                                           ((getConfig()->crc32 == RAMBO)) || (getConfig()->crc32 == TOO_SPICY)))
     {
         if (getcwd(envpath, 100) == NULL)
             return "";

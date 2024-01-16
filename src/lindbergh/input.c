@@ -15,11 +15,11 @@
 #include <pthread.h>
 #include <math.h>
 
-Game game = UNKNOWN;
+GameType gameType = SHOOTING;
 
 int initInput()
 {
-  game = getConfig()->game;
+  gameType = getConfig()->gameType;
   return 0;
 }
 
@@ -199,44 +199,14 @@ int XNextEvent(Display *display, XEvent *event_return)
   }
 
   // Select the appropriate input mapping depending on the game
-  switch (game)
+  switch (gameType)
   {
-  // Driving games
-  case INITIALD_4:
-  case INITIALD_4_REVE:
-  case INITIALD_5_EXP_20:
-  case INITIALD_ARCADE_STAGE_5:
-  case OUTRUN_2_SP_SDX:
-  case OUTRUN_2_SP_SDX_TEST:
-  case OUTRUN_2_SP_SDX_REVA:
-  case OUTRUN_2_SP_SDX_REVA_TEST:
-  case SEGA_RACE_TV:
-  case HUMMER_EXTREME:
-  case R_TUNED:
+  case DRIVING:
     return XNextEventDriving(display, event_return, returnValue);
     break;
 
-  // Shooting games
-  case THE_HOUSE_OF_THE_DEAD_4:
-  case THE_HOUSE_OF_THE_DEAD_4_SPECIAL:
-  case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:
-  case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
-  case THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST:
-  case THE_HOUSE_OF_THE_DEAD_4_TEST:
-  case THE_HOUSE_OF_THE_DEAD_EX:
-  case THE_HOUSE_OF_THE_DEAD_EX_TEST:
-  case TOO_SPICY:
-  case PRIMEVAL_HUNT:
-  case LETS_GO_JUNGLE:
-  case LETS_GO_JUNGLE_REVA:
-  case LETS_GO_JUNGLE_SPECIAL:
-
-  // Stick games
-  case VIRTUA_TENNIS_3:
-  case VIRTUA_TENNIS_3_TEST:
-  case VIRTUA_FIGHTER_5: // TODO: Add in all the other VFs
-  case VIRTUA_FIGHTER_5_EXPORT:
-
+  case SHOOTING:
+  case FIGHTING:
   default:
     return XNextEventShooting(display, event_return, returnValue);
     break;

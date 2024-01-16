@@ -68,7 +68,7 @@ int initEeprom()
             setFreeplay(eeprom, getConfig()->freeplay);
     }
 
-    if ((getConfig()->game == LETS_GO_JUNGLE_SPECIAL) || (getConfig()->game == THE_HOUSE_OF_THE_DEAD_EX) || (getConfig()->game == THE_HOUSE_OF_THE_DEAD_4_SPECIAL))
+    if ((getConfig()->crc32 == LETS_GO_JUNGLE_SPECIAL) || (getConfig()->crc32 == THE_HOUSE_OF_THE_DEAD_EX) || (getConfig()->crc32 == THE_HOUSE_OF_THE_DEAD_4_SPECIAL))
     {
         if (fixCreditSection(eeprom) != 0)
         {

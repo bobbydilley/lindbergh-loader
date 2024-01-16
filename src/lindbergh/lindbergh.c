@@ -8,7 +8,7 @@
 #define PRELOAD_FILE_NAME "lindbergh.so"
 
 // List of all lindbergh executables known, not including the test executables
-char *games[] = {"hummer_Master.elf", "drive.elf", "chopperM.elf", "vsg", "Jennifer", "amiM.elf", "abc", "hod4M.elf", "lgj_final", "vt3", "id4.elf", "id5.elf", "lgjsp_app", "gsevo", "vf5", "apacheM.elf", "segaboot", "END"};
+char *games[] = {"vt3_Lindbergh", "hummer_Master.elf", "drive.elf", "chopperM.elf", "vsg", "Jennifer", "amiM.elf", "abc", "hod4M.elf", "lgj_final", "vt3", "id4.elf", "id5.elf", "lgjsp_app", "gsevo", "vf5", "apacheM.elf", "segaboot", "END"};
 
 /**
  * Tests if the game uses a seperate elf for test mode
@@ -37,6 +37,12 @@ void testModePath(char *name)
         return;
     }
 
+    if (strcmp(name, "./vt3_Lindbergh") == 0)
+    {
+        strcpy(name, "./vt3_testmode");
+        return;
+    }
+
     // Otherwise add the standard -t to the end
     strcat(name, " -t");
 }
@@ -57,7 +63,7 @@ void setEnvironmentVariables()
         strcat(libraryPath, ":");
     }
 
-    strcat(libraryPath, ".:lib");
+    strcat(libraryPath, ".:lib:../lib");
 
     setenv(LD_LIBRARY_PATH, libraryPath, 1);
 

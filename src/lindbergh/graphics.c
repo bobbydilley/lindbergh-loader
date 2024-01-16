@@ -29,7 +29,7 @@ FGAPI int FGAPIENTRY glutEnterGameMode()
   glutCreateWindow(gameTitle);
 
   // Outrun doesn't run the glutMainLoop through, so we'll do that here
-  Game game = getConfig()->game;
+  uint32_t game = getConfig()->crc32;
   if (game == OUTRUN_2_SP_SDX || game == OUTRUN_2_SP_SDX_TEST || game == OUTRUN_2_SP_SDX_REVA || game == OUTRUN_2_SP_SDX_REVA_TEST)
   {
     pthread_t glutMainLoopID;
@@ -107,7 +107,7 @@ Window XCreateWindow(Display *display, Window parent, int x, int y, unsigned int
   // attributes->override_redirect = False;
 
   Window window = _XCreateWindow(display, parent, x, y, width, height, border_width, depth, class, visual, valueMask, attributes);
-  printf("The resolution is %dx%d \n", width, height);
+  printf("  RESOLUTION: %dx%d\n\n", width, height);
 
   if (getConfig()->fullscreen)
   {

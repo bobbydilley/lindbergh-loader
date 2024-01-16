@@ -33,379 +33,281 @@ static char *getNextToken(char *buffer, char *seperator, char **saveptr)
 static int detectGame(uint32_t elf_crc)
 {
 
-    if (elf_crc == 0x93ea7e11)
+    switch (elf_crc)
     {
-        config.game = SEGABOOT_2_4;
+
+    case SEGABOOT_2_4:
+    {
+        config.gameTitle = "Segaboot 2.4";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x3cc635ee)
+    case SEGABOOT_2_4_SYM:
     {
-        config.game = SEGABOOT_2_4_SYM;
+        config.gameTitle = "Segaboot 2.4 with symbols";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xbc0c9ffa)
+    case THE_HOUSE_OF_THE_DEAD_4:
+    case THE_HOUSE_OF_THE_DEAD_4_TEST:
     {
-        config.game = THE_HOUSE_OF_THE_DEAD_4;
+        config.gameTitle = "The House of the Dead 4";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x5df569f5)
+    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
+    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST:
     {
-        config.game = THE_HOUSE_OF_THE_DEAD_4_STRIPPED;
+        config.gameTitle = "The House of the Dead 4 Rev A";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xDDECE1E9)
+    case THE_HOUSE_OF_THE_DEAD_4_SPECIAL:
+    case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:
     {
-        config.game = THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST;
+        config.gameTitle = "The House of the Dead 4 Special";
+        config.emulateRideboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x7235bda8)
+    case THE_HOUSE_OF_THE_DEAD_EX:
+    case THE_HOUSE_OF_THE_DEAD_EX_TEST:
+
     {
-        config.game = THE_HOUSE_OF_THE_DEAD_4_TEST;
+        config.gameTitle = "The House of the Dead EX";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x12266f81)
+    case OUTRUN_2_SP_SDX_REVA:
+    case OUTRUN_2_SP_SDX_REVA_TEST:
     {
-        config.game = THE_HOUSE_OF_THE_DEAD_4_SPECIAL;
-        config.gameStatus = WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0x83ba3b45)
-    {
-        config.game = THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST;
-        config.gameStatus = WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0x85c0c22a)
-    {
-        config.game = THE_HOUSE_OF_THE_DEAD_EX;
-        config.gameStatus = WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0xb9a166bb)
-    {
-        config.game = THE_HOUSE_OF_THE_DEAD_EX_TEST;
-        config.gameStatus = WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0x6d055308)
-    {
-        config.game = OUTRUN_2_SP_SDX_REVA;
+        config.gameTitle = "Outrun 2 SP SDX";
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xffdccaaa)
+    case VIRTUA_FIGHTER_5_EXPORT:
     {
-        config.game = OUTRUN_2_SP_SDX_REVA_TEST;
-        config.emulateDriveboard = 1;
-        config.emulateMotionboard = 1;
+        config.gameTitle = "Virtua Fighter 5 Export";
+        config.gameDVP = "DVP-0043";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if(elf_crc == 0x157B0576) {
-        config.game = VIRTUA_FIGHTER_5_EXPORT;
+    case LETS_GO_JUNGLE:
+    {
+        config.gameTitle = "Let's Go Jungle! Lost on the Island of Spice!";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xd4726d61)
+    case LETS_GO_JUNGLE_SPECIAL:
     {
-        config.game = LETS_GO_JUNGLE;
+        config.gameTitle = "Let's Go Jungle! Special!";
+        config.emulateRideboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xbbabc0e0)
+    case AFTER_BURNER_CLIMAX:
     {
-        config.game = LETS_GO_JUNGLE_SPECIAL;
-        config.gameStatus = NOT_WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0xcc02de7d)
-    {
-        config.game = AFTER_BURNER_CLIMAX;
+        config.gameTitle = "After Burner Climax";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x152530dd)
+    case AFTER_BURNER_CLIMAX_REVA:
     {
-        config.game = AFTER_BURNER_CLIMAX_REVA;
+        config.gameTitle = "After Burner Climax Rev A";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x5c18953c)
+    case AFTER_BURNER_CLIMAX_SDX:
     {
-        config.game = AFTER_BURNER_CLIMAX_SDX;
+        config.gameTitle = "After Burner Climax SDX";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x9af7cb29)
+    case AFTER_BURNER_CLIMAX_CE:
     {
-        config.game = AFTER_BURNER_CLIMAX_CE;
+        config.gameTitle = "After Burner Climax CE";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x4e9ccf33)
+    case INITIALD_4:
     {
-        config.game = INITIALD_4;
-        config.gameStatus = NOT_WORKING;
+        config.gameTitle = "Initial D Arcade Stage 4";
+        config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x7f3f9f0c)
+    case INITIALD_4_REVE:
     {
-        config.game = INITIALD_4_REVE;
-        config.gameStatus = NOT_WORKING;
+        config.gameTitle = "Initial D Arcade Stage 4 Rev E";
+        config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xfb096f81)
+    case SEGA_RACE_TV:
     {
-        config.game = SEGA_RACE_TV;
-        config.emulateDriveboard = 1;
-        config.gameStatus = NOT_WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0x77ebac34)
-    {
-        config.game = RAMBO;
-        config.gameStatus = NOT_WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0xb05d9bbe)
-    {
-        config.game = R_TUNED;
+        config.gameTitle = "SEGA Race TV";
         config.emulateDriveboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x4c768eb4)
+    case RAMBO:
     {
-        config.game = TOO_SPICY;
+        config.gameTitle = "Rambo";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xc4b7e89)
+    case R_TUNED:
     {
-        config.game = VIRTUA_TENNIS_3;
+        config.gameTitle = "R Tuned";
+        config.emulateDriveboard = 1;
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xffe3b0fd)
+    case TOO_SPICY:
     {
-        config.game = VIRTUA_TENNIS_3_TEST;
-        config.gameStatus = NOT_WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0x1bf1b627)
-    {
-        config.game = VIRTUA_FIGHTER_5_REVC;
+        config.gameTitle = "Too Spicy";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if(elf_crc == 0xC4B05D40) {
-        config.game = VIRTUA_FIGHTER_5_REVE;
-        config.gameStatus = NOT_WORKING;
-        return 0;
-    }
-
-    if (elf_crc == 0x3CC635EE)
+    case VIRTUA_TENNIS_3:
+    case VIRTUA_TENNIS_3_TEST:
     {
-        config.game = SEGABOOT_2_4;
+        config.gameTitle = "Virtua Tennis 3";
         config.gameStatus = WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xcdbc8069)
+    case VIRTUA_FIGHTER_5_REVC:
     {
-        config.game = PRIMEVAL_HUNT;
+        config.gameTitle = "Virtua Fighter 5 Rev C";
+        config.gameStatus = WORKING;
+        return 0;
+    }
+    break;
+
+    case VIRTUA_FIGHTER_5_REVE:
+    {
+        config.gameTitle = "Virtua Fighter 5 Rev E";
         config.gameStatus = NOT_WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xe60d8e04)
+    case PRIMEVAL_HUNT:
     {
-        config.game = GHOST_SQUAD_EVOLUTION;
+        config.gameTitle = "Primeval Hunt";
         config.gameStatus = NOT_WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x14d1292a)
+    case GHOST_SQUAD_EVOLUTION:
     {
-        config.game = INITIALD_5_EXP_20;
+        config.gameTitle = "Ghost Squad Evolution";
         config.gameStatus = NOT_WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0x722ebbc4)
+    case INITIALD_5_EXP_20:
     {
-        config.game = INITIALD_ARCADE_STAGE_5;
+        config.gameTitle = "Initial D Arcade Stage 5 Export Ver 2.0";
         config.gameStatus = NOT_WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xc85f106a)
+    case INITIALD_ARCADE_STAGE_5:
     {
-        config.game = HUMMER_EXTREME;
+        config.gameTitle = "Initial D Arcade Stage 5";
         config.gameStatus = NOT_WORKING;
         return 0;
     }
+    break;
 
-    if (elf_crc == 0xB6479554)
+    case HUMMER_EXTREME:
     {
-        config.game = LETS_GO_JUNGLE_REVA;
+        config.gameTitle = "Hummer Extreme";
+        config.gameID = "SBST";
+        config.gameDVP = "DVP-0079";
+        config.gameType = DRIVING;
+        config.gameStatus = WORKING;
+        return 0;
+    }
+    break;
+
+    case LETS_GO_JUNGLE_REVA:
+    {
+        config.gameTitle = "Lets Go Jungle Rev A";
         config.gameStatus = NOT_WORKING;
         return 0;
     }
+    break;
 
-    config.game = UNKNOWN;
+    default:
+    {
+        config.crc32 = UNKNOWN;
+    }
+    break;
+    }
+
     return 1;
 }
 
 char *getGameName()
 {
-    char *unknownGameTitle = "Unknown Game";
-    switch (config.game)
-    {
-    case AFTER_BURNER_CLIMAX:
-        return "After Burner Climax";
-    case AFTER_BURNER_CLIMAX_REVA:
-        return "After Burner Climax Rev A";
-    case AFTER_BURNER_CLIMAX_REVB:
-        return "After Burner Climax Rev B";
-    case AFTER_BURNER_CLIMAX_SDX:
-        return "After Burner Climax SDX";
-    case AFTER_BURNER_CLIMAX_SDX_REVA:
-        return "After Burner Climax SDX Rev A";
-    case AFTER_BURNER_CLIMAX_CE:
-        return "After Burner Climax CE2";
-    case GHOST_SQUAD_EVOLUTION:
-        return "Ghost Squad Evolution";
-    case HARLEY_DAVIDSON:
-        return "Harley Davidson: King of the Road";
-    case HUMMER:
-        return "Hummer";
-    case HUMMER_EXTREME:
-        return "Hummer Extreme";
-    case HUMMER_EXTREME_MDX:
-        return "Hummer Extreme MDX";
-    case INITIALD_4:
-        return "Initial D Arcade Stage 4";
-    case INITIALD_4_REVE:
-        return "Initial D Arcade Stage 4 EXP Rev E";
-    case INITIALD_5_EXP_20:
-        return "Initial D Arcade Stage 5 Ver.2.0";
-    case INITIALD_ARCADE_STAGE_5:
-        return "Initial D Arcade Stage 5";
-    case LETS_GO_JUNGLE_REVA:
-        return "Let's Go Jungle! Lost on the Island of Spice! Rev A";
-    case LETS_GO_JUNGLE:
-        return "Let's Go Jungle! Lost on the Island of Spice!";
-    case LETS_GO_JUNGLE_SPECIAL:
-        return "Let's Go Jungle! Special!";
-    case VIRTUA_FIGHTER_5_EXPORT:
-        return "Virtua Fighter 5 Export";
-    case OUTRUN_2_SP_SDX:
-        return "Outrun 2 SP SDX";
-    case OUTRUN_2_SP_SDX_REVA:
-        return "Outrun 2 SP SDX Rev A";
-    case OUTRUN_2_SP_SDX_REVA_TEST:
-        return "Outrun 2 SP SDX Rev A Test Mode";
-    case OUTRUN_2_SP_SDX_TEST:
-        return "Outrun 2 SP SDX Test Mode";
-    case PRIMEVAL_HUNT:
-        return "Primeval Hunt";
-    case RAMBO:
-        return "Rambo";
-    case RAMBO_CHINA:
-        return "Rambo China Release";
-    case R_TUNED:
-        return "R-Tuned Ultimate Street Racing";
-    case SEGABOOT:
-        return "Segaboot";
-    case SEGABOOT_2_4:
-        return "SEGABOOT 2.4";
-    case SEGABOOT_2_4_SYM:
-        return "SEGABOOT 2.4 with Symbols";
-    case SEGABOOT_2_6:
-        return "SEGABOOT 2.6";
-    case SEGA_RACE_TV:
-        return "SEGA Race TV";
-    case THE_HOUSE_OF_THE_DEAD_4:
-        return "The House of the Dead 4";
-    case THE_HOUSE_OF_THE_DEAD_4_SPECIAL:
-        return "The House of the Dead 4 Special";
-    case THE_HOUSE_OF_THE_DEAD_4_SPECIAL_TEST:
-        return "The House of the Dead 4 Special Test Mode";
-    case THE_HOUSE_OF_THE_DEAD_4_TEST:
-        return "The House of the Dead 4 Test Mode";
-    case THE_HOUSE_OF_THE_DEAD_EX:
-        return "The House of the Dead Ex";
-    case TOO_SPICY:
-        return "2 Step : 2 Spicy";
-    case UNKNOWN:
-        return unknownGameTitle;
-    case VIRTUA_FIGHTER_5:
-        return "Virtua Fighter 5";
-    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN:
-        return "Virtua Fighter 5 Final Showdown";
-    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVA:
-        return "Virtua Fighter 5 Final Showdown Rev A";
-    case VIRTUA_FIGHTER_5_R:
-        return " Virtua Fighter 5 R";
-    case VIRTUA_FIGHTER_5_REVA:
-        return "Virtua Fighter 5 Rev A";
-    case VIRTUA_FIGHTER_5_REVB:
-        return "Virtua Fighter 5 Rev B";
-    case VIRTUA_FIGHTER_5_REVC:
-        return "Virtua Fighter 5 Rev C";
-    case VIRTUA_FIGHTER_5_REVE:
-        return "Virtua Fighter 5 Rev E";
-    case VIRTUA_FIGHTER_5_R_REVD:
-        return "Virtua Fighter 5 Rev D";
-    case VIRTUA_TENNIS_3:
-        return "Virtua Tennis 3";
-    case VIRTUA_TENNIS_3_TEST:
-        return "Virtua Tennis 3 Test Mode";
-    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
-        return "The House of the Dead 4 Rev C";
-    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST:
-        return "The House of the Dead 4 Rev C Test Mode";
-    default:
-        return unknownGameTitle;
-    }
-    return unknownGameTitle;
+    return config.gameTitle;
+}
+
+char *getDVPName()
+{
+    return config.gameDVP;
+}
+
+char *getGameID()
+{
+    return config.gameID;
 }
 
 int readConfig(FILE *configFile, EmulatorConfig *config)
@@ -514,6 +416,10 @@ int initConfig()
     config.region = -1;
     config.freeplay = -1;
     config.showDebugMessages = 0;
+    config.gameTitle = "Unknown game";
+    config.gameID = "XXXX";
+    config.gameDVP = "DVP-XXXX";
+    config.gameType = SHOOTING;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);
