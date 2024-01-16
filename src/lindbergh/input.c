@@ -204,7 +204,8 @@ int XNextEvent(Display *display, XEvent *event_return)
   // Driving games
   case INITIALD_4:
   case INITIALD_4_REVE:
-  case INITIALD_5:
+  case INITIALD_5_EXP_20:
+  case INITIALD_ARCADE_STAGE_5:
   case OUTRUN_2_SP_SDX:
   case OUTRUN_2_SP_SDX_TEST:
   case OUTRUN_2_SP_SDX_REVA:

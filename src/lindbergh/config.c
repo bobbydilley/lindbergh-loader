@@ -263,7 +263,14 @@ static int detectGame(uint32_t elf_crc)
 
     if (elf_crc == 0x14d1292a)
     {
-        config.game = INITIALD_5;
+        config.game = INITIALD_5_EXP_20;
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    if (elf_crc == 0x722ebbc4)
+    {
+        config.game = INITIALD_ARCADE_STAGE_5;
         config.gameStatus = NOT_WORKING;
         return 0;
     }
@@ -317,7 +324,9 @@ char *getGameName()
         return "Initial D Arcade Stage 4";
     case INITIALD_4_REVE:
         return "Initial D Arcade Stage 4 EXP Rev E";
-    case INITIALD_5:
+    case INITIALD_5_EXP_20:
+        return "Initial D Arcade Stage 5 Ver.2.0";
+    case INITIALD_ARCADE_STAGE_5:
         return "Initial D Arcade Stage 5";
     case LETS_GO_JUNGLE_REVA:
         return "Let's Go Jungle! Lost on the Island of Spice! Rev A";
