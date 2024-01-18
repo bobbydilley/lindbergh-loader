@@ -193,6 +193,9 @@ static int detectGame(uint32_t elf_crc)
     case RAMBO:
     {
         config.gameTitle = "Rambo";
+        config.gameDVP = "DVP-0069";
+        config.gameID = "SBQL";
+        config.gameType = SHOOTING;
         config.gameStatus = WORKING;
         return 0;
     }
