@@ -388,7 +388,7 @@ int initPatch()
         detourFunction(0x08066044, amDipswInit);
     }
     break;
-    case THE_HOUSE_OF_THE_DEAD_4:
+    case THE_HOUSE_OF_THE_DEAD_4_REVA:
     {
         if (config->showDebugMessages == 1)
         {
@@ -416,6 +416,12 @@ int initPatch()
         detourFunction(0x0831ddd7, amDipswGetData);
         detourFunction(0x0831de4f, amDipswSetLed);
 
+        // Patch comparison check
+        patchMemory(0x081b502a, "c7420400000001");
+
+        // Patch fullscreen
+        detourFunction(0x08376405, stubRetZero);
+
         // CPU patch to support AMD processors
         if (strcmp("AuthenticAMD", cpu_vendor.cpuid) == 0)
         {
@@ -425,7 +431,7 @@ int initPatch()
         }
     }
     break;
-    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
+    case THE_HOUSE_OF_THE_DEAD_4_REVC:
     {
         // Security
         detourFunction(0x0831ad04, amDongleInit);
@@ -434,6 +440,12 @@ int initPatch()
         // Fixes
         detourFunction(0x0831875f, amDipswGetData);
         detourFunction(0x083187d7, amDipswSetLed);
+
+        // Patch comparison check
+        patchMemory(0x081b58be, "c7420400000001");
+
+        // Patch fullscreen
+        detourFunction(0x08372391, stubRetZero);
 
         // CPU patch to support AMD processors
         if (strcmp("AuthenticAMD", cpu_vendor.cpuid) == 0)
@@ -444,7 +456,7 @@ int initPatch()
         }
     }
     break;
-    case THE_HOUSE_OF_THE_DEAD_4_TEST:
+    case THE_HOUSE_OF_THE_DEAD_4_REVA_TEST:
     {
         detourFunction(0x080677a0, amDongleInit);
         detourFunction(0x08067a81, amDongleIsAvailable);
@@ -572,20 +584,20 @@ int initPatch()
     {
         if (config->showDebugMessages == 1)
         {
-            setVariable(0x08c10604, 2);              // amBackupDebugLevel
-            setVariable(0x08c10620, 2);              // amCreditDebugLevel
-            setVariable(0x08c10878, 2);              // amDipswDebugLevel
-            setVariable(0x08c1087c, 2);              // amDongleDebugLevel
-            setVariable(0x08c10880, 2);              // amEepromDebugLevel
-            setVariable(0x08c10884, 2);              // amHwmonitorDebugLevel
-            setVariable(0x08c10888, 2);              // amJvsDebugLevel
-            setVariable(0x08c1088c, 2);              // amLibDebugLevel
-            setVariable(0x08c10890, 2);              // amMiscDebugLevel
-            setVariable(0x08c10898, 2);              // amSysDataDebugLevel
-            setVariable(0x08c108a0, 2);              // bcLibDebugLevel
-            setVariable(0x08c10894, 2);              // amOsinfoDebugLevel
-            setVariable(0x08c108a4, 0x0FFFFFFF);     // s_logMask
-            //detourFunction(0x08074a8c, _putConsole); // Debug Messages
+            setVariable(0x08c10604, 2);          // amBackupDebugLevel
+            setVariable(0x08c10620, 2);          // amCreditDebugLevel
+            setVariable(0x08c10878, 2);          // amDipswDebugLevel
+            setVariable(0x08c1087c, 2);          // amDongleDebugLevel
+            setVariable(0x08c10880, 2);          // amEepromDebugLevel
+            setVariable(0x08c10884, 2);          // amHwmonitorDebugLevel
+            setVariable(0x08c10888, 2);          // amJvsDebugLevel
+            setVariable(0x08c1088c, 2);          // amLibDebugLevel
+            setVariable(0x08c10890, 2);          // amMiscDebugLevel
+            setVariable(0x08c10898, 2);          // amSysDataDebugLevel
+            setVariable(0x08c108a0, 2);          // bcLibDebugLevel
+            setVariable(0x08c10894, 2);          // amOsinfoDebugLevel
+            setVariable(0x08c108a4, 0x0FFFFFFF); // s_logMask
+            // detourFunction(0x08074a8c, _putConsole); // Debug Messages
         }
         // Security
         detourFunction(0x084e9fbc, amDongleInit);
@@ -597,28 +609,28 @@ int initPatch()
         detourFunction(0x084e9f6a, amDipswSetLed);
         patchMemory(0x084125f0, "9090"); // No full screen
         // Set Resolution
-        //setVariable(0x082e1323, 0x00000550); // Set ResX
-        //setVariable(0x082e1330, 0x00000300); // Set ResY
+        // setVariable(0x082e1323, 0x00000550); // Set ResX
+        // setVariable(0x082e1330, 0x00000300); // Set ResY
     }
 
     case LETS_GO_JUNGLE:
     {
         if (config->showDebugMessages == 1)
         {
-            setVariable(0x08c083a4, 2);              // amBackupDebugLevel
-            setVariable(0x08c083c0, 2);              // amCreditDebugLevel
-            setVariable(0x08c08618, 2);              // amDipswDebugLevel
-            setVariable(0x08c0861c, 2);              // amDongleDebugLevel
-            setVariable(0x08c08620, 2);              // amEepromDebugLevel
-            setVariable(0x08c08624, 2);              // amHwmonitorDebugLevel
-            setVariable(0x08c08628, 2);              // amJvsDebugLevel
-            setVariable(0x08c0862c, 2);              // amLibDebugLevel
-            setVariable(0x08c08630, 2);              // amMiscDebugLevel
-            setVariable(0x08c08638, 2);              // amSysDataDebugLevel
-            setVariable(0x08c08640, 2);              // bcLibDebugLevel
-            setVariable(0x08c08634, 2);              // amOsinfoDebugLevel
-            setVariable(0x08c08644, 0x0FFFFFFF);     // s_logMask
-            //detourFunction(0x08074a8c, _putConsole); // Debug Messages
+            setVariable(0x08c083a4, 2);          // amBackupDebugLevel
+            setVariable(0x08c083c0, 2);          // amCreditDebugLevel
+            setVariable(0x08c08618, 2);          // amDipswDebugLevel
+            setVariable(0x08c0861c, 2);          // amDongleDebugLevel
+            setVariable(0x08c08620, 2);          // amEepromDebugLevel
+            setVariable(0x08c08624, 2);          // amHwmonitorDebugLevel
+            setVariable(0x08c08628, 2);          // amJvsDebugLevel
+            setVariable(0x08c0862c, 2);          // amLibDebugLevel
+            setVariable(0x08c08630, 2);          // amMiscDebugLevel
+            setVariable(0x08c08638, 2);          // amSysDataDebugLevel
+            setVariable(0x08c08640, 2);          // bcLibDebugLevel
+            setVariable(0x08c08634, 2);          // amOsinfoDebugLevel
+            setVariable(0x08c08644, 0x0FFFFFFF); // s_logMask
+            // detourFunction(0x08074a8c, _putConsole); // Debug Messages
         }
         // Security
         detourFunction(0x084e50d8, amDongleInit);
@@ -633,9 +645,8 @@ int initPatch()
         setVariable(0x082E006b, 0x00000550); // Set ResX
         setVariable(0x082E0078, 0x00000300); // Set ResY
         // Test
-        //patchMemory(0x084032e0, "33c990");
-        //08523950 return ADXM_SetupFramework
-
+        // patchMemory(0x084032e0, "33c990");
+        // 08523950 return ADXM_SetupFramework
     }
     break;
 
@@ -782,7 +793,7 @@ int initPatch()
         patchMemory(0x0855a48d, "E9f000");   // Accept different Resolutions
         setVariable(0x0855a583, 0x00000550); // Set ResX
         setVariable(0x0855a588, 0x00000300); // Set ResY
-        
+
         // amsInit
         patchMemory(0x08938437, "00");         // Avoids strBBBlackList
         patchMemory(0x089385cb, "e9e7000000"); // Eliminate Dongle Challenges
@@ -796,25 +807,25 @@ int initPatch()
     }
     break;
     case INITIALD_ARCADE_STAGE_5:
-    {    
+    {
         if (config->showDebugMessages == 1)
         {
-            setVariable(0x093f6fa0, 2);              // amBackupDebugLevel
-            setVariable(0x093f6fc0, 2);              // amCreditDebugLevel
-            setVariable(0x093f7218, 2);              // amDipswDebugLevel
-            setVariable(0x093f721c, 2);              // amDongleDebugLevel
-            setVariable(0x093f7220, 2);              // amEepromDebugLevel
-            setVariable(0x093f7224, 2);              // amHwmonitorDebugLevel
-            setVariable(0x093f7228, 2);              // amJvsDebugLevel
-            setVariable(0x093f722c, 2);              // amLibDebugLevel
-            setVariable(0x093f7230, 2);              // amMiscDebugLevel
-            setVariable(0x093f7238, 2);              // amSysDataDebugLevel
-            setVariable(0x093f7240, 2);              // bcLibDebugLevel
-            setVariable(0x093f7234, 2);              // amOsinfoDebugLevel
-            setVariable(0x093f7244, 0x0FFFFFFF);     // s_logMask
-        //    detourFunction(0x0808f9a8, _putConsole); // Crashes the game sometimes.
-            patchMemory(0x08942fe1, "E912ffffff");   // Removes grep messages
-            patchMemory(0x089439ab, "EB29");         // Removes grep messages
+            setVariable(0x093f6fa0, 2);            // amBackupDebugLevel
+            setVariable(0x093f6fc0, 2);            // amCreditDebugLevel
+            setVariable(0x093f7218, 2);            // amDipswDebugLevel
+            setVariable(0x093f721c, 2);            // amDongleDebugLevel
+            setVariable(0x093f7220, 2);            // amEepromDebugLevel
+            setVariable(0x093f7224, 2);            // amHwmonitorDebugLevel
+            setVariable(0x093f7228, 2);            // amJvsDebugLevel
+            setVariable(0x093f722c, 2);            // amLibDebugLevel
+            setVariable(0x093f7230, 2);            // amMiscDebugLevel
+            setVariable(0x093f7238, 2);            // amSysDataDebugLevel
+            setVariable(0x093f7240, 2);            // bcLibDebugLevel
+            setVariable(0x093f7234, 2);            // amOsinfoDebugLevel
+            setVariable(0x093f7244, 0x0FFFFFFF);   // s_logMask
+                                                   //    detourFunction(0x0808f9a8, _putConsole); // Crashes the game sometimes.
+            patchMemory(0x08942fe1, "E912ffffff"); // Removes grep messages
+            patchMemory(0x089439ab, "EB29");       // Removes grep messages
         }
         // Security
         detourFunction(0x0893df75, amDongleInit);
@@ -830,25 +841,25 @@ int initPatch()
 
         // Fixes
         detourFunction(0x0893c68d, amDipswGetData);
-        detourFunction(0x0893c703, amDipswSetLed);  // amDipswSetLed
-        detourFunction(0x0832fe46, stubRetOne);     // isEthLinkUp
-        patchMemory(0x084566d8, "e954010000");      // tickWaitDHCP
-        patchMemory(0x084587cb, "eb60");            // tickInitAddress
-        patchMemory(0x08455914, "C0270900");        // tickInitStoreNetwork
-        detourFunction(0x08944106, stubRetZero);    // amOsinfoExecDhcpNic
-        detourFunction(0x08513810, stubRetZero);    // isUseServerBox
+        detourFunction(0x0893c703, amDipswSetLed); // amDipswSetLed
+        detourFunction(0x0832fe46, stubRetOne);    // isEthLinkUp
+        patchMemory(0x084566d8, "e954010000");     // tickWaitDHCP
+        patchMemory(0x084587cb, "eb60");           // tickInitAddress
+        patchMemory(0x08455914, "C0270900");       // tickInitStoreNetwork
+        detourFunction(0x08944106, stubRetZero);   // amOsinfoExecDhcpNic
+        detourFunction(0x08513810, stubRetZero);   // isUseServerBox
         // Set Resolution
-        patchMemory(0x0855a6dd, "E9f000");          // Accept different Resolutions
-        setVariable(0x0855a7d3, 0x00000550);        // Set ResX
-        setVariable(0x0855a7d8, 0x00000300);        // Set ResY
+        patchMemory(0x0855a6dd, "E9f000");   // Accept different Resolutions
+        setVariable(0x0855a7d3, 0x00000550); // Set ResX
+        setVariable(0x0855a7d8, 0x00000300); // Set ResY
         // amsInit
-        patchMemory(0x08938437, "00");              // Avoids strBBBlackList
-        patchMemory(0x089385cb, "e9e7000000");      // Eliminate Dongle Challenges
-        patchMemory(0x0893871e, "74"); //           // Returns 1
-        patchMemory(0x0893871a, "01000000");        // Returns 1
+        patchMemory(0x08938437, "00");         // Avoids strBBBlackList
+        patchMemory(0x089385cb, "e9e7000000"); // Eliminate Dongle Challenges
+        patchMemory(0x0893871e, "74");         //           // Returns 1
+        patchMemory(0x0893871a, "01000000");   // Returns 1
         // amsCheckKeyDataVerify
-        patchMemory(0x08939696, "00000000");        // amsCheckKeyDataVerify
-        patchMemory(0x0893962b, "00000000");        // amsCheckKeyDataVerify
+        patchMemory(0x08939696, "00000000"); // amsCheckKeyDataVerify
+        patchMemory(0x0893962b, "00000000"); // amsCheckKeyDataVerify
     }
     break;
     case SEGABOOT_2_4_SYM:

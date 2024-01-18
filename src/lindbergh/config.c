@@ -52,19 +52,25 @@ static int detectGame(uint32_t elf_crc)
     }
     break;
 
-    case THE_HOUSE_OF_THE_DEAD_4:
-    case THE_HOUSE_OF_THE_DEAD_4_TEST:
+    case THE_HOUSE_OF_THE_DEAD_4_REVA:
+    case THE_HOUSE_OF_THE_DEAD_4_REVA_TEST:
     {
-        config.gameTitle = "The House of the Dead 4";
+        config.gameTitle = "The House of the Dead 4 Rev A";
+        config.gameID = "SBLC";
+        config.gameDVP = "DVP-0003A";
+        config.gameType = SHOOTING;
         config.gameStatus = WORKING;
         return 0;
     }
     break;
 
-    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED:
-    case THE_HOUSE_OF_THE_DEAD_4_STRIPPED_TEST:
+    case THE_HOUSE_OF_THE_DEAD_4_REVC:
+    case THE_HOUSE_OF_THE_DEAD_4_REVC_TEST:
     {
-        config.gameTitle = "The House of the Dead 4 Rev A";
+        config.gameTitle = "The House of the Dead 4 Rev C";
+        config.gameID = "SBLC";
+        config.gameDVP = "DVP-0003C";
+        config.gameType = SHOOTING;
         config.gameStatus = WORKING;
         return 0;
     }
