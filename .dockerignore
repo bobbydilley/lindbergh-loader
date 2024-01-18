@@ -1,0 +1,5 @@
+*.md
+.git
+.gitignore
+.vscode
+docs
