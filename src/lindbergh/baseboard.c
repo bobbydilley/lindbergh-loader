@@ -131,7 +131,7 @@ int baseboardIoctl(int fd, unsigned int request, void *data)
   }
   break;
 
-  case BASEBOARD_READY: // Not sure this is what it should be called
+  case BASEBOARD_READY: // Not sure if this is what it should be called
   {
     selectReply = 0;
     return 0;

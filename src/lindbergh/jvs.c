@@ -171,7 +171,7 @@ JVSStatus processPacket(int *packetSize)
     if (inputPacket.destination != BROADCAST && inputPacket.destination != io.deviceID)
         return JVS_STATUS_NOT_FOR_US;
 
-    /* Setup the output packet */
+    /* Set up the output packet */
     outputPacket.length = 0;
     outputPacket.destination = BUS_MASTER;
 
