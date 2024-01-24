@@ -56,35 +56,43 @@
 #define VIRTUA_TENNIS_3 0xc4b7e89
 #define VIRTUA_TENNIS_3_TEST 0xffe3b0fd
 
+typedef enum { YELLOW, RED } Colour;
 
-typedef enum
-{
-  YELLOW,
-  RED
-} Colour;
+typedef enum { WORKING, NOT_WORKING } GameStatus;
 
-typedef enum
-{
-  WORKING,
-  NOT_WORKING
-} GameStatus;
+typedef enum { JP, US, EX } GameRegion;
 
-typedef enum
-{
-  JP,
-  US,
-  EX
-} GameRegion;
+typedef enum { SHOOTING, DRIVING, FIGHTING } GameType;
 
-typedef enum
-{
-  SHOOTING,
-  DRIVING,
-  FIGHTING
-} GameType;
+// All keycode can be found using `xev` (Ubuntu `x11-utils` package)
+typedef struct {
+  unsigned int testKey;
+  unsigned int serviceKey;
+  unsigned int p1CoinKey;
+  unsigned int p2CoinKey;
+  unsigned int p1StartKey;
+  unsigned int p2StartKey;
+  unsigned int buttonUp;
+  unsigned int buttonDown;
+  unsigned int buttonLeft;
+  unsigned int buttonRight;
+  unsigned int button1;
+  unsigned int button2;
+  unsigned int button3;
+  unsigned int button4;
+  /*Shooting game & Fighting game*/
+  unsigned int triggerButton;
+  unsigned int reloadButton;
+  unsigned int gunButton;
+  /*Driving game*/
+  /*TODO: Modify driving game keymap because I may mess up things (Caviar X)*/
+  unsigned int analogueUp;
+  unsigned int analogueDown;
+  unsigned int analogueLeft;
+  unsigned int analogueRight;
+} EmulatorKeyMap;
 
-typedef struct
-{
+typedef struct {
   int emulateRideboard;
   int emulateDriveboard;
   int emulateMotionboard;
@@ -103,11 +111,12 @@ typedef struct
   GameType gameType;
   uint32_t crc32;
   GameRegion region;
+  EmulatorKeyMap keymap;
   int freeplay;
   int showDebugMessages;
   char *gameID;
   char *gameTitle;
-  char* gameDVP;
+  char *gameDVP;
 } EmulatorConfig;
 
 int initConfig();

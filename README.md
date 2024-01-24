@@ -22,6 +22,11 @@ sudo apt install libalut-dev:i386 // You will need to find libalut-dev:i386, lib
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
 ```
+or execute `init.bash`
+
+```bash
+sudo sh init.bash
+```
 
 Note: The project has been tested to work on Ubuntu 22.04, and doesn't currently work on Ubuntu 23.10. Multiple packages such as `freeglut3:i386` are not available anymore on Debian Trixxie or Ubuntu 23.10.
 

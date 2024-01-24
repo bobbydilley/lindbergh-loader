@@ -1,3 +1,4 @@
+#include <X11/X.h>
 #define _GNU_SOURCE
 
 #include "jvs.h"
@@ -6,19 +7,17 @@
 
 #include <GL/freeglut.h>
 #include <GL/glx.h>
-#include <X11/extensions/xf86vmode.h>
 #include <X11/Xatom.h>
+#include <X11/extensions/xf86vmode.h>
 #include <dlfcn.h>
+#include <math.h>
+#include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
-#include <pthread.h>
-#include <math.h>
-
 GameType gameType = SHOOTING;
 
-int initInput()
-{
+int initInput() {
   gameType = getConfig()->gameType;
   return 0;
 }
@@ -26,181 +25,116 @@ int initInput()
 /**
  * Button mapping used for driving games
  */
-int XNextEventDriving(Display *display, XEvent *event_return, int returnValue)
-{
-  switch (event_return->type)
-  {
-
-  case KeyRelease:
-  case KeyPress:
-  {
-    switch (event_return->xkey.keycode)
-    {
-    case 28:
+int XNextEventDriving(Display *display, XEvent *event_return, int returnValue) {
+  EmulatorKeyMap keymap = getConfig()->keymap;
+  if (event_return->type == KeyPress || event_return->type == KeyRelease) {
+    if (event_return->xkey.keycode == keymap.testKey)
       setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
-      break;
-    case 39:
+    else if (event_return->xkey.keycode == keymap.serviceKey)
       setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);
-      break;
-    case 14:
+    else if (event_return->xkey.keycode == keymap.p1CoinKey)
       incrementCoin(PLAYER_1, event_return->type == KeyPress);
-      break;
-    case 15:
+    else if (event_return->xkey.keycode == keymap.p2CoinKey)
       incrementCoin(PLAYER_2, event_return->type == KeyPress);
-      break;
-    case 111: // Up
-      setAnalogue(ANALOGUE_2, event_return->type == KeyPress ? pow(2, 10) - 1 : 0);
-      break;
-    case 116: // Down
-      setAnalogue(ANALOGUE_3, event_return->type == KeyPress ? pow(2, 10) - 1 : 0);
-      break;
-    case 113: // Left
-      setAnalogue(ANALOGUE_1, event_return->type == KeyPress ? pow(2, 10) * 0.2 : pow(2, 10) * 0.5);
-      break;
-    case 114: // Right
-      setAnalogue(ANALOGUE_1, event_return->type == KeyPress ? pow(2, 10) * 0.8 : pow(2, 10) * 0.5);
-      break;
-    case 10:
+    else if (event_return->xkey.keycode == keymap.analogueUp)
+      setAnalogue(ANALOGUE_2,
+                  event_return->type == KeyPress ? pow(2, 10) - 1 : 0);
+    else if (event_return->xkey.keycode == keymap.analogueDown)
+      setAnalogue(ANALOGUE_3,
+                  event_return->type == KeyPress ? pow(2, 10) - 1 : 0);
+    else if (event_return->xkey.keycode == keymap.analogueLeft)
+      setAnalogue(ANALOGUE_1, event_return->type == KeyPress
+                                  ? pow(2, 10) * 0.2
+                                  : pow(2, 10) * 0.5);
+    else if (event_return->xkey.keycode == keymap.analogueRight)
+      setAnalogue(ANALOGUE_1, event_return->type == KeyPress
+                                  ? pow(2, 10) * 0.8
+                                  : pow(2, 10) * 0.5);
+    else if (event_return->xkey.keycode == keymap.p1StartKey)
       setSwitch(PLAYER_1, BUTTON_START, event_return->type == KeyPress);
-      break;
-    case 24:
+    else if (event_return->xkey.keycode == keymap.button1)
       setSwitch(PLAYER_1, BUTTON_1, event_return->type == KeyPress);
-      break;
-    case 25:
+    else if (event_return->xkey.keycode == keymap.button2)
       setSwitch(PLAYER_1, BUTTON_2, event_return->type == KeyPress);
-      break;
-    case 26:
+    else if (event_return->xkey.keycode == keymap.button3)
       setSwitch(PLAYER_1, BUTTON_3, event_return->type == KeyPress);
-      break;
-    case 27:
+    else if (event_return->xkey.keycode == keymap.button4)
       setSwitch(PLAYER_1, BUTTON_4, event_return->type == KeyPress);
-      break;
-    case 29:
+    else if (event_return->xkey.keycode == keymap.buttonUp)
       setSwitch(PLAYER_1, BUTTON_UP, event_return->type == KeyPress);
-      break;
-    case 30:
+    else if (event_return->xkey.keycode == keymap.buttonDown)
       setSwitch(PLAYER_1, BUTTON_DOWN, event_return->type == KeyPress);
-      break;
-    case 31:
+    else if (event_return->xkey.keycode == keymap.buttonLeft)
       setSwitch(PLAYER_1, BUTTON_LEFT, event_return->type == KeyPress);
-      break;
-    case 32:
+    else if (event_return->xkey.keycode == keymap.buttonRight)
       setSwitch(PLAYER_1, BUTTON_RIGHT, event_return->type == KeyPress);
-      break;
-    default:
-      break;
-    }
   }
-  break;
-  }
-
   return returnValue;
 }
 
 /**
  * Button mapping used for shooting games
  */
-int XNextEventShooting(Display *display, XEvent *event_return, int returnValue)
-{
-  switch (event_return->type)
-  {
-
-  case KeyRelease:
-  case KeyPress:
-  {
-    switch (event_return->xkey.keycode)
-    {
-    case 28:
+int XNextEventShooting(Display *display, XEvent *event_return,
+                       int returnValue) {
+  EmulatorKeyMap keymap = getConfig()->keymap;
+  if (event_return->type == KeyPress || event_return->type == KeyRelease) {
+    if (event_return->xkey.keycode == keymap.testKey)
       setSwitch(SYSTEM, BUTTON_TEST, event_return->type == KeyPress);
-      break;
-    case 39:
+    else if (event_return->xkey.keycode == keymap.serviceKey)
       setSwitch(PLAYER_1, BUTTON_SERVICE, event_return->type == KeyPress);
-      break;
-    case 14:
+    else if (event_return->xkey.keycode == keymap.p1CoinKey)
       incrementCoin(PLAYER_1, event_return->type == KeyPress);
-      break;
-    case 15:
+    else if (event_return->xkey.keycode == keymap.p2CoinKey)
       incrementCoin(PLAYER_2, event_return->type == KeyPress);
-      break;
-    case 111:
-      setSwitch(PLAYER_1, BUTTON_UP, event_return->type == KeyPress);
-      break;
-    case 116:
-      setSwitch(PLAYER_1, BUTTON_DOWN, event_return->type == KeyPress);
-      break;
-    case 113:
-      setSwitch(PLAYER_1, BUTTON_LEFT, event_return->type == KeyPress);
-      break;
-    case 114:
-      setSwitch(PLAYER_1, BUTTON_RIGHT, event_return->type == KeyPress);
-      break;
-    case 10:
+    else if (event_return->xkey.keycode == keymap.p1StartKey)
       setSwitch(PLAYER_1, BUTTON_START, event_return->type == KeyPress);
-      break;
-    case 24:
+    else if (event_return->xkey.keycode == keymap.button1)
       setSwitch(PLAYER_1, BUTTON_1, event_return->type == KeyPress);
-      break;
-    case 25:
+    else if (event_return->xkey.keycode == keymap.button2)
       setSwitch(PLAYER_1, BUTTON_2, event_return->type == KeyPress);
-      break;
-    case 26:
+    else if (event_return->xkey.keycode == keymap.button3)
       setSwitch(PLAYER_1, BUTTON_3, event_return->type == KeyPress);
-      break;
-    case 27:
+    else if (event_return->xkey.keycode == keymap.button4)
       setSwitch(PLAYER_1, BUTTON_4, event_return->type == KeyPress);
-      break;
-    default:
-      break;
-    }
+    else if (event_return->xkey.keycode == keymap.buttonUp)
+      setSwitch(PLAYER_1, BUTTON_UP, event_return->type == KeyPress);
+    else if (event_return->xkey.keycode == keymap.buttonDown)
+      setSwitch(PLAYER_1, BUTTON_DOWN, event_return->type == KeyPress);
+    else if (event_return->xkey.keycode == keymap.buttonLeft)
+      setSwitch(PLAYER_1, BUTTON_LEFT, event_return->type == KeyPress);
+    else if (event_return->xkey.keycode == keymap.buttonRight)
+      setSwitch(PLAYER_1, BUTTON_RIGHT, event_return->type == KeyPress);
   }
-  break;
-
-  case MotionNotify:
-  {
+  if (event_return->type == MotionNotify) {
     setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * pow(2, 10));
     setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * pow(2, 10));
   }
-  break;
-
-  case ButtonPress:
-  case ButtonRelease:
-  {
-    switch (event_return->xbutton.button)
-    {
-    case 1: // Trigger
+  if (event_return->type == ButtonPress || event_return->type == ButtonRelease) {
+    printf("Keymap: T %d - R %d - G %d\nButton: %d",keymap.triggerButton,keymap.reloadButton,keymap.gunButton,event_return->xbutton.button);
+    if (event_return->xbutton.button == keymap.triggerButton)
       setSwitch(PLAYER_1, BUTTON_1, event_return->type == ButtonPress);
-      break;
-    case 3: // Reload
+    else if (event_return->xbutton.button == keymap.reloadButton)
       setSwitch(PLAYER_1, BUTTON_2, event_return->type == ButtonPress);
-      break;
-    case 9: // Gun Button
+    else if (event_return->xbutton.button == keymap.gunButton)
       setSwitch(PLAYER_1, BUTTON_3, event_return->type == ButtonPress);
-      break;
-    default:
-      break;
-    }
   }
-  break;
-  }
-
   return returnValue;
 }
 
-int XNextEvent(Display *display, XEvent *event_return)
-{
+int XNextEvent(Display *display, XEvent *event_return) {
 
-  int (*_XNextEvent)(Display *display, XEvent *event_return) = dlsym(RTLD_NEXT, "XNextEvent");
+  int (*_XNextEvent)(Display *display, XEvent *event_return) =
+      dlsym(RTLD_NEXT, "XNextEvent");
   int returnValue = _XNextEvent(display, event_return);
 
   // Return now if we're not emulating JVS
-  if (!getConfig()->emulateJVS)
-  {
+  if (!getConfig()->emulateJVS) {
     return returnValue;
   }
 
   // Select the appropriate input mapping depending on the game
-  switch (gameType)
-  {
+  switch (gameType) {
   case DRIVING:
     return XNextEventDriving(display, event_return, returnValue);
     break;

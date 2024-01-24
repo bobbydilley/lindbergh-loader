@@ -1,28 +1,22 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <linux/serial.h>
-#include <termios.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <string.h>
-#include <termios.h>
-#include <unistd.h>
-#include <time.h>
-#include <stdarg.h>
-#include <sys/ioctl.h>
 #include <linux/serial.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "serial.h"
 
 #define TIMEOUT_SELECT 200
 
-int setSerialAttributes(int fd, int myBaud)
-{
+int setSerialAttributes(int fd, int myBaud) {
   struct termios options;
   int status;
   tcgetattr(fd, &options);
@@ -66,8 +60,7 @@ int setSerialAttributes(int fd, int myBaud)
   return 0;
 }
 
-int readBytes(int fd, unsigned char *buffer, int amount)
-{
+int readBytes(int fd, unsigned char *buffer, int amount) {
   fd_set fd_serial;
   struct timeval tv;
 
