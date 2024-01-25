@@ -64,7 +64,7 @@ typedef enum { JP, US, EX } GameRegion;
 
 typedef enum { SHOOTING, DRIVING, FIGHTING } GameType;
 
-// All keycode can be found using `xev` (Ubuntu `x11-utils` package)
+// All keycode can be found using `xev` binary's debug output
 typedef struct {
   unsigned int testKey;
   unsigned int serviceKey;
@@ -80,6 +80,12 @@ typedef struct {
   unsigned int button2;
   unsigned int button3;
   unsigned int button4;
+  //Something weird happened on gungame button
+  //Button config were changed after first AppGarbageCollect
+  //TODO: fix this (Caviar X)
+//unsigned int gunButton;
+//unsigned int reloadButton;
+//unsigned int triggerButton;
   /*Driving game*/
   /*TODO: Modify driving game keymap because I may mess up things (Caviar X)*/
   unsigned int analogueUp;

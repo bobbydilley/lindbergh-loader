@@ -51,7 +51,7 @@ Some games will require extra libraries like `libposixtime.so`, which can be fou
 
 A default configuration file is provided in `docs/lindbergh.conf`. It should be placed in the same folder the game is run from. If no config file is present a default setting will be used.
 
-Do not run this as root, instead use the usergroups for input/dialout to give the emulator access to what it needs. Lindbergh games expect full control of the Linux OS and with root privilages it is possible that they could cause damage to your computer.
+**Do not run this as root**, instead use the usergroups for input/dialout to give the emulator access to what it needs. Lindbergh games expect full control of the Linux OS and with root privilages it is possible that they could cause damage to your computer.
 
 A `lindbergh` executable is provided in the build directory to easily run the games. Place it in the same directory as the game elf, and run `./lindbergh` to automatically start the game with the correct environment variables set, or run `./lindbergh -t` for test mode.
 
@@ -67,7 +67,8 @@ Currently the controls are set up for The House of the Dead 4.
 | 1           | Player 1 Start |
 | Right Click | Reload         |
 | Left Click  | Shoot          |
-
+|Middle Click | Gun Button(Grenade)|
+You can modify the keys at `docs/lindbergh.conf`
 ## Thanks
 
-This project has been built by referencing earlier projects by Teknoparrot and JayFoxRox and from contributions by Doozer, Rolel and dkeruza-neo with extensive testing by Francesco - thanks to all of them!
+This project has been built by referencing earlier projects by Teknoparrot and JayFoxRox and from contributions by Doozer, Rolel, AutoBank and dkeruza-neo with extensive testing by Francesco - thanks to all of them!

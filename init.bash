@@ -12,7 +12,7 @@ if [ "$(. /etc/os-release; printf "%s-%s" $NAME $VERSION_CODENAME)" = "Ubuntu-ja
     printf "Confirm?(y/n):"
     read ans
     if [ "$ans" != "y" ]; then
-	exit
+	    exit
     fi
 else
     echo "ERROR: This script shouldn't run on any other platform than Ubuntu 22.04(jammy)\n"
@@ -20,11 +20,11 @@ else
 fi
 # Uncomment these if you're a Chinese mainland user (use aliyun mirror)
 # You can also replace it with your specified mirror
-sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.aliyun.com@g' /etc/apt/sources.list
-sudo sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-sudo sed -i 's/http:/https:/g' /etc/apt/sources.list
+# sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.aliyun.com@g' /etc/apt/sources.list
+# sudo sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+# sudo sed -i 's/http:/https:/g' /etc/apt/sources.list
 sudo dpkg --add-architecture i386
-# APT update issue
+# Special solution for WSL clock sync issue
 if grep -qi microsoft /proc/version; then
   sudo apt-get -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false update
 else
@@ -47,3 +47,7 @@ wget http://launchpadlibrarian.net/534757982/multiarch-support_2.23-0ubuntu11.3_
 fi
 sudo dpkg -i multiarch-support_2.23-0ubuntu11.3_i386.deb
 sudo usermod -a -G dialout,input $USER
+# Just in case
+yes | sudo apt --fix-broken install
+# cleanup files
+rm *.deb
