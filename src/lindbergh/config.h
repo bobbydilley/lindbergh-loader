@@ -80,10 +80,6 @@ typedef struct {
   unsigned int button2;
   unsigned int button3;
   unsigned int button4;
-  /*Shooting game & Fighting game*/
-  unsigned int triggerButton;
-  unsigned int reloadButton;
-  unsigned int gunButton;
   /*Driving game*/
   /*TODO: Modify driving game keymap because I may mess up things (Caviar X)*/
   unsigned int analogueUp;

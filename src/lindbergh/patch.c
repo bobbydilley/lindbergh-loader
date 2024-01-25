@@ -181,7 +181,6 @@ void _putConsole(const char *format, ...) {
 
 int initPatch() {
   EmulatorConfig *config = getConfig();
-
   switch (config->crc32) {
   case R_TUNED: {
     // Security

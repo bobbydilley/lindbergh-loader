@@ -1,18 +1,20 @@
 #define _GNU_SOURCE
+#include <GL/freeglut_std.h>
+#include <X11/X.h>
+#include "config.h"
+#include "jvs.h"
+#include "securityboard.h"
 #include <GL/freeglut.h>
 #include <GL/glx.h>
 #include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/cursorfont.h>
 #include <X11/extensions/xf86vmode.h>
 #include <dlfcn.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "config.h"
-#include "jvs.h"
-#include "securityboard.h"
-
 int gameModeWidth = -1;
 int gameModeHeight = -1;
 
@@ -33,7 +35,6 @@ FGAPI int FGAPIENTRY glutEnterGameMode() {
     pthread_t glutMainLoopID;
     pthread_create(&glutMainLoopID, NULL, &glutMainLoopThread, NULL);
   }
-
   return 1;
 }
 
@@ -42,7 +43,9 @@ FGAPI void FGAPIENTRY glutLeaveGameMode() {
   return;
 }
 
-FGAPI void FGAPIENTRY glutSetCursor(int cursor) { return; }
+FGAPI void FGAPIENTRY glutSetCursor(int cursor) { 
+  return;
+}
 
 FGAPI void FGAPIENTRY glutGameModeString(const char *string) {
   // printf("glutGameModeString: %s\n", string);
@@ -88,14 +91,13 @@ Window XCreateWindow(Display *display, Window parent, int x, int y,
                      XSetWindowAttributes *attributes) {
 
   Window (*_XCreateWindow)(
-      Display *display, Window parent, int x, int y, unsigned int width,
+      Display * display, Window parent, int x, int y, unsigned int width,
       unsigned int height, unsigned int border_width, int depth,
       unsigned int class, Visual *visual, unsigned long valueMask,
       XSetWindowAttributes *attributes) = dlsym(RTLD_NEXT, "XCreateWindow");
 
   width = getConfig()->width;
   height = getConfig()->height;
-
   // Ensure that the windows will respond with keyboard and mouse events
   attributes->event_mask = attributes->event_mask | KeyPressMask |
                            KeyReleaseMask | PointerMotionMask;
@@ -112,14 +114,13 @@ Window XCreateWindow(Display *display, Window parent, int x, int y,
     XChangeProperty(display, window, wm_state, XA_ATOM, 32, PropModeReplace,
                     (unsigned char *)&wm_fullscreen, 1);
   }
-
   return window;
 }
 
 int XGrabPointer(Display *display, Window grab_window, Bool owner_events,
                  unsigned int event_mask, int pointer_mode, int keyboard_mode,
                  Window confine_to, Cursor cursor, Time time) {
-  int (*_XGrabPointer)(Display *display, Window grab_window, Bool owner_events,
+  int (*_XGrabPointer)(Display * display, Window grab_window, Bool owner_events,
                        unsigned int event_mask, int pointer_mode,
                        int keyboard_mode, Window confine_to, Cursor cursor,
                        Time time) = dlsym(RTLD_NEXT, "XGrabPointer");
@@ -132,19 +133,21 @@ int XGrabPointer(Display *display, Window grab_window, Bool owner_events,
 
 int XGrabKeyboard(Display *display, Window grab_window, Bool owner_events,
                   int pointer_mode, int keyboard_mode, Time time) {
-  int (*_XGrabKeyboard)(Display *display, Window grab_window, Bool owner_events,
-                        int pointer_mode, int keyboard_mode, Time time) =
-      dlsym(RTLD_NEXT, "XGrabKeyboard");
+  int (*_XGrabKeyboard)(Display * display, Window grab_window,
+                        Bool owner_events, int pointer_mode, int keyboard_mode,
+                        Time time) = dlsym(RTLD_NEXT, "XGrabKeyboard");
   int returnValue = _XGrabKeyboard(display, grab_window, owner_events,
                                    pointer_mode, keyboard_mode, time);
   XUngrabKeyboard(display, time);
   return returnValue;
 }
 
-int XDefineCursor(Display *display, Window w, Cursor cursor) { return 0; }
+int XDefineCursor(Display *display, Window w, Cursor cursor) {
+  return 0;
+}
 
 int XStoreName(Display *display, Window w, const char *window_name) {
-  int (*_XStoreName)(Display *display, Window w, const char *window_name) =
+  int (*_XStoreName)(Display * display, Window w, const char *window_name) =
       dlsym(RTLD_NEXT, "XStoreName");
   char gameTitle[256] = {0};
   strcat(gameTitle, getGameName());
@@ -156,7 +159,7 @@ int XSetStandardProperties(Display *display, Window window,
                            Pixmap icon_pixmap, char **argv, int argc,
                            XSizeHints *hints) {
   int (*_XSetStandardProperties)(
-      Display *display, Window window, const char *window_name,
+      Display * display, Window window, const char *window_name,
       const char *icon_name, Pixmap icon_pixmap, char **argv, int argc,
       XSizeHints *hints) = dlsym(RTLD_NEXT, "XSetStandardProperties");
   char gameTitle[256] = {0};
@@ -173,7 +176,7 @@ Bool XF86VidModeSwitchToMode(Display *display, int screen,
 int XF86VidModeGetAllModeLines(Display *display, int screen,
                                int *modecount_return,
                                XF86VidModeModeInfo ***modesinfo) {
-  int (*_XF86VidModeGetAllModeLines)(Display *display, int screen,
+  int (*_XF86VidModeGetAllModeLines)(Display * display, int screen,
                                      int *modecount_return,
                                      XF86VidModeModeInfo ***modesinfo) =
       dlsym(RTLD_NEXT, "XF86VidModeGetAllModeLines");

@@ -357,12 +357,6 @@ int readConfig(FILE *configFile, EmulatorConfig *config) {
       config->keymap.analogueLeft = atoi(getNextToken(NULL, " ", &saveptr));
     else if (strcmp(command, "ANALOGUE_RIGHT") == 0)
       config->keymap.analogueRight = atoi(getNextToken(NULL, " ", &saveptr));
-    else if (strcmp(command, "TRIGGER_BUTTON") == 0)
-      config->keymap.triggerButton = atoi(getNextToken(NULL, " ", &saveptr));
-    else if (strcmp(command, "GUN_BUTTON") == 0)
-      config->keymap.gunButton = atoi(getNextToken(NULL, " ", &saveptr));
-    else if (strcmp(command, "RELOAD_BUTTON") == 0)
-      config->keymap.reloadButton = atoi(getNextToken(NULL, " ", &saveptr));
     else
       printf("Error: Unknown settings command %s\n", command);
   }
@@ -391,7 +385,7 @@ int initConfig() {
   config.gameTitle = "Unknown game";
   config.gameID = "XXXX";
   config.gameDVP = "DVP-XXXX";
-  config.gameType = SHOOTING;
+  config.gameType = SHOOTING; 
   if (detectGame(config.crc32) != 0) {
     printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new "
            "game to the GitHub repository: "
@@ -442,9 +436,6 @@ int initConfig() {
     config.keymap.button2 = 25;
     config.keymap.button3 = 26;
     config.keymap.button4 = 27;
-    config.keymap.triggerButton = 1;
-    config.keymap.reloadButton = 3;
-    config.keymap.gunButton = 2;
     break;
   }
   configFile = fopen(CONFIG_PATH, "r");
@@ -453,12 +444,12 @@ int initConfig() {
     printf("Warning: Cannot open %s, using default values.\n", CONFIG_PATH);
     return 1;
   }
-
   readConfig(configFile, &config);
 
   fclose(configFile);
-
   return 0;
 }
 
-EmulatorConfig *getConfig() { return &config; }
+EmulatorConfig *getConfig() {
+  return &config; 
+}

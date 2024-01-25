@@ -22,7 +22,7 @@ sudo apt install libalut-dev:i386 // You will need to find libalut-dev:i386, lib
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
 ```
-or execute `init.bash`
+Also, you can simply execute `init.bash` to finish the environment configuration if you're running under Ubuntu Jammy(Ubuntu 22.04.2)
 
 ```bash
 sudo sh init.bash

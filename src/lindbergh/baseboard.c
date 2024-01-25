@@ -61,7 +61,6 @@ int jvsPacketSize = -1;
 
 int initBaseboard() {
   char *sramPath = getConfig()->sramPath;
-
   sram = fopen(sramPath, "a");
 
   // Create file if it doesn't exist

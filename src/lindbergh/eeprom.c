@@ -32,7 +32,6 @@ FILE *eeprom = NULL;
 
 int initEeprom() {
   char *eepromPath = getConfig()->eepromPath;
-
   eeprom = fopen(eepromPath, "a");
 
   // Create file if it doesn't exist
