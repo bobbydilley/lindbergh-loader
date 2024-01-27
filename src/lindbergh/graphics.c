@@ -6,6 +6,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
 
@@ -213,4 +214,13 @@ void glGenFencesNV(int n, uint *fences)
 void glDeleteFencesNV(int a, const uint *b)
 {
   return;
+}
+
+void (*glXGetProcAddressARB(const GLubyte *procname))(void)
+{
+
+  static void *(*real_glXGetProcAddressARB)(const unsigned char *);
+  real_glXGetProcAddressARB = dlsym(RTLD_NEXT, "glXGetProcAddressARB");
+    printf("glXGetProcAddressARB NVIDIA -- %s\n", procname);
+  return real_glXGetProcAddressARB(procname);
 }

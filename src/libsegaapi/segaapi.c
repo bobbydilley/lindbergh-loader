@@ -17,6 +17,8 @@
 
 // #define DEBUG_OUTPUT
 
+#define NUM_BUFFERS 400
+
 const GUID EAX_NULL_GUID;
 const GUID EAX_FREQUENCYSHIFTER_EFFECT;
 const GUID EAX_ECHO_EFFECT;
@@ -54,8 +56,9 @@ typedef struct
 	bool playing;
 	bool paused;
 
+	int usedBuffers;
 	// OpenAL Parts
-	ALuint alBuffer;
+	ALuint alBuffer[NUM_BUFFERS];
 	ALuint alSource;
 
 	// TinySoundFont Parts
@@ -133,9 +136,16 @@ ALenum getAlFormat(unsigned int sampleFormat, unsigned int channels)
 
 static void updateBufferData(SEGAContext *context, unsigned int offset, size_t length)
 {
-	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-	alBufferData(context->alBuffer, getAlFormat(context->sampleFormat, context->channels), context->data, context->size, context->sampleRate);
-	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
+	printf("Update buffer data - handle %p offset %d length %d\n", context, offset, length);
+
+	if (length < 1)
+		return;
+
+	ALuint alBuffer;
+	alGenBuffers(1, &alBuffer);
+	alBufferData(alBuffer, getAlFormat(context->sampleFormat, context->channels), context->data + offset, length, context->sampleRate);
+	alSourceQueueBuffers(context->alSource, 1, &alBuffer);
+
 }
 
 static void resetBuffer(SEGAContext *context)
@@ -155,6 +165,7 @@ static void resetBuffer(SEGAContext *context)
 	context->endLoop = context->size;
 	context->loop = false;
 	context->paused = false;
+	context->usedBuffers = 0;
 
 	tsf *res = (tsf *)TSF_MALLOC(sizeof(tsf));
 	TSF_MEMSET(res, 0, sizeof(tsf));
@@ -183,6 +194,7 @@ static void resetBuffer(SEGAContext *context)
 int SEGAAPI_Play(void *hHandle)
 {
 	dbgPrint("SEGAAPI_Play() 0x%x", hHandle);
+	printf("play called %p\n", hHandle);
 
 	SEGAContext *context = hHandle;
 
@@ -250,14 +262,23 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(void *hHandle)
 	switch (state)
 	{
 	case AL_PLAYING:
+		printf("%p get playback status return active\n", hHandle);
 		return PLAYBACK_STATUS_ACTIVE;
 	case AL_PAUSED:
+		printf("%p get playback status return pause\n", hHandle);
+
 		return PLAYBACK_STATUS_PAUSE;
 	case AL_INITIAL:
+		printf("%p get playback status return active\n", hHandle);
+
 		return PLAYBACK_STATUS_ACTIVE;
 	case AL_STOPPED:
+		printf("%p get playback status return stopped\n", hHandle);
+
 		return PLAYBACK_STATUS_STOP;
 	default:
+		printf("%p get playback status return invalid\n", hHandle);
+
 		return PLAYBACK_STATUS_INVALID;
 	}
 
@@ -285,8 +306,6 @@ int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate)
 
 	SEGAContext *context = hHandle;
 	context->sampleRate = dwSampleRate;
-
-	updateBufferData(context, -1, -1);
 
 	return SEGA_SUCCESS;
 }
@@ -394,6 +413,14 @@ unsigned int SEGAAPI_GetPlaybackPosition(void *hHandle)
 
 	ALint position;
 	alGetSourcei(context->alSource, AL_BYTE_OFFSET, &position);
+
+	if(context->loop) {
+		position = position % context->size;
+	}
+
+	printf("get playback position %p -> %d\n", hHandle, position);
+
+	
 
 	return position;
 }
@@ -596,7 +623,6 @@ int SEGAAPI_SetReleaseState(void *hHandle, int enterReleasePhase)
 
 	SEGAContext *context = hHandle;
 
-
 	if (!enterReleasePhase)
 		return SEGA_SUCCESS;
 
@@ -681,7 +707,7 @@ int SEGAAPI_CreateBuffer(BufferConfig *pConfig, BufferCallback pCallback, unsign
 
 	pConfig->mapData.hBufferHdr = context->data;
 
-	alGenBuffers(1, &context->alBuffer);
+	alGenBuffers(NUM_BUFFERS, context->alBuffer);
 	alGenSources(1, &context->alSource);
 
 	/*
