@@ -36,6 +36,10 @@ const GUID EAXPROPERTYID_EAX40_FXSlot1;
 const GUID EAXPROPERTYID_EAX40_FXSlot2;
 const GUID EAXPROPERTYID_EAX40_FXSlot3;
 
+LPALBUFFERSAMPLESSOFT alBufferSamplesSOFT = NULL;
+LPALBUFFERSUBSAMPLESSOFT alBufferSubSamplesSOFT = NULL;
+LPALGETBUFFERSAMPLESSOFT alGetBufferSamplesSOFT = NULL;
+
 typedef struct
 {
 	// SEGA API Parts
@@ -53,6 +57,7 @@ typedef struct
 	size_t size;
 	bool playing;
 	bool paused;
+	bool playWithSetup;
 
 	// OpenAL Parts
 	ALuint alBuffer;
@@ -79,41 +84,42 @@ void dbgPrint(const char *format, ...)
 }
 #endif
 
-/**
- * Returns the OpenAL Format Enum from the sampleFormat and channels
- * of the SEGA API.
- *
- * @param sampleFormat SEGA API Sample Format
- * @param channels Amount of channels to use
- * @returns The OpenAL Format
- */
-ALenum getAlFormat(unsigned int sampleFormat, unsigned int channels)
+static void updateBufferData(SEGAContext *context, unsigned int offset, size_t length)
 {
 	ALenum alFormat = -1;
+	ALenum alChannels = -1;
+	ALenum alType;
+	int bufferSampleSize = context->channels * ((context->sampleFormat == SIGNED_16PCM) ? 2 : 1);
 
-	switch (sampleFormat)
+	switch (context->sampleFormat)
 	{
 	case UNSIGNED_8PCM: /* Unsigned (offset 128) 8-bit PCM */
-		switch (channels)
+		alType = AL_BYTE_SOFT;
+		switch (context->channels)
 		{
 		case 1:
 			alFormat = AL_MONO8_SOFT;
+			alChannels = AL_MONO_SOFT;
 			break;
 		case 2:
 			alFormat = AL_STEREO8_SOFT;
+			alChannels = AL_STEREO_SOFT;
 			break;
 		default:
 			break;
 		}
 		break;
 	case SIGNED_16PCM: /* Signed 16-bit PCM */
-		switch (channels)
+		alType = AL_SHORT_SOFT;
+		switch (context->channels)
 		{
 		case 1:
 			alFormat = AL_MONO16_SOFT;
+			alChannels = AL_MONO_SOFT;
 			break;
 		case 2:
 			alFormat = AL_STEREO16_SOFT;
+			alChannels = AL_STEREO_SOFT;
 			break;
 		default:
 			break;
@@ -122,20 +128,17 @@ ALenum getAlFormat(unsigned int sampleFormat, unsigned int channels)
 		break;
 	}
 
-	if (alFormat == -1)
+	// Create a new buffer if we get -1
+	if (offset == -1)
 	{
-		printf("SEGAAPI Fatal Error: Unknown format - 0x%X with %d channels!\n", sampleFormat, channels);
-		abort();
+		alSourcei(context->alSource, AL_BUFFER, AL_NONE);
+		alBufferSamplesSOFT(context->alBuffer, context->sampleRate, alFormat, context->size / bufferSampleSize, alChannels, alType, context->data);
+		alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
+		return;
 	}
 
-	return alFormat;
-}
-
-static void updateBufferData(SEGAContext *context, unsigned int offset, size_t length)
-{
-	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-	alBufferData(context->alBuffer, getAlFormat(context->sampleFormat, context->channels), context->data, context->size, context->sampleRate);
-	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
+	// Update the buffer whilst it's running
+	alBufferSubSamplesSOFT(context->alBuffer, offset / bufferSampleSize, length / bufferSampleSize, alChannels, alType, &context->data[offset]);
 }
 
 static void resetBuffer(SEGAContext *context)
@@ -155,6 +158,7 @@ static void resetBuffer(SEGAContext *context)
 	context->endLoop = context->size;
 	context->loop = false;
 	context->paused = false;
+	context->playWithSetup = false;
 
 	tsf *res = (tsf *)TSF_MALLOC(sizeof(tsf));
 	TSF_MEMSET(res, 0, sizeof(tsf));
@@ -175,9 +179,7 @@ static void resetBuffer(SEGAContext *context)
 
 	context->region = region;
 
-	alSourcei(context->alSource, AL_BUFFER, AL_NONE);
-	alSourcei(context->alSource, AL_BYTE_OFFSET, 0);
-	alSourceStop(context->alSource);
+	updateBufferData(context, -1, -1);
 }
 
 int SEGAAPI_Play(void *hHandle)
@@ -189,6 +191,8 @@ int SEGAAPI_Play(void *hHandle)
 	if (context == NULL)
 		return SEGA_ERROR_BAD_PARAM;
 
+	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
+	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
 	alSourcePlay(context->alSource);
 
 	return SEGA_SUCCESS;
@@ -231,8 +235,9 @@ int SEGAAPI_PlayWithSetup(void *hHandle)
 	if (context == NULL)
 		return SEGA_ERROR_BAD_PARAM;
 
+	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
+	alSourcei(context->alSource, AL_BUFFER, context->alBuffer);
 	alSourcePlay(context->alSource);
-
 	return SEGA_ERROR_UNSUPPORTED;
 }
 
@@ -254,7 +259,6 @@ PlaybackStatus SEGAAPI_GetPlaybackStatus(void *hHandle)
 	case AL_PAUSED:
 		return PLAYBACK_STATUS_PAUSE;
 	case AL_INITIAL:
-		return PLAYBACK_STATUS_ACTIVE;
 	case AL_STOPPED:
 		return PLAYBACK_STATUS_STOP;
 	default:
@@ -285,8 +289,6 @@ int SEGAAPI_SetSampleRate(void *hHandle, unsigned int dwSampleRate)
 
 	SEGAContext *context = hHandle;
 	context->sampleRate = dwSampleRate;
-
-	updateBufferData(context, -1, -1);
 
 	return SEGA_SUCCESS;
 }
@@ -495,6 +497,7 @@ int SEGAAPI_SetLoopState(void *hHandle, int loop)
 	SEGAContext *context = hHandle;
 
 	context->loop = loop;
+	alSourcei(context->alSource, AL_LOOPING, context->loop ? AL_TRUE : AL_FALSE);
 
 	return SEGA_SUCCESS;
 }
@@ -595,7 +598,6 @@ int SEGAAPI_SetReleaseState(void *hHandle, int enterReleasePhase)
 		return SEGA_ERROR_BAD_HANDLE;
 
 	SEGAContext *context = hHandle;
-
 
 	if (!enterReleasePhase)
 		return SEGA_SUCCESS;
@@ -812,6 +814,26 @@ int SEGAAPI_Init(void)
 	{
 		dbgPrint("SEGAAPI_Init() alutInit() failed!");
 		return SEGA_ERROR_FAIL;
+	}
+
+	alBufferSamplesSOFT = alGetProcAddress("alBufferSamplesSOFT");
+	if (alBufferSamplesSOFT == NULL)
+	{
+		dbgPrint("Could not resolve AL extension!\n");
+		exit(1);
+	}
+
+	alBufferSubSamplesSOFT = alGetProcAddress("alBufferSubSamplesSOFT");
+	if (alBufferSubSamplesSOFT == NULL)
+	{
+		dbgPrint("Could not resolve AL extension!\n");
+		exit(1);
+	}
+	alGetBufferSamplesSOFT = alGetProcAddress("alGetBufferSamplesSOFT");
+	if (alGetBufferSamplesSOFT == NULL)
+	{
+		dbgPrint("Could not resolve AL extension!\n");
+		exit(1);
 	}
 
 	return SEGA_SUCCESS;
