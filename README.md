@@ -1,6 +1,6 @@
 # SEGA Lindbergh Emulator
 
-This alpha stage project emulates the SEGA Lindbergh, allowing games to run on modern Linux computers with any NVIDIA graphics card.
+This project emulates the SEGA Lindbergh, allowing games to run on modern Linux computers with an NVIDIA graphics card to be used as replacement hardware for broken Lindbergh systems in physical arcade machines.
 
 You can view the supported titles [here.](docs/supported.md)
 
