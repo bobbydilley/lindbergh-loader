@@ -82,6 +82,8 @@ static int detectGame(uint32_t elf_crc)
         config.gameTitle = "The House of the Dead 4 Special";
         config.emulateRideboard = 1;
         config.gameStatus = WORKING;
+        config.width = 1024;
+        config.height = 768;
         return 0;
     }
     break;
@@ -363,14 +365,11 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "JVS_PATH") == 0)
             strcpy(config->jvsPath, getNextToken(NULL, " ", &saveptr));
 
-        else if (strcmp(command, "RIDEBOARD_PATH") == 0)
-            strcpy(config->rideboardPath, getNextToken(NULL, " ", &saveptr));
+        else if (strcmp(command, "SERIAL_1_PATH") == 0)
+            strcpy(config->serial1Path, getNextToken(NULL, " ", &saveptr));
 
-        else if (strcmp(command, "DRIVEBOARD_PATH") == 0)
-            strcpy(config->driveboardPath, getNextToken(NULL, " ", &saveptr));
-
-        else if (strcmp(command, "MOTIONBOARD_PATH") == 0)
-            strcpy(config->motionboardPath, getNextToken(NULL, " ", &saveptr));
+        else if (strcmp(command, "SERIAL_2_PATH") == 0)
+            strcpy(config->serial2Path, getNextToken(NULL, " ", &saveptr));
 
         else if (strcmp(command, "FREEPLAY") == 0)
             config->freeplay = atoi(getNextToken(NULL, " ", &saveptr));
@@ -415,10 +414,9 @@ int initConfig()
     config.lindberghColour = YELLOW;
     strcpy(config.eepromPath, "eeprom.bin");
     strcpy(config.sramPath, "sram.bin");
-    strcpy(config.jvsPath, "none");
-    strcpy(config.driveboardPath, "none");
-    strcpy(config.motionboardPath, "none");
-    strcpy(config.rideboardPath, "none");
+    strcpy(config.jvsPath, "/dev/ttyUSB0");
+    strcpy(config.serial1Path, "/dev/ttyS0");
+    strcpy(config.serial2Path, "/dev/ttyS1");
     config.width = 640;
     config.height = 480;
     config.crc32 = elf_crc;

@@ -188,7 +188,6 @@ void __attribute__((constructor)) hook_init()
     printf("  GAME ID:    %s\n", getGameID());
     printf("  DVP:        %s\n", getDVPName());
     printf("  STATUS:     %s\n", getConfig()->gameStatus == WORKING ? "WORKING" : "NOT WORKING");
-   
 }
 
 int open(const char *pathname, int flags)
@@ -211,6 +210,9 @@ int open(const char *pathname, int flags)
 
     if (strcmp(pathname, "/dev/ttyS0") == 0 || strcmp(pathname, "/dev/tts/0") == 0)
     {
+        if (getConfig()->emulateDriveboard == 0 && getConfig()->emulateRideboard == 0)
+            return _open(getConfig()->serial1Path, flags);
+
         if (hooks[SERIAL0] != -1)
             return -1;
 
@@ -221,6 +223,9 @@ int open(const char *pathname, int flags)
 
     if (strcmp(pathname, "/dev/ttyS1") == 0 || strcmp(pathname, "/dev/tts/1") == 0)
     {
+        if (getConfig()->emulateMotionboard == 0)
+            return _open(getConfig()->serial2Path, flags);
+
         if (hooks[SERIAL1] != -1)
             return -1;
 
@@ -301,16 +306,16 @@ FILE *fopen(const char *restrict pathname, const char *restrict mode)
         return fileHooks[PCI_CARD_1F0];
     }
 
-    char* result;
-    if((result = strstr(pathname, "/home/disk0")) != NULL)
+    char *result;
+    if ((result = strstr(pathname, "/home/disk0")) != NULL)
     {
         memmove(result + 2, result + 11, strlen(result + 11) + 1);
         memcpy(result, "..", 2);
         return _fopen(result, mode);
     }
 
-    //printf("Path= %s\n", pathname); 
-    
+    // printf("Path= %s\n", pathname);
+
     return _fopen(pathname, mode);
 }
 
@@ -466,8 +471,8 @@ size_t fread(void *buf, size_t size, size_t count, FILE *stream)
 
     if (stream == fileHooks[PCI_CARD_1F0])
     {
-        memcpy(buf, pci_1f0, size*count);
-        return size*count;
+        memcpy(buf, pci_1f0, size * count);
+        return size * count;
     }
     return _fread(buf, size, count, stream);
 }
@@ -507,7 +512,7 @@ int ioctl(int fd, unsigned int request, void *data)
 
     if (fd == hooks[EEPROM])
     {
-        if(request == 0xC04064A0)
+        if (request == 0xC04064A0)
             return _ioctl(fd, request, data);
         return eepromIoctl(fd, request, data);
     }
