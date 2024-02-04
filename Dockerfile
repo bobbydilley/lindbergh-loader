@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS lindbergh-build
+FROM debian:bullseye AS lindbergh-build
 
 RUN dpkg --add-architecture i386 \
     && apt-get update \
