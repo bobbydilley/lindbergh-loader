@@ -1,0 +1,48 @@
+name: Lindbergh Loader CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+    # NOTE: Manual releases for now, only currently
+    #       testing with pre-releases and artifacts
+    # tags:
+    #   - 'v*'
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build Docker image and output
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          outputs: type=local,dest=build
+
+      - name: Create build artifacts
+        uses: actions/upload-artifact@v3
+        if: github.event_name == 'pull_request'
+        with:
+          name: lindbergh-loader-${{ github.event.pull_request.head.sha }}
+          path: build/*
+
+      - name: Create pre-release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Lindbergh Loader"
+          files: build/*

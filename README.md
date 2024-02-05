@@ -17,7 +17,7 @@ sudo apt install freeglut3:i386
 sudo apt install freeglut3-dev:i386
 sudo apt install libglew-dev
 sudo apt install xorg-dev
-sudo apt install libopenal1 libopenal-dev
+sudo apt install libopenal1:i386 libopenal-dev:i386
 sudo apt install libalut-dev:i386 // You will need to find libalut-dev:i386, libalut0:i386 and multiarch-support:i386 from Ubuntu Xenial.
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
