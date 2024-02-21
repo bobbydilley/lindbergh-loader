@@ -125,7 +125,9 @@ int amDongleUpdate()
 
 int amDongleUserInfoEx(int a, int b, char *_arcadeContext)
 {
-    if (getConfig()->crc32 == INITIALD_4_REVE)
+    if (getConfig()->crc32 == RAMBO)
+        memcpy(_arcadeContext, "SBQL", 4);
+    else if (getConfig()->crc32 == INITIALD_4_REVE)
         memcpy(_arcadeContext, "SBNK", 4);
     else if (getConfig()->crc32 == INITIALD_5_EXP_20)
         memcpy(_arcadeContext, "SBPF", 4);
@@ -930,6 +932,10 @@ int initPatch()
         detourFunction(0x082c4746, amDongleInit);
         detourFunction(0x082c3201, amDongleIsAvailable);
         detourFunction(0x082c3bf7, amDongleUpdate);
+        detourFunction(0x082c460d, amDongleUserInfoEx);
+        detourFunction(0x082c321e, amDongleIsDevelop);
+        detourFunction(0x080e4262, stubRetZero);
+        detourFunction(0x080e3e94, stubRetZero);
         // Fixes
         detourFunction(0x082c308d, amDipswGetData);
         detourFunction(0x082c3103, amDipswSetLed);
@@ -964,16 +970,16 @@ int initPatch()
         detourFunction(0x081400b5, amDipswGetData);
         detourFunction(0x0814012c, stubRetZero);
         patchMemory(0x08052cb2, "9090909090");
-        //patchMemory(0x0805206a, "00");
-        // test
-        // patchMemory(0x0804d8be, "909090909090909090909090909090");
-        // patchMemory(0x0804e5cf, "909090909090909090909090909090");
-        // Res
-        // setVariable(0x0805af8b, 0x00000438);
-        // setVariable(0x0805af93, 0x000003c0);
-        // setVariable(0x0805afa2, 0x000003c0);
-        // setVariable(0x0805b0ed, 0x00000438);
-        // setVariable(0x0805aff5, 0x000003c0);
+        // patchMemory(0x0805206a, "00");
+        //  test
+        //  patchMemory(0x0804d8be, "909090909090909090909090909090");
+        //  patchMemory(0x0804e5cf, "909090909090909090909090909090");
+        //  Res
+        //  setVariable(0x0805af8b, 0x00000438);
+        //  setVariable(0x0805af93, 0x000003c0);
+        //  setVariable(0x0805afa2, 0x000003c0);
+        //  setVariable(0x0805b0ed, 0x00000438);
+        //  setVariable(0x0805aff5, 0x000003c0);
     }
     break;
     case GHOST_SQUAD_EVOLUTION:
