@@ -964,7 +964,7 @@ int initPatch()
         detourFunction(0x081400b5, amDipswGetData);
         detourFunction(0x0814012c, stubRetZero);
         patchMemory(0x08052cb2, "9090909090");
-        patchMemory(0x0805206a, "00");
+        //patchMemory(0x0805206a, "00");
         // test
         // patchMemory(0x0804d8be, "909090909090909090909090909090");
         // patchMemory(0x0804e5cf, "909090909090909090909090909090");
