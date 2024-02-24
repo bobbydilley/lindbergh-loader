@@ -397,11 +397,77 @@ int readConfig(FILE *configFile, EmulatorConfig *config)
         else if (strcmp(command, "DEBUG_MSGS") == 0)
             config->showDebugMessages = atoi(getNextToken(NULL, " ", &saveptr));
 
+        else if (strcmp(command,"TEST_KEY") == 0)
+            config->keymap.test = atoi(getNextToken(NULL, " ", &saveptr));
+        //TODO: add config when supporting player2
+        else if (strcmp(command,"PLAYER_1_START_KEY") == 0)
+            config->keymap.player1.start = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_SERVICE_KEY") == 0)
+            config->keymap.player1.service = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_COIN_KEY") == 0)
+            config->keymap.player1.coin = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_UP_KEY") == 0)
+            config->keymap.player1.up = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_DOWN_KEY") == 0)
+            config->keymap.player1.down = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_LEFT_KEY") == 0)
+            config->keymap.player1.left = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_RIGHT_KEY") == 0)
+            config->keymap.player1.right = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_BUTTON_1_KEY") == 0)
+            config->keymap.player1.button1 = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_BUTTON_2_KEY") == 0)
+            config->keymap.player1.button2 = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_BUTTON_3_KEY") == 0)
+            config->keymap.player1.button3 = atoi(getNextToken(NULL, " ", &saveptr));
+
+        else if (strcmp(command,"PLAYER_1_BUTTON_4_KEY") == 0)
+            config->keymap.player1.button4 = atoi(getNextToken(NULL, " ", &saveptr));
+
         else
             printf("Error: Unknown settings command %s\n", command);
     }
 
     return 0;
+}
+
+KeyMapping getDefualtKeymap() 
+{
+    KeyMapping a;
+    a.test = 28;
+    a.player1.start = 10;
+    a.player1.service = 39;
+    a.player1.coin = 14;
+    a.player1.up = 111;
+    a.player1.down = 116;
+    a.player1.left = 113;
+    a.player1.right = 114;
+    a.player1.button1 = 24;
+    a.player1.button2 = 25;
+    a.player1.button3 = 26;
+    a.player1.button4 = 27;
+    //TODO: Add keys when supporting player2
+    a.player2.start = -1;
+    a.player2.service = -1;
+    a.player2.coin = -1;
+    a.player2.up = -1;
+    a.player2.down = -1;
+    a.player2.left = -1;
+    a.player2.right = -1;
+    a.player2.button1 = -1;
+    a.player2.button2 = -1;
+    a.player2.button3 = -1;
+    a.player2.button4 = -1;
+    return a;
 }
 
 int initConfig()
@@ -427,6 +493,7 @@ int initConfig()
     config.gameID = "XXXX";
     config.gameDVP = "DVP-XXXX";
     config.gameType = SHOOTING;
+    config.keymap = getDefualtKeymap();
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);

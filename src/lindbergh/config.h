@@ -85,6 +85,30 @@ typedef enum
 
 typedef struct
 {
+  unsigned int service;
+  unsigned int start;
+  unsigned int coin;
+  unsigned int up;
+  unsigned int down;
+  unsigned int left;
+  unsigned int right;
+  unsigned int button1;
+  unsigned int button2;
+  unsigned int button3;
+  unsigned int button4;
+} PlayerKeyMapping;
+
+// All keycode can be found using `xev` binary's debug output
+// NOTE: Maybe using tagged union for driving and shooting games
+typedef struct
+{
+  unsigned int test;
+  PlayerKeyMapping player1;
+  PlayerKeyMapping player2;
+} KeyMapping;
+
+typedef struct
+{
   int emulateRideboard;
   int emulateDriveboard;
   int emulateMotionboard;
@@ -100,6 +124,7 @@ typedef struct
   Colour lindberghColour;
   GameStatus gameStatus;
   GameType gameType;
+  KeyMapping keymap;
   uint32_t crc32;
   GameRegion region;
   int freeplay;
@@ -109,6 +134,7 @@ typedef struct
   char* gameDVP;
 } EmulatorConfig;
 
+KeyMapping getDefualtKeymap();
 int initConfig();
 EmulatorConfig *getConfig();
 char *getGameName();
