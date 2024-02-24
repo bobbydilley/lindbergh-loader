@@ -384,10 +384,15 @@ int initPatch()
         detourFunction(0x08066220, amDongleInit);
         detourFunction(0x080665a1, amDongleIsAvailable);
         detourFunction(0x080664c5, amDongleUpdate);
+        detourFunction(0x080665c1, amDongleIsDevelop);
+
         // Fixes
         detourFunction(0x08066156, amDipswGetData);
         detourFunction(0x080661ce, amDipswSetLed); // Stub amDipswSetLed
         detourFunction(0x08066044, amDipswInit);
+
+        // Patch to allow selection of all cabinet types
+        patchMemory(0x08054ac4, "9090909090");
     }
     break;
     case THE_HOUSE_OF_THE_DEAD_4_REVA:
