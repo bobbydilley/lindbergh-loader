@@ -107,6 +107,7 @@ static int detectGame(uint32_t elf_crc)
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
+        config.gameType = DRIVING;
         return 0;
     }
     break;
@@ -140,6 +141,7 @@ static int detectGame(uint32_t elf_crc)
     case LETS_GO_JUNGLE:
     {
         config.gameTitle = "Let's Go Jungle! Lost on the Island of Spice!";
+        config.gameDVP = "DVP-0011";
         config.gameStatus = WORKING;
         return 0;
     }
@@ -190,6 +192,7 @@ static int detectGame(uint32_t elf_crc)
     {
         config.gameTitle = "Initial D Arcade Stage 4";
         config.gameStatus = WORKING;
+        config.gameType = DRIVING;
         return 0;
     }
     break;
@@ -198,6 +201,7 @@ static int detectGame(uint32_t elf_crc)
     {
         config.gameTitle = "Initial D Arcade Stage 4 Rev E";
         config.gameStatus = WORKING;
+        config.gameType = DRIVING;
         return 0;
     }
     break;
@@ -207,6 +211,7 @@ static int detectGame(uint32_t elf_crc)
         config.gameTitle = "SEGA Race TV";
         config.emulateDriveboard = 1;
         config.gameStatus = WORKING;
+        config.gameType = DRIVING;
         return 0;
     }
     break;
@@ -227,6 +232,7 @@ static int detectGame(uint32_t elf_crc)
         config.gameTitle = "R Tuned";
         config.emulateDriveboard = 1;
         config.gameStatus = WORKING;
+        config.gameType = DRIVING;
         return 0;
     }
     break;
@@ -267,7 +273,8 @@ static int detectGame(uint32_t elf_crc)
     case PRIMEVAL_HUNT:
     {
         config.gameTitle = "Primeval Hunt";
-        config.gameStatus = NOT_WORKING;
+        config.gameStatus = WORKING;
+        config.gameType = SHOOTING;
         return 0;
     }
     break;
