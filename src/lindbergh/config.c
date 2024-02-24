@@ -102,6 +102,8 @@ static int detectGame(uint32_t elf_crc)
     case OUTRUN_2_SP_SDX_REVA_TEST:
     {
         config.gameTitle = "Outrun 2 SP SDX";
+        config.gameDVP = "DVP-0015A";
+        config.gameID = "SBMB";
         config.emulateDriveboard = 1;
         config.emulateMotionboard = 1;
         config.gameStatus = WORKING;
@@ -117,6 +119,23 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
     break;
+
+    case VIRTUA_FIGHTER_5_R:
+    {
+        config.gameTitle = "Virtua Fighter 5 R";
+        config.gameDVP = "DVP-XXXX";
+        config.gameID = "SBQU";
+        config.gameStatus = NOT_WORKING;
+        return 0;
+    }
+
+    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN:
+    {
+        config.gameTitle = "Virtua Fighter 5 Final Showdown";
+        config.gameDVP = "DVP-SBUV";
+        config.gameID = "SBUV";
+        return 0;
+    }
 
     case LETS_GO_JUNGLE:
     {
