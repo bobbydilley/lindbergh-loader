@@ -56,7 +56,6 @@
 #define VIRTUA_TENNIS_3 0xc4b7e89
 #define VIRTUA_TENNIS_3_TEST 0xffe3b0fd
 
-
 typedef enum
 {
   YELLOW,
@@ -98,8 +97,6 @@ typedef struct
   unsigned int button4;
 } PlayerKeyMapping;
 
-// All keycode can be found using `xev` binary's debug output
-// NOTE: Maybe using tagged union for driving and shooting games
 typedef struct
 {
   unsigned int test;
@@ -131,10 +128,10 @@ typedef struct
   int showDebugMessages;
   char *gameID;
   char *gameTitle;
-  char* gameDVP;
+  char *gameDVP;
 } EmulatorConfig;
 
-KeyMapping getDefualtKeymap();
+KeyMapping getDefaultKeymap();
 int initConfig();
 EmulatorConfig *getConfig();
 char *getGameName();
