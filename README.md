@@ -21,6 +21,14 @@ sudo apt install libopenal1:i386 libopenal-dev:i386
 sudo apt install libalut-dev:i386 // You will need to find libalut-dev:i386, libalut0:i386 and multiarch-support:i386 from Ubuntu Xenial.
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
+
+wget -q http://launchpadlibrarian.net/534757982/multiarch-support_2.23-0ubuntu11.3_i386.deb \
+    && dpkg -i multiarch-support_2.23-0ubuntu11.3_i386.deb
+wget -q http://launchpadlibrarian.net/184146495/libalut0_1.1.0-5_i386.deb \
+    && dpkg -i libalut0_1.1.0-5_i386.deb
+wget -q http://launchpadlibrarian.net/184146496/libalut-dev_1.1.0-5_i386.deb \
+    && dpkg -i libalut-dev_1.1.0-5_i386.deb
+
 ```
 
 Note: The project has been tested to work on Ubuntu 22.04, and doesn't currently work on Ubuntu 23.10. Multiple packages such as `freeglut3:i386` are not available anymore on Debian Trixxie or Ubuntu 23.10.
