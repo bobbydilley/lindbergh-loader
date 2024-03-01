@@ -30,6 +30,15 @@
 #include "patch.h"
 #include "pcidata.h"
 #include "input.h"
+#include "soundcard.h"
+
+#include "alsa/global.h"
+#include "alsa/input.h"
+#include "alsa/output.h" 
+#include "alsa/conf.h"
+#include "alsa/pcm.h"
+#include "alsa/control.h"
+#include "alsa/error.h"
 
 #define HOOK_FILE_NAME "/dev/zero"
 
@@ -742,4 +751,10 @@ int unsetenv(const char *name)
     }
 
     return _unsetenv(name);
+}
+
+int snd_pcm_open(snd_pcm_t **pcmp, const char *name, snd_pcm_stream_t stream, int mode)
+{
+    int (*_snd_pcm_open)(snd_pcm_t **pcmp, const char *name, snd_pcm_stream_t stream, int mode) = dlsym(RTLD_NEXT, "snd_pcm_open");
+    return _snd_pcm_open(pcmp, get_sndcard(), stream, mode);
 }
