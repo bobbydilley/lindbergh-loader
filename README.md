@@ -21,7 +21,12 @@ sudo apt install libopenal1:i386 libopenal-dev:i386
 sudo apt install libalut-dev:i386 // You will need to find libalut-dev:i386, libalut0:i386 and multiarch-support:i386 from Ubuntu Xenial.
 sudo apt install libxmu6:i386
 sudo apt install libstdc++5:i386
+sudo apt install libasound2-dev:i386
+```
 
+For Ubuntu 22.04 and above you'll need to download manually from Xenial.
+
+```
 wget -q http://launchpadlibrarian.net/534757982/multiarch-support_2.23-0ubuntu11.3_i386.deb \
     && dpkg -i multiarch-support_2.23-0ubuntu11.3_i386.deb
 wget -q http://launchpadlibrarian.net/184146495/libalut0_1.1.0-5_i386.deb \
@@ -47,7 +52,7 @@ To build, run the makefile, and then copy the contents of the build directory in
 make
 cp build/* ~/the-house-of-the-dead-4/disk0/elf/.
 cd ~/the-house-of-the-dead-4/disk0/elf
-LD_PRELOAD=lindbergh.so LD_LIBRARY_PATH=$LD_LIBRARY_PATH:. ./hod4M.elf
+./lindbergh
 ```
 
 Some games will require extra libraries like `libposixtime.so`, which can be found in dumps of the Lindbergh CF image.
@@ -70,6 +75,8 @@ Currently the controls are set up for The House of the Dead 4.
 | 1           | Player 1 Start |
 | Right Click | Reload         |
 | Left Click  | Shoot          |
+
+Controls can be modified in the `lindbergh.conf` file.
 
 ## Thanks
 

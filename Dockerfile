@@ -12,6 +12,7 @@ RUN dpkg --add-architecture i386 \
         libopenal1:i386 \
         libstdc++5:i386 \
         libxmu6:i386 \
+        libasound2-dev:i386 \
         wget \
         xorg-dev \
     && apt-get clean \
