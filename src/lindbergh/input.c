@@ -112,7 +112,13 @@ int XNextEventShooting(Display *display, XEvent *event_return, int returnValue)
       setSwitch(PLAYER_1, BUTTON_3, event_return->type == KeyPress);
 
     else if (event_return->xkey.keycode == keymap.player1.button4)
+    {
       setSwitch(PLAYER_1, BUTTON_4, event_return->type == KeyPress);
+
+      // For The House of the Dead 4's Accelerometer
+      setAnalogue(ANALOGUE_5, 0);
+      setAnalogue(ANALOGUE_6, 0);
+    }
 
     else if (event_return->xkey.keycode == keymap.player1.up)
       setSwitch(PLAYER_1, BUTTON_UP, event_return->type == KeyPress);
@@ -132,6 +138,9 @@ int XNextEventShooting(Display *display, XEvent *event_return, int returnValue)
   {
     setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * pow(2, 10));
     setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * pow(2, 10));
+    // For The House of the Dead 4's Accelerometer
+    setAnalogue(ANALOGUE_5, pow(2, 10) / 2);
+    setAnalogue(ANALOGUE_6, pow(2, 10) / 2);
   }
   break;
 
