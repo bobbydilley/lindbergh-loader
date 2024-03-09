@@ -133,6 +133,8 @@ int amDongleUserInfoEx(int a, int b, char *_arcadeContext)
         memcpy(_arcadeContext, "SBPF", 4);
     else if (getConfig()->crc32 == HUMMER_EXTREME)
         memcpy(_arcadeContext, "SBST", 4);
+    else if (getConfig()->crc32 == GHOST_SQUAD_EVOLUTION)
+        memcpy(_arcadeContext, getConfig()->gameID, 4);
     return 0;
 }
 
@@ -998,11 +1000,16 @@ int initPatch()
         detourFunction(0x08183046, amDongleInit);
         detourFunction(0x08181a91, amDongleIsAvailable);
         detourFunction(0x081824f5, amDongleUpdate);
+        detourFunction(0x08181aae, amDongleIsDevelop);
+        detourFunction(0x08182f0d, amDongleUserInfoEx);
         // Fixes
         detourFunction(0x0818191d, amDipswGetData);
         detourFunction(0x08181994, stubRetZero);
-        // patchMemory(0x807c9ec, "01");
-        // detourFunction(0x080f3f94, stubRetZero); //eliminates init_heap function.
+
+        patchMemory(0x080f37dd, "75");
+        patchMemory(0x080e7db2, "01");
+        patchMemory(0x0009FF41, "15");
+        patchMemory(0x080e7f5f, "B80100000090");
     }
     break;
     case HUMMER_EXTREME:

@@ -282,7 +282,9 @@ static int detectGame(uint32_t elf_crc)
     case GHOST_SQUAD_EVOLUTION:
     {
         config.gameTitle = "Ghost Squad Evolution";
-        config.gameStatus = NOT_WORKING;
+        config.gameStatus = WORKING;
+        config.gameDVP = "DVP-0029A";
+        config.gameID = "SBNJ";
         return 0;
     }
     break;
