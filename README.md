@@ -80,4 +80,4 @@ Controls can be modified in the `lindbergh.conf` file.
 
 ## Thanks
 
-This project has been built by referencing earlier projects by Teknoparrot and JayFoxRox and from contributions by Doozer, Rolel, dkeruza-neo and Caviar-X with extensive testing by Francesco - thanks to all of them!
+This project has been built by referencing earlier projects by Teknoparrot and JayFoxRox and from contributions by Doozer, Rolel, dkeruza-neo, Caviar-X and RetroFan with extensive testing by Francesco - thanks to all of them!
