@@ -138,6 +138,22 @@ static int detectGame(uint32_t elf_crc)
         return 0;
     }
 
+    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVA:
+    {
+        config.gameTitle = "Virtua Fighter 5 Final Showdown REV A";
+        config.gameDVP = "DVP-5019A";
+        config.gameID = "SBUV";
+        return 0;
+    }
+
+    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVB:
+    {
+        config.gameTitle = "Virtua Fighter 5 Final Showdown REV B";
+        config.gameDVP = "DVP-5019B";
+        config.gameID = "SBUV";
+        return 0;
+    }
+
     case LETS_GO_JUNGLE:
     {
         config.gameTitle = "Let's Go Jungle! Lost on the Island of Spice!";

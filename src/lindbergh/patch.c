@@ -93,6 +93,11 @@ int stubRetZero()
     return 0;
 }
 
+void stubReturn()
+{
+    return;
+}
+
 int stubRetOne()
 {
     return 1;
@@ -151,6 +156,16 @@ int amDipswSetLed()
 int amDongleIsDevelop()
 {
     return 1;
+}
+
+int amDongleDecryptEx()
+{
+    return 0;
+}
+
+int amDongleSetIv()
+{
+    return 0;
 }
 
 void print_binary(unsigned int number)
@@ -263,6 +278,8 @@ int initPatch()
         // Fixes
         detourFunction(0x084d44fc, amDipswSetLed);
         detourFunction(0x084d4485, amDipswGetData);
+        patchMemory(0x0804edb2, "9090909090");
+        detourFunction(0x083a61cc, stubReturn);
     }
     break;
     case AFTER_BURNER_CLIMAX_REVA:
@@ -572,6 +589,54 @@ int initPatch()
         detourFunction(0x0840889e, stubRetZero);   // Stub returns 0
         detourFunction(0x0840ab90, stubRetZero);   // Stub returns 0
         patchMemory(0x080e17af, "b800000000");     // Patch IDK what
+    }
+    break;
+
+case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVA:
+    {
+        // Security
+        detourFunction(0x0888f4ba, amDongleInit);
+        detourFunction(0x0888df75, amDongleIsAvailable);
+        detourFunction(0x0888e96b, amDongleUpdate);
+
+        // Fixes and patches to bypss network check
+        detourFunction(0x0888de01, amDipswGetData);
+        detourFunction(0x0888de77, amDipswSetLed); // Stub amDipswSetLed
+        detourFunction(0x080e2b86, stubRetZero);   // Stub returns 0
+        detourFunction(0x081082ac, stubRetZero);   // Stub returns 0
+        detourFunction(0x0859a768, stubRetZero);   // Stub returns 0
+        detourFunction(0x08598fbc, stubRetZero);   // Stub returns 0
+        patchMemory(0x0812363c, "b800000000");     // Patch IDK what
+        //Tests
+        //patchMemory(0x081230ac,"9090");
+    }
+    break;
+
+    case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVB:
+    {
+        // Security
+        detourFunction(0x088b1866, amDongleInit);
+        detourFunction(0x088b0321, amDongleIsAvailable);
+        detourFunction(0x088b0d17, amDongleUpdate);
+
+        // Fixes and patches to bypss network check
+        detourFunction(0x088b01ad, amDipswGetData);
+        detourFunction(0x088b0223, amDipswSetLed); // Stub amDipswSetLed
+        //detourFunction(0x0806c71e, stubReturn);    // Stub returns TP
+        //patchMemory(0x08095736, "90E9");           // Patch TP
+        //detourFunction(0x080e4fce, stubRetZero);   // Stub returns 0 TP Net
+        //patchMemory(0x080e4fea,"00");
+        patchMemory(0x080e4ff5, "EB");
+        //detourFunction(0x081084b4, stubRetZero);   // Stub returns 0 TP
+        patchMemory(0x081084d5, "EB");
+        //patchMemory(0x081238d2, "04");             // Patch TP
+        patchMemory(0x081229f4, "05");
+        
+        //patchMemory(0x08123296, "909090909090909090909090909090");
+        //patchMemory(0x080eb4b7, "9090");
+        detourFunction(0x0812326e, stubReturn);
+        //detourFunction(0x0865eff0, stubRetZero);   // Stub returns 0
+        //detourFunction(0x08860eda, stubReturn);    // Stub Return TP
     }
     break;
 
@@ -1000,8 +1065,6 @@ int initPatch()
         detourFunction(0x08183046, amDongleInit);
         detourFunction(0x08181a91, amDongleIsAvailable);
         detourFunction(0x081824f5, amDongleUpdate);
-        detourFunction(0x08181aae, amDongleIsDevelop);
-        detourFunction(0x08182f0d, amDongleUserInfoEx);
         // Fixes
         detourFunction(0x0818191d, amDipswGetData);
         detourFunction(0x08181994, stubRetZero);
@@ -1041,6 +1104,13 @@ int initPatch()
         detourFunction(0x0831bf97, amDongleUserInfoEx);
         detourFunction(0x0831668c, stubRetZero);     // amsInit
         detourFunction(0x08170654, stubRetMinusOne); // checkError
+        detourFunction(0x0831b982, amDongleDecryptEx); // Return 0
+        detourFunction(0x0831b08b, amDongleSetIv);     // Retrun 0
+        patchMemory(0x082b4d51, "00");
+        patchMemory(0x082b5163, "00");
+        patchMemory(0x082b5306, "00");
+        patchMemory(0x082b570f, "00");
+        patchMemory(0x082b57c8, "909090909090"); 
 
         // Security Board
         detourFunction(0x0831a7e9, amDipswGetData);
