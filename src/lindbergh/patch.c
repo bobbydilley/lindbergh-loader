@@ -686,6 +686,7 @@ case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVA:
         // setVariable(0x082e1323, 0x00000550); // Set ResX
         // setVariable(0x082e1330, 0x00000300); // Set ResY
     }
+    break;
 
     case LETS_GO_JUNGLE:
     {

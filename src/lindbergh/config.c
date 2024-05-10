@@ -334,8 +334,9 @@ static int detectGame(uint32_t elf_crc)
 
     case LETS_GO_JUNGLE_REVA:
     {
-        config.gameTitle = "Lets Go Jungle Rev A";
-        config.gameStatus = NOT_WORKING;
+        config.gameTitle = "Let's Go Jungle! Lost on the Island of Spice! Rev A";
+        config.gameDVP = "DVP-0011A";
+        config.gameStatus = WORKING;
         return 0;
     }
     break;
