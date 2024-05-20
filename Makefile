@@ -2,6 +2,7 @@ CC=gcc -m32
 CFLAGS = -g -O0 -fPIC -m32 -Wall -Werror -Wno-unused-variable -Wno-unused-function
 LD = g++ -m32
 LDFLAGS = -Wl,-z,defs -rdynamic -static-libstdc++ -static-libgcc -lc -ldl -lGL -lglut -lX11 -lm -lpthread -shared -nostdlib -lasound
+LDFLAGS2 = -Wl,-z,defs -rdynamic -shared
 
 BUILD = build
 
@@ -19,10 +20,13 @@ lindbergh.so: $(OBJS)
 	rm -f src/lindbergh/*.o
 
 LIBSEGA_LD=gcc #clang
-LIBSEGA_LDFLAGS=-m32 -O0 -g
+#LIBSEGA_LDFLAGS=-m32 -O0 -g -Wl,-z,defs -L/usr/local/lib/libFAudio.so
+LIBSEGA_LDFLAGS=-m32 -L/usr/local/lib -Wl,-rpath=/usr/local/lib -l:libFAudio
 
-libsegaapi.so: src/libsegaapi/segaapi.o
-	$(LIBSEGA_LD) $(LIBSEGA_LDFLAGS) src/libsegaapi/segaapi.o -L/usr/lib/i386-linux-gnu -lalut -fPIC -shared -o $(BUILD)/libsegaapi.so
+#libsegaapi.so: src/libsegaapi/opensegaapi.o
+libsegaapi.so:
+	#g++ $(LIBSEGA_LDFLAGS) src/libsegaapi/opensegaapi.cpp src/libsegaapi/dqueue.c -L/usr/lib/i386-linux-gnu -fPIC -shared -o $(BUILD)/libsegaapi.so
+	g++ -L:/usr/local/lib/libFAudio.so src/libsegaapi/opensegaapi.cpp src/libsegaapi/dqueue.c -fPIC -shared -o build/libsegaapi.so
 	rm -f src/libsegaapi/*.o
 
 libkswapapi.so: src/libkswapapi/libkswapapi.o
@@ -34,3 +38,4 @@ clean:
 	rm -f src/lindbergh/*.o
 	rm -f src/libsegaapi/*.o
 	rm -f src/libkswapapi/*.o
+
