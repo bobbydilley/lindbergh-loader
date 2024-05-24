@@ -31,6 +31,8 @@ queue_t * queue_init(unsigned int block_num, size_t block_size, size_t element_w
     queue_t * queue;
     unsigned int i, j;
 
+	printf("queue_init() block_num:%d block_size:%d element_width:%d\r\n",
+		block_num, block_size, element_width);
     if(block_size == 0)
         block_size = DEFAULT_BLOCK;
 
@@ -39,11 +41,13 @@ queue_t * queue_init(unsigned int block_num, size_t block_size, size_t element_w
 
     if((queue->block_size = block_size) <= 0 || (queue->total_blocks = block_num) <= 0 || (queue->element_width = element_width) <= 0) {
         queue->status = SIZE_ERROR;
+	printf("queue_init() SIZE_ERROR\r\n");
         return queue;
     }
 
     if(!(queue->base_p = (char**)malloc(queue->total_blocks * sizeof(char *)))) {
         queue->status = MEM_ERROR;
+	printf("queue_init() MEM_ERROR\r\n");
         return queue;
     }
 
@@ -152,11 +156,16 @@ void * queue_pop(queue_t * queue)
 
 int queue_isempty(const queue_t * const queue)
 {
+	int result = 1;
     if(queue == NULL) {
         printf("Error: Invalid queue pointer!\n");
         return MEM_ERROR;
     }
-	return (queue->total_blocks - queue->cur_block) == 0;
+
+	result = (queue->total_blocks - queue->cur_block) == queue->total_blocks;
+	printf("queue_isempty() %i - %i -> %i\r\n", 
+		queue->total_blocks, queue->cur_block, result);
+	return result;
 }
 
 int queue_debug(const queue_t * const queue)

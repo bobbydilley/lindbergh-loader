@@ -17,6 +17,7 @@
 #include "dqueue.h"
 
 #define _DEBUG
+#define BREAK_IT
 
 #define minfn(a,b)            (((a) < (b)) ? (a) : (b))
 	
@@ -64,7 +65,8 @@ void dbgprint(const char *format, ...)
 	va_start(args, format);
 	vprintf(format, args);
 	va_end(args);
-	printf("\n");
+	printf("\r\n");
+	fflush(stdout);
 }
 #else
 void dbgprint(const char *format, ...)
@@ -72,6 +74,60 @@ void dbgprint(const char *format, ...)
 	return;
 }
 #endif
+
+void hexDump(const char *desc, void *addr, int len) 
+{
+	int i;
+	unsigned char buff[17];
+	unsigned char *pc = (unsigned char*)addr;
+
+	// Output description if given.
+	if (desc != NULL)
+		printf("%s:\n", desc);
+
+	if (len == 0) {
+		printf("  ZERO LENGTH\n");
+		return;
+	}
+	if (len < 0) {
+		printf("  NEGATIVE LENGTH: %i\n", len);
+		return;
+	}
+
+	// Process every byte in the data.
+	for (i = 0; i < len; i++) {
+		// Multiple of 16 means new line (with line offset).
+
+		if ((i % 16) == 0) {
+			// Just don't print ASCII for the zeroth line.
+			if (i != 0)
+				printf("  %s\n", buff);
+
+			// Output the offset.
+			printf("  %04x ", i);
+		}
+
+		// Now the hex code for the specific character.
+		printf(" %02x", pc[i]);
+
+		// And store a printable ASCII character for later.
+		if ((pc[i] < 0x20) || (pc[i] > 0x7e))
+			buff[i % 16] = '.';
+		else
+			buff[i % 16] = pc[i];
+		buff[(i % 16) + 1] = '\0';
+	}
+
+	// Pad out last line if not exactly 16 characters.
+	while ((i % 16) != 0) {
+		printf("   ");
+		i++;
+	}
+
+	// And print the final ASCII bit.
+	printf("  %s\n", buff);
+	fflush(stdout);
+}
 
 // Calculate the argument to SetFrequencyRatio from a semitone value
 __inline float FAudioSemitonesToFrequencyRatio(float Semitones)
@@ -81,7 +137,7 @@ __inline float FAudioSemitonesToFrequencyRatio(float Semitones)
     return powf(2.0f, Semitones / 12.0f);
 }
 
-
+/*
 class XA2Callback : public FAudioEngineCallback
 {
 public:
@@ -114,6 +170,62 @@ public:
 public:
 	OPEN_segaapiBuffer_t * buffer;
 };
+*/
+
+class FAudio_BufferNotify : public FAudioVoiceCallback {
+public:
+	OPEN_segaapiBuffer_t* buffer = NULL;
+	queue_t * defers = NULL;
+	FAudioSourceVoice* xaVoice;
+
+    	FAudio_BufferNotify() {
+        	OnBufferEnd = &FAudio_BufferNotify::StaticOnBufferEnd;
+	        OnVoiceProcessingPassStart = &FAudio_BufferNotify::StaticOnVoiceProcessingPassStart;
+	        OnVoiceProcessingPassEnd = &FAudio_BufferNotify::StaticOnVoiceProcessingPassEnd;
+	        OnStreamEnd = &FAudio_BufferNotify::StaticOnStreamEnd;
+	        OnBufferStart = &FAudio_BufferNotify::StaticOnBufferStart;
+	        OnLoopEnd = &FAudio_BufferNotify::StaticOnLoopEnd;
+	        OnVoiceError = &FAudio_BufferNotify::StaticOnVoiceError;
+	}
+	~FAudio_BufferNotify() = default;
+
+private:
+	void SignalBufferEnd() {
+	//	OnBufferEnd(buffer);
+        dbgprint("OnBufferEnd()");
+        FAudioSourceVoice* returned_voice;
+
+        while (!queue_isempty(defers))
+        {
+                FAudioVoiceState vs;
+
+                FAudioSourceVoice_GetState(xaVoice, &vs, 0);
+
+                if (vs.BuffersQueued > 0)
+                {
+                        FAudioSourceVoice_FlushSourceBuffers(xaVoice);
+                        return;
+                }
+
+                returned_voice = (FAudioSourceVoice*)queue_pop(defers);
+                if (returned_voice)
+                {
+                        dbgprint("OnBufferEnd: voice = %08x", returned_voice);
+                        FAudioSourceVoice_FlushSourceBuffers(returned_voice);
+                }
+        }
+    	
+	}
+	static void StaticOnBufferEnd(FAudioVoiceCallback* callback, void*) {
+        	static_cast<FAudio_BufferNotify*>(callback)->SignalBufferEnd();
+    	}
+    	static void StaticOnVoiceProcessingPassStart(FAudioVoiceCallback*, uint32_t) {}
+    	static void StaticOnVoiceProcessingPassEnd(FAudioVoiceCallback*) {}
+    	static void StaticOnStreamEnd(FAudioVoiceCallback*) {}
+    	static void StaticOnBufferStart(FAudioVoiceCallback*, void*) {}
+    	static void StaticOnLoopEnd(FAudioVoiceCallback*, void*) {}
+    	static void StaticOnVoiceError(FAudioVoiceCallback*, void*, uint32_t) {}
+};
 
 struct OPEN_segaapiBuffer_t
 {
@@ -139,7 +251,7 @@ struct OPEN_segaapiBuffer_t
 	//XAUDIO2_BUFFER xaBuffer;
 	FAudioBuffer xaBuffer;
 	//IXAudio2SourceVoice* xaVoice;
-	FAudioSourceVoice* xaVoice;
+	//FAudioSourceVoice* xaVoice;
 
 	float sendVolumes[7];
 	int sendChannels[7];
@@ -150,15 +262,79 @@ struct OPEN_segaapiBuffer_t
 	tsf_region* region;
 
 	//XA2Callback xaCallback;
-	FAudioVoiceCallback xaCallback;
+	//FAudioVoiceCallback xaCallback;
+	FAudio_BufferNotify xaCallback;  // buffer end notification
+
 
 	//concurrency::concurrent_queue<std::function<void()>> defers;
-	queue_t * defers = NULL;
 };
 
-void XA2Callback::OnBufferEnd(void* cxt)
+/*
+// Signals that the buffer end event has occurred.
+void OnBufferEnd(OPEN_segaapiBuffer_t* buffer) {
+        dbgprint("OnBufferEnd()");
+        FAudioSourceVoice* returned_voice;
+
+        while (!queue_isempty(buffer->defers))
+        {
+                FAudioVoiceState vs;
+
+                FAudioSourceVoice_GetState(buffer->xaVoice, &vs, 0);
+
+                if (vs.BuffersQueued > 0)
+                {
+                        FAudioSourceVoice_FlushSourceBuffers(buffer->xaVoice);
+                        return;
+                }
+
+                returned_voice = (FAudioSourceVoice*)queue_pop(buffer->defers);
+                if (returned_voice)
+                {
+                        dbgprint("OnBufferEnd: voice = %08x", returned_voice);
+                        FAudioSourceVoice_FlushSourceBuffers(returned_voice);
+                }
+        }
+    	
+}
+*/
+
+/*
+void OnBufferEnd(void *pBufferContext)
 {
-	dbgprint("OnBufferEnd()\r\n");
+        dbgprint("OnBufferEnd() pBufferContext = %p", pBufferContext);
+        FAudioSourceVoice* returned_voice;
+
+		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)pBufferContext;
+
+        while (!queue_isempty(buffer->defers))
+        {
+                FAudioVoiceState vs;
+
+                FAudioSourceVoice_GetState(buffer->xaVoice, &vs, 0);
+
+                if (vs.BuffersQueued > 0)
+                {
+                        FAudioSourceVoice_FlushSourceBuffers(buffer->xaVoice);
+
+                        return;
+                }
+
+                returned_voice = (FAudioSourceVoice*)queue_pop(buffer->defers);
+                if (returned_voice)
+                {
+                        dbgprint("OnBufferEnd: voice = %08x", returned_voice);
+                        FAudioSourceVoice_FlushSourceBuffers(returned_voice);
+                }
+        }
+	
+}
+*/
+
+/*
+//void XA2Callback::OnBufferEnd(void* cxt)
+void FAudioVoiceCallback::OnBufferEnd(void* cxt)
+{
+	dbgprint("OnBufferEnd()");
 	//std::function<void()> entry;
 	FAudioSourceVoice* returned_voice;
 	
@@ -179,43 +355,50 @@ void XA2Callback::OnBufferEnd(void* cxt)
 			return;
 		}
 
-		/*
-		if (buffer->defers.try_pop(entry))
-		{
-			entry();
-		}
-		*/
+		//if (buffer->defers.try_pop(entry))
+		//{
+		//	entry();
+		//}
 		returned_voice = (FAudioSourceVoice*)queue_pop(buffer->defers);
 		if (returned_voice)
 		{
+			dbgprint("OnBufferEnd: voice = %08x", returned_voice);
 			FAudioSourceVoice_FlushSourceBuffers(returned_voice);
 		}
 	}
 }
+*/
 
-template <typename TFn>
-void defer_buffer_call(OPEN_segaapiBuffer_t* buffer, const TFn& fn)
+//template <typename TFn>
+//void defer_buffer_call(OPEN_segaapiBuffer_t* buffer, const TFn& fn)
+void defer_buffer_call(FAudioSourceVoice* voice, queue_t* defers, uint32_t samplerate)
 {
-	dbgprint("defer_buffer_call()\r\n");
-	if (buffer->xaVoice)
+	dbgprint("defer_buffer_call()");
+	if (voice)
 	{
 		//XAUDIO2_VOICE_STATE vs;
 		FAudioVoiceState vs;
+		dbgprint("defer_buffer_call: call FAudioSourceVoice_GetState");
 		//buffer->xaVoice->GetState(&vs);
-		FAudioSourceVoice_GetState(buffer->xaVoice, &vs, 0);
-
+		FAudioSourceVoice_GetState(voice, &vs, 0);
+		dbgprint("defer_buffer_call: call complete: %i", vs.BuffersQueued);
 		if (vs.BuffersQueued > 0)
 		{
 			//buffer->defers.push(fn);
-			queue_push((const void*)buffer->xaVoice, buffer->defers);
+			dbgprint("defer_buffer_call: call queue_push voice = %08x", voice);
+			queue_push((const void*)voice, defers);
+			dbgprint("defer_buffer_call: call complete");
 
 			//buffer->xaVoice->FlushSourceBuffers();
-			//FAudioSourceVoice_FlushSourceBuffers(buffer->xaVoice);
+			FAudioSourceVoice_FlushSourceBuffers(voice);
 
 			return;
 		}
 	}
-	fn();
+	dbgprint("defer_buffer_call: call fn");
+	//fn();
+	FAudioSourceVoice_SetSourceSampleRate(voice, samplerate);
+	dbgprint("defer_buffer_call: call complete");	
 }
 
 static void dumpWaveBuffer(const char* path, unsigned int channels, unsigned int sampleRate, unsigned int sampleBits, void* data, size_t size)
@@ -300,6 +483,7 @@ static unsigned int bufferSampleSize(OPEN_segaapiBuffer_t* buffer)
 
 static void updateSynthOnPlay(OPEN_segaapiBuffer_t* buffer, unsigned int offset, size_t length)
 {
+	dbgprint("updateSynthOnPlay");
 	// TODO
 	//// synth
 	//if (buffer->synthesizer)
@@ -405,6 +589,9 @@ static void updateSynthOnPlay(OPEN_segaapiBuffer_t* buffer, unsigned int offset,
 
 static void resetBuffer(OPEN_segaapiBuffer_t* buffer)
 {
+	dbgprint("resetBuffer %08x size:%d", buffer, buffer->size);
+	if (buffer == NULL)
+		return;
 	buffer->startLoop = 0;
 	buffer->endOffset = buffer->size;
 	buffer->endLoop = buffer->size;
@@ -470,24 +657,26 @@ static FAudioSubmixVoice* g_submixVoices[6];
 
 static void updateBufferNew(OPEN_segaapiBuffer_t* buffer, unsigned int offset, size_t length)
 {
+	dbgprint("updateBufferNew voice: %08x data: %p size: %d", buffer->xaCallback.xaVoice, buffer->data, buffer->size);
+
 	// don't update with pending defers
 	//if (!buffer->defers.empty())
-	if (!queue_isempty(buffer->defers))
+	if (!queue_isempty(buffer->xaCallback.defers))
 	{
 		dbgprint("updateBufferNew: DEFER!");
 		return;
 	}
 
 	//CHECK_HR(buffer->xaVoice->FlushSourceBuffers());
-	CHECK_HR(FAudioSourceVoice_FlushSourceBuffers(buffer->xaVoice));
+	CHECK_HR(FAudioSourceVoice_FlushSourceBuffers(buffer->xaCallback.xaVoice));
 
 	buffer->xaBuffer.Flags = 0;
 	buffer->xaBuffer.AudioBytes = buffer->size;
 	buffer->xaBuffer.pAudioData = buffer->data;
+	hexDump("updateBufferNew", buffer->data, 256);
 
 	if (buffer->loop)
 	{
-		dbgprint("updateBufferNew: loop");
 
 		// Note: Sega uses byte offsets for begin and end
 		//       Xaudio2 uses start sample and length in samples
@@ -497,20 +686,26 @@ static void updateBufferNew(OPEN_segaapiBuffer_t* buffer, unsigned int offset, s
 		buffer->xaBuffer.LoopLength = buffer->xaBuffer.PlayLength;
 		buffer->xaBuffer.LoopCount = FAUDIO_LOOP_INFINITE; //XAUDIO2_LOOP_INFINITE;
 		buffer->xaBuffer.pContext = NULL;
+		dbgprint("updateBufferNew: loop PlayBegin: %d PlayLength: %d", buffer->xaBuffer.PlayBegin, buffer->xaBuffer.PlayLength);
 	}
 	else
 	{
-		dbgprint("updateBufferNew: no loop");
 		buffer->xaBuffer.PlayBegin = buffer->startLoop / bufferSampleSize(buffer);
 		buffer->xaBuffer.PlayLength = (minfn(buffer->endLoop, buffer->endOffset) - buffer->startLoop) / bufferSampleSize(buffer);
 		buffer->xaBuffer.LoopBegin = 0;
 		buffer->xaBuffer.LoopLength = 0;
 		buffer->xaBuffer.LoopCount = 0;
 		buffer->xaBuffer.pContext = NULL;
+		dbgprint("updateBufferNew: no loop PlayBegin: %d PlayLength: %d", buffer->xaBuffer.PlayBegin, buffer->xaBuffer.PlayLength);
 	}
 
+	dbgprint("updateBufferNew: call FAudioSourceVoice_SubmitSourceBuffer voice: %p buffer: %p",
+		(void*)buffer->xaCallback.xaVoice, (void*)&buffer->xaBuffer);
 	//buffer->xaVoice->SubmitSourceBuffer(&buffer->xaBuffer);
-	FAudioSourceVoice_SubmitSourceBuffer(buffer->xaVoice, &buffer->xaBuffer, NULL);
+#ifdef BREAK_IT
+	FAudioSourceVoice_SubmitSourceBuffer(buffer->xaCallback.xaVoice, &buffer->xaBuffer, NULL);
+#endif
+	dbgprint("updateBufferNew: call complete size: %d", buffer->size);
 
 	// Uncomment to dump audio buffers to wav files (super slow)
 	/*auto sampleBits = (buffer->sampleFormat == OPEN_HASF_SIGNED_16PCM) ? 16 : 8;
@@ -530,9 +725,21 @@ extern "C" {
 
 		OPEN_segaapiBuffer_t* buffer = new OPEN_segaapiBuffer_t;
 
-		dbgprint("SEGAAPI_CreateBuffer: hHandle: %08X synth: %d, mem caller: %d, mem last: %d, mem alloc: %d, size: %d SampleRate: %d, byNumChans: %d, dwPriority: %d, dwSampleFormat: %d", buffer, (dwFlags & OPEN_HABUF_SYNTH_BUFFER), (dwFlags & OPEN_HABUF_ALLOC_USER_MEM) >> 1, (dwFlags & OPEN_HABUF_USE_MAPPED_MEM) >> 2, dwFlags == 0, pConfig->mapData.dwSize, pConfig->dwSampleRate, pConfig->byNumChans, pConfig->dwPriority, pConfig->dwSampleFormat);
+		dbgprint("SEGAAPI_CreateBuffer: hHandle: %08X synth: %d, mem caller: %d, mem last: %d, mem alloc: %d, size: %d SampleRate: %d, byNumChans: %d, dwPriority: %d, dwSampleFormat: %d", 
+			buffer, 
+			(dwFlags & OPEN_HABUF_SYNTH_BUFFER), 
+			(dwFlags & OPEN_HABUF_ALLOC_USER_MEM) >> 1, 
+			(dwFlags & OPEN_HABUF_USE_MAPPED_MEM) >> 2, 
+			dwFlags == 0, 
+			pConfig->mapData.dwSize, 
+			pConfig->dwSampleRate, 
+			pConfig->byNumChans, 
+			pConfig->dwPriority, 
+			pConfig->dwSampleFormat);
 
-		buffer->defers = queue_init(20, 10, sizeof(FAudioSourceVoice*));
+		buffer->xaCallback.defers = queue_init(20, 20, sizeof(FAudioSourceVoice*));
+		if (buffer->xaCallback.defers == NULL)
+			printf("queue_init failed!\r\n");
 
 		buffer->playing = false;
 		buffer->callback = pCallback;
@@ -557,7 +764,9 @@ extern "C" {
 		// Allocate new buffer (caller will fill it later)
 		else
 		{
+			dbgprint("SEGAAPI_CreateBuffer malloc %d", buffer->size);
 			buffer->data = (uint8_t*)malloc(buffer->size);
+			memset(buffer->data, 0, buffer->size);
 		}
 
 		pConfig->mapData.hBufferHdr = buffer->data;
@@ -573,10 +782,13 @@ extern "C" {
 		buffer->xaFormat.nChannels = channels;
 		buffer->xaFormat.wFormatTag = 1;
 		buffer->xaFormat.nBlockAlign = (sampleBits * channels) / 8;
-		//buffer->xaCallback.buffer = buffer;
+		buffer->xaCallback.buffer = buffer;
 
 		//CHECK_HR(g_xa2->CreateSourceVoice(&buffer->xaVoice, &buffer->xaFormat, 0, 2.0f, &buffer->xaCallback));
-		CHECK_HR(FAudio_CreateSourceVoice(g_xa2, &buffer->xaVoice, &buffer->xaFormat, 0, 2.0f, &buffer->xaCallback, NULL, NULL));
+		CHECK_HR(FAudio_CreateSourceVoice(g_xa2, 
+			&buffer->xaCallback.xaVoice, 
+			&buffer->xaFormat, 0, 2.0f, 
+			&buffer->xaCallback, NULL, NULL));
 
 		buffer->xaBuffer = { 0 };
 
@@ -628,11 +840,12 @@ extern "C" {
 			return OPEN_SEGAERR_BAD_HANDLE;
 		}
 
-		dbgprint("SEGAAPI_UpdateBuffer: Handle: %08X dwStartOffset: %08X, dwLength: %08X", hHandle, dwStartOffset, dwLength);
+		dbgprint("SEGAAPI_UpdateBuffer: Handle: %08X dwStartOffset: %08X, dwLength: %d", hHandle, dwStartOffset, dwLength);
 
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 
 		updateBufferNew(buffer, dwStartOffset, dwLength);
+		dbgprint("SEGAAPI_UpdateBuffer: complete");
 		return OPEN_SEGA_SUCCESS;
 	}
 
@@ -694,12 +907,15 @@ extern "C" {
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 		buffer->sampleRate = dwSampleRate;
 
+		/*
 		defer_buffer_call(buffer, [=]()
 		{
+			dbgprint("SEGAAPI_SetSampleRate: call FAudioSourceVoice_SetSourceSampleRate");
 			//buffer->xaVoice->SetSourceSampleRate(dwSampleRate);
 			FAudioSourceVoice_SetSourceSampleRate(buffer->xaVoice, dwSampleRate);
 		});
-
+		*/
+		defer_buffer_call(buffer->xaCallback.xaVoice, buffer->xaCallback.defers, dwSampleRate);
 		return OPEN_SEGA_SUCCESS;
 	}
 
@@ -735,6 +951,7 @@ extern "C" {
 		{
 		}
 
+		dbgprint("SEGAAPI_SetPlaybackPosition: complete");
 		// XA2 TODO
 		return OPEN_SEGA_SUCCESS;
 	}
@@ -745,17 +962,25 @@ extern "C" {
 		{
 			return 0;
 		}
+		dbgprint("SEGAAPI_GetPlaybackPosition");
 
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 
 		//XAUDIO2_VOICE_STATE vs;
 		//buffer->xaVoice->GetState(&vs);
 		FAudioVoiceState vs;
-		FAudioSourceVoice_GetState(buffer->xaVoice, &vs, 0);
+		FAudioSourceVoice_GetState(buffer->xaCallback.xaVoice, &vs, 0);
 
 		unsigned int result = (vs.SamplesPlayed * (buffer->xaFormat.wBitsPerSample / 8) * buffer->xaFormat.nChannels) % buffer->size;
 		
-		dbgprint("SEGAAPI_GetPlaybackPosition: Handle: %08X Samples played: %08d BitsPerSample %08d/%08d nChannels %08d bufferSize %08d Result: %08X", hHandle, vs.SamplesPlayed, buffer->xaFormat.wBitsPerSample, (buffer->xaFormat.wBitsPerSample / 8), buffer->xaFormat.nChannels, buffer->size, result);
+		dbgprint("SEGAAPI_GetPlaybackPosition: Handle: %08X Samples played: %08d BitsPerSample %08d/%08d nChannels %08d bufferSize %08d Result: %08X", 
+			hHandle, 
+			vs.SamplesPlayed, 
+			buffer->xaFormat.wBitsPerSample, 
+			(buffer->xaFormat.wBitsPerSample / 8), 
+			buffer->xaFormat.nChannels, 
+			buffer->size, 
+			result);
 
 		return result;
 	}
@@ -783,10 +1008,14 @@ extern "C" {
 		// Uncomment to mute music
 		//if (buffer->playWithSetup)
 		//{
+			dbgprint("SEGAAPI_Play: call FAudioSourceVoice_Start voice: %08x size: %d", buffer->xaCallback.xaVoice, buffer->size);
+			hexDump("SEGAAPI_Play", buffer->data, 256);
 			//CHECK_HR(buffer->xaVoice->Start());
-			CHECK_HR(FAudioSourceVoice_Start(buffer->xaVoice, 0, FAUDIO_COMMIT_NOW));
+#ifdef BREAK_IT
+			CHECK_HR(FAudioSourceVoice_Start(buffer->xaCallback.xaVoice, 0, FAUDIO_COMMIT_NOW));
+#endif
+			dbgprint("SEGAAPI_Play: call complete");
 		//}
-			
 		return OPEN_SEGA_SUCCESS;
 	}
 
@@ -804,7 +1033,7 @@ extern "C" {
 		buffer->playing = false;
 		buffer->paused = false;
 		//CHECK_HR(buffer->xaVoice->Stop());
-		CHECK_HR(FAudioSourceVoice_Stop(buffer->xaVoice, 0, FAUDIO_COMMIT_NOW));
+		CHECK_HR(FAudioSourceVoice_Stop(buffer->xaCallback.xaVoice, 0, FAUDIO_COMMIT_NOW));
 		return OPEN_SEGA_SUCCESS;
 	}
 
@@ -815,6 +1044,7 @@ extern "C" {
 			dbgprint("SEGAAPI_GetPlaybackStatus: Handle: %08X, Status: OPEN_HAWOSTATUS_INVALID", hHandle);
 			return OPEN_HAWOSTATUS_INVALID;
 		}
+		dbgprint("SEGAAPI_GetPlaybackStatus");
 
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 
@@ -828,7 +1058,7 @@ extern "C" {
 		//XAUDIO2_VOICE_STATE vs;
 		//buffer->xaVoice->GetState(&vs);
 		FAudioVoiceState vs;
-		FAudioSourceVoice_GetState(buffer->xaVoice, &vs, 0);
+		FAudioSourceVoice_GetState(buffer->xaCallback.xaVoice, &vs, 0);
 
 		if (vs.BuffersQueued == 0)
 		{
@@ -870,9 +1100,9 @@ extern "C" {
 		{
 			buffer->playing = false;
 			//buffer->xaVoice->FlushSourceBuffers();
-			FAudioSourceVoice_FlushSourceBuffers(buffer->xaVoice);
+			FAudioSourceVoice_FlushSourceBuffers(buffer->xaCallback.xaVoice);
 			//buffer->xaVoice->Stop();
-			FAudioSourceVoice_Stop(buffer->xaVoice, 0, FAUDIO_COMMIT_NOW);
+			FAudioSourceVoice_Stop(buffer->xaCallback.xaVoice, 0, FAUDIO_COMMIT_NOW);
 		}
 
 		return OPEN_SEGA_SUCCESS;
@@ -891,8 +1121,8 @@ extern "C" {
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 
 		//buffer->xaVoice->DestroyVoice();
-		FAudioVoice_DestroyVoice(buffer->xaVoice);
-		queue_destroy(buffer->defers);
+		FAudioVoice_DestroyVoice(buffer->xaCallback.xaVoice);
+		queue_destroy(buffer->xaCallback.defers);
 		delete buffer;
 		return OPEN_SEGA_SUCCESS;
 	}
@@ -913,7 +1143,7 @@ extern "C" {
 
 		//CHECK_HR(XAudio2Create(&g_xa2));
 		CHECK_HR(FAudioCreate(&g_xa2, 0, FAUDIO_DEFAULT_PROCESSOR));
-		
+		/*
 		//XAUDIO2_DEBUG_CONFIGURATION cfg = { 0 };
 		FAudioDebugConfiguration cfg = { 0 };
 		//cfg.TraceMask = XAUDIO2_LOG_ERRORS;
@@ -921,6 +1151,7 @@ extern "C" {
 		//cfg.BreakMask = XAUDIO2_LOG_ERRORS;
 		//g_xa2->SetDebugConfiguration(&cfg);
 		FAudio_SetDebugConfiguration(g_xa2, &cfg, NULL);
+		*/
 
 		//CHECK_HR(g_xa2->CreateMasteringVoice(&g_masteringVoice));
 		CHECK_HR(FAudio_CreateMasteringVoice(g_xa2, &g_masteringVoice, FAUDIO_DEFAULT_CHANNELS, FAUDIO_DEFAULT_SAMPLERATE, 0, 0, NULL));
@@ -1004,6 +1235,7 @@ extern "C" {
 
 		int numRoutes = 0;
 
+		dbgprint("updateRouting");
 		for (int i = 0; i < /*7*/2; i++)
 		{
 			if (buffer->sendRoutes[i] != OPEN_HA_UNUSED_PORT && buffer->sendRoutes[i] < 6)
@@ -1043,12 +1275,12 @@ extern "C" {
 		sends.SendCount = numRoutes;
 		sends.pSends = sendDescs;
 		//CHECK_HR(buffer->xaVoice->SetOutputVoices(&sends));
-		CHECK_HR(FAudioVoice_SetOutputVoices(buffer->xaVoice, &sends));
+		CHECK_HR(FAudioVoice_SetOutputVoices(buffer->xaCallback.xaVoice, &sends));
 
 		for (int i = 0; i < numRoutes; i++)
 		{
 			//CHECK_HR(buffer->xaVoice->SetOutputMatrix(outVoices[i], buffer->channels, 1, &levels[i * buffer->channels]));
-			CHECK_HR(FAudioVoice_SetOutputMatrix(buffer->xaVoice, outVoices[i], buffer->channels, 1, &levels[i * buffer->channels], FAUDIO_COMMIT_NOW));
+			CHECK_HR(FAudioVoice_SetOutputMatrix(buffer->xaCallback.xaVoice, outVoices[i], buffer->channels, 1, &levels[i * buffer->channels], FAUDIO_COMMIT_NOW));
 		}
 	}
 
@@ -1204,7 +1436,7 @@ extern "C" {
 			float volume = tsf_decibelsToGain(0.0f - lPARWValue / 10.0f);
 
 			//buffer->xaVoice->SetVolume(volume);
-			FAudioVoice_SetVolume(buffer->xaVoice, volume, FAUDIO_COMMIT_NOW);
+			FAudioVoice_SetVolume(buffer->xaCallback.xaVoice, volume, FAUDIO_COMMIT_NOW);
 			dbgprint("SEGAAPI_SetSynthParam: OPEN_HAVP_ATTENUATION gain: %f dB: %d", volume, lPARWValue);
 		}
 		else if (param == OPEN_HAVP_PITCH)
@@ -1214,7 +1446,7 @@ extern "C" {
 			float freqRatio = FAudioSemitonesToFrequencyRatio(semiTones);
 
 			//buffer->xaVoice->SetFrequencyRatio(freqRatio);
-			FAudioSourceVoice_SetFrequencyRatio(buffer->xaVoice, freqRatio, FAUDIO_COMMIT_NOW);
+			FAudioSourceVoice_SetFrequencyRatio(buffer->xaCallback.xaVoice, freqRatio, FAUDIO_COMMIT_NOW);
 			dbgprint("SEGAAPI_SetSynthParam: OPEN_HAVP_PITCH hHandle: %08X semitones: %f freqRatio: %f", hHandle, semiTones, freqRatio);
 		}
 
@@ -1296,7 +1528,7 @@ extern "C" {
 		buffer->playing = false;
 		buffer->paused = true;
 		//CHECK_HR(buffer->xaVoice->Stop());
-		CHECK_HR(FAudioSourceVoice_Stop(buffer->xaVoice, 0, FAUDIO_COMMIT_NOW));
+		CHECK_HR(FAudioSourceVoice_Stop(buffer->xaCallback.xaVoice, 0, FAUDIO_COMMIT_NOW));
 		
 		
 		return OPEN_SEGA_SUCCESS;

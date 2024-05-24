@@ -3,3 +3,6 @@ test/
 tmp/
 *.bin
 /*.conf
+src/lindbergh/*.o
+src/libkswapapi/*.o
+src/libsegaapi/*.o
