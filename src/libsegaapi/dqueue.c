@@ -26,13 +26,17 @@
 #include <stdio.h>
 #include <string.h>
 
+//#define _DEBUG
+
 queue_t * queue_init(unsigned int block_num, size_t block_size, size_t element_width)
 {
     queue_t * queue;
     unsigned int i, j;
 
+#ifdef _DEBUG
 	printf("queue_init() block_num:%d block_size:%d element_width:%d\r\n",
 		block_num, block_size, element_width);
+#endif
     if(block_size == 0)
         block_size = DEFAULT_BLOCK;
 
@@ -163,8 +167,10 @@ int queue_isempty(const queue_t * const queue)
     }
 
 	result = (queue->total_blocks - queue->cur_block) == queue->total_blocks;
+#ifdef _DEBUG
 	printf("queue_isempty() %i - %i -> %i\r\n", 
 		queue->total_blocks, queue->cur_block, result);
+#endif
 	return result;
 }
 
