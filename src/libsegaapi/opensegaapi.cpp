@@ -15,7 +15,8 @@
 
 #include "opensegaapi.h"
 #include "segaerr.h"
-#include "dqueue.h"
+// https://github.com/cameron314/concurrentqueue
+#include "concurrentqueue.h"
 
 //#define _DEBUG
 
@@ -135,7 +136,7 @@ __inline float FAudioSemitonesToFrequencyRatio(float Semitones)
 class FAudio_BufferNotify : public FAudioVoiceCallback {
 public:
 	OPEN_segaapiBuffer_t* buffer = NULL;
-	queue_t * defers = NULL;
+	moodycamel::ConcurrentQueue<uint32_t> defers;
 	FAudioSourceVoice* xaVoice;
 
     	FAudio_BufferNotify() {
@@ -152,31 +153,29 @@ public:
 private:
 	void SignalBufferEnd() 
 	{
-        dbgprint("SignalBufferEnd()");
-        FAudioSourceVoice* returned_voice;
+	        dbgprint("SignalBufferEnd() size = %ld", defers.size_approx());
+	        uint32_t returned_samplerate;
 
-        while (!queue_isempty(defers))
-        {
-                FAudioVoiceState vs;
+        	while (defers.size_approx() > 0)
+	        {
+        	        FAudioVoiceState vs;
 
-                FAudioSourceVoice_GetState(xaVoice, &vs, 0);
+                	FAudioSourceVoice_GetState(xaVoice, &vs, 0);
 
-                if (vs.BuffersQueued > 0)
-                {
-                        FAudioSourceVoice_FlushSourceBuffers(xaVoice);
-                        return;
-                }
+	                if (vs.BuffersQueued > 0)
+        	        {
+                	        FAudioSourceVoice_FlushSourceBuffers(xaVoice);
+                        	return;
+	                }
 
-                returned_voice = (FAudioSourceVoice*)queue_pop(defers);
-                if (returned_voice)
-                {
-                        dbgprint("SignalBufferEnd: voice = %08x", returned_voice);
-                        FAudioSourceVoice_FlushSourceBuffers(returned_voice);
-                }
-        }
-    	
+			if (defers.try_dequeue(returned_samplerate))
+			{
+                		dbgprint("SignalBufferEnd: samplerate: %d", returned_samplerate);
+		                FAudioSourceVoice_SetSourceSampleRate(xaVoice, returned_samplerate);
+			}
+        	}
 	}
-	
+
 	static void StaticOnBufferEnd(FAudioVoiceCallback* callback, void*) 
 	{
         	static_cast<FAudio_BufferNotify*>(callback)->SignalBufferEnd();
@@ -221,20 +220,17 @@ struct OPEN_segaapiBuffer_t
 	FAudio_BufferNotify xaCallback;  // buffer end notification
 };
 
-void defer_buffer_call(FAudioSourceVoice* voice, queue_t* defers, uint32_t samplerate)
+void defer_buffer_call(FAudioSourceVoice* voice, FAudio_BufferNotify* notify, uint32_t samplerate)
 {
 	dbgprint("defer_buffer_call()");
 	if (voice)
 	{
 		FAudioVoiceState vs;
-		dbgprint("defer_buffer_call: call FAudioSourceVoice_GetState");
 		FAudioSourceVoice_GetState(voice, &vs, 0);
-		dbgprint("defer_buffer_call: call complete: %i", vs.BuffersQueued);
 		if (vs.BuffersQueued > 0)
 		{
-			dbgprint("defer_buffer_call: call queue_push voice = %08x", voice);
-			queue_push((const void*)voice, defers);
-			dbgprint("defer_buffer_call: call complete");
+			dbgprint("defer_buffer_call: push samplerate: %d", samplerate);
+			notify->defers.enqueue(samplerate);
 
 			FAudioSourceVoice_FlushSourceBuffers(voice);
 
@@ -497,10 +493,12 @@ static FAudioSubmixVoice* g_submixVoices[6];
 
 static void updateBufferNew(OPEN_segaapiBuffer_t* buffer, unsigned int offset, size_t length)
 {
+	size_t count = 0;
 	dbgprint("updateBufferNew voice: %08x data: %p size: %d", buffer->xaCallback.xaVoice, buffer->data, buffer->size);
 
 	// don't update with pending defers
-	if (!queue_isempty(buffer->xaCallback.defers))
+	count = buffer->xaCallback.defers.size_approx();
+	if (count > 0)
 	{
 		dbgprint("updateBufferNew: DEFER!");
 		return;
@@ -572,10 +570,6 @@ extern "C" {
 			pConfig->byNumChans, 
 			pConfig->dwPriority, 
 			pConfig->dwSampleFormat);
-
-		buffer->xaCallback.defers = queue_init(20, 20, sizeof(FAudioSourceVoice*));
-		if (buffer->xaCallback.defers == NULL)
-			printf("queue_init failed!\r\n");
 
 		buffer->playing = false;
 		buffer->callback = pCallback;
@@ -742,7 +736,7 @@ extern "C" {
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 		buffer->sampleRate = dwSampleRate;
 
-		defer_buffer_call(buffer->xaCallback.xaVoice, buffer->xaCallback.defers, dwSampleRate);
+		defer_buffer_call(buffer->xaCallback.xaVoice, &buffer->xaCallback, dwSampleRate);
 		return OPEN_SEGA_SUCCESS;
 	}
 
@@ -939,7 +933,6 @@ extern "C" {
 		OPEN_segaapiBuffer_t* buffer = (OPEN_segaapiBuffer_t*)hHandle;
 
 		FAudioVoice_DestroyVoice(buffer->xaCallback.xaVoice);
-		queue_destroy(buffer->xaCallback.defers);
 		delete buffer;
 		return OPEN_SEGA_SUCCESS;
 	}
