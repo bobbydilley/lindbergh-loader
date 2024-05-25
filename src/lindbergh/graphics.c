@@ -179,6 +179,45 @@ int XF86VidModeGetAllModeLines(Display *display, int screen, int *modecount_retu
   return true;
 }
 
+/**
+ * Function which games use to scale the output, some games behave well when this is changed
+ * others less so.
+ */
+void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+  int (*_glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) = dlsym(RTLD_NEXT, "glViewport");
+  switch (getConfig()->crc32)
+  {
+  case LETS_GO_JUNGLE:
+  case LETS_GO_JUNGLE_REVA:
+  {
+    if (width == 1360 && height == 768)
+    {
+      width = getConfig()->width;
+      height = getConfig()->height;
+    }
+  }
+  break;
+
+  case LETS_GO_JUNGLE_SPECIAL:
+  {
+    printf("glViewPort(%d, %d, %d, %d);\n", x, y, width, height);
+
+    if (width == 2048 && height == 768)
+    {
+      width = getConfig()->width * 2;
+      height = getConfig()->height;
+    }
+  }
+  break;
+
+  default:
+    break;
+  }
+
+  _glViewport(x, y, width, height);
+}
+
 typedef unsigned int uint;
 
 int glXSwapIntervalSGI(int interval)

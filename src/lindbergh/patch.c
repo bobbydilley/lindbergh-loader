@@ -282,7 +282,7 @@ int initPatch()
         detourFunction(0x083a61cc, stubReturn);
     }
     break;
-    case AFTER_BURNER_CLIMAX_REVA:
+    case AFTER_BURNER_CLIMAX_REVB:
     {
         if (config->showDebugMessages == 1)
         {
@@ -309,7 +309,7 @@ int initPatch()
         detourFunction(0x081e492e, amDipswSetLed);
     }
     break;
-    case AFTER_BURNER_CLIMAX_REVB:
+    case AFTER_BURNER_CLIMAX_REVA:
     {
         if (config->showDebugMessages == 1)
         {
