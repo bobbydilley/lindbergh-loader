@@ -130,6 +130,7 @@ typedef struct
   char *gameID;
   char *gameTitle;
   char *gameDVP;
+  int jvsAnalogueInBits;
 } EmulatorConfig;
 
 KeyMapping getDefaultKeymap();

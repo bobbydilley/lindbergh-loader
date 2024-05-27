@@ -188,6 +188,8 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
   int (*_glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) = dlsym(RTLD_NEXT, "glViewport");
   switch (getConfig()->crc32)
   {
+  
+
   case LETS_GO_JUNGLE:
   case LETS_GO_JUNGLE_REVA:
   {
@@ -201,7 +203,6 @@ void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
   case LETS_GO_JUNGLE_SPECIAL:
   {
-    printf("glViewPort(%d, %d, %d, %d);\n", x, y, width, height);
 
     if (width == 2048 && height == 768)
     {

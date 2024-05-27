@@ -237,9 +237,6 @@ extern unsigned char outputBuffer[JVS_MAX_PACKET_SIZE], inputBuffer[JVS_MAX_PACK
 int getSenseLine();
 void setSenseLine(int senseLine);
 
-JVSCapabilities *getCapabilities();
-JVSState *getState();
-
 int initIO();
 int setSwitch(JVSPlayer player, JVSInput switchNumber, int value);
 int incrementCoin(JVSPlayer player, int amount);

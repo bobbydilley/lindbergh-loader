@@ -1074,6 +1074,9 @@ case VIRTUA_FIGHTER_5_FINAL_SHOWDOWN_REVA:
         patchMemory(0x080e7db2, "01");
         patchMemory(0x0009FF41, "15");
         patchMemory(0x080e7f5f, "B80100000090");
+
+        // Stop the extra inputs by removing io_glut_init
+        detourFunction(0x080e7f94, stubRetZero);
     }
     break;
     case HUMMER_EXTREME:

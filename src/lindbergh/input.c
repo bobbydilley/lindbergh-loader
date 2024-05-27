@@ -16,10 +16,12 @@
 #include <math.h>
 
 GameType gameType = SHOOTING;
+int jvsAnalogueInBits = 10;
 
 int initInput()
 {
   gameType = getConfig()->gameType;
+  jvsAnalogueInBits = getConfig()->jvsAnalogueInBits;
   return 0;
 }
 
@@ -44,16 +46,16 @@ int XNextEventDriving(Display *display, XEvent *event_return, int returnValue)
       incrementCoin(PLAYER_1, event_return->type == KeyPress);
 
     else if (event_return->xkey.keycode == keymap.player1.up)
-      setAnalogue(ANALOGUE_2, event_return->type == KeyPress ? pow(2, 10) - 1 : 0);
+      setAnalogue(ANALOGUE_2, event_return->type == KeyPress ? pow(2, jvsAnalogueInBits) - 1 : 0);
 
     else if (event_return->xkey.keycode == keymap.player1.down)
-      setAnalogue(ANALOGUE_3, event_return->type == KeyPress ? pow(2, 10) - 1 : 0);
+      setAnalogue(ANALOGUE_3, event_return->type == KeyPress ? pow(2, jvsAnalogueInBits) - 1 : 0);
 
     else if (event_return->xkey.keycode == keymap.player1.left)
-      setAnalogue(ANALOGUE_1, event_return->type == KeyPress ? pow(2, 10) * 0.2 : pow(2, 10) * 0.5);
+      setAnalogue(ANALOGUE_1, event_return->type == KeyPress ? pow(2, jvsAnalogueInBits) * 0.2 : pow(2, jvsAnalogueInBits) * 0.5);
 
     else if (event_return->xkey.keycode == keymap.player1.right)
-      setAnalogue(ANALOGUE_1, event_return->type == KeyPress ? pow(2, 10) * 0.8 : pow(2, 10) * 0.5);
+      setAnalogue(ANALOGUE_1, event_return->type == KeyPress ? pow(2, jvsAnalogueInBits) * 0.8 : pow(2, jvsAnalogueInBits) * 0.5);
 
     else if (event_return->xkey.keycode == keymap.player1.start)
       setSwitch(PLAYER_1, BUTTON_START, event_return->type == KeyPress);
@@ -136,11 +138,11 @@ int XNextEventShooting(Display *display, XEvent *event_return, int returnValue)
 
   case MotionNotify:
   {
-    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * pow(2, 10));
-    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * pow(2, 10));
+    setAnalogue(ANALOGUE_1, ((double)event_return->xmotion.x / (double)getConfig()->width) * pow(2, jvsAnalogueInBits));
+    setAnalogue(ANALOGUE_2, ((double)event_return->xmotion.y / (double)getConfig()->height) * pow(2, jvsAnalogueInBits));
     // For The House of the Dead 4's Accelerometer
-    setAnalogue(ANALOGUE_5, pow(2, 10) / 2);
-    setAnalogue(ANALOGUE_6, pow(2, 10) / 2);
+    setAnalogue(ANALOGUE_5, pow(2, jvsAnalogueInBits) / 2);
+    setAnalogue(ANALOGUE_6, pow(2, jvsAnalogueInBits) / 2);
   }
   break;
 

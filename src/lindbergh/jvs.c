@@ -1,5 +1,7 @@
 #include "jvs.h"
 
+#include "config.h"
+
 #include <time.h>
 #include <string.h>
 #include <math.h>
@@ -33,7 +35,7 @@ int initJVS()
     io.capabilities.switches = 14;
     io.capabilities.coins = 2;
     io.capabilities.players = 2;
-    io.capabilities.analogueInBits = 10;
+    io.capabilities.analogueInBits = getConfig()->jvsAnalogueInBits;
     io.capabilities.rightAlignBits = 0;
     io.capabilities.analogueInChannels = 8;
     io.capabilities.generalPurposeOutputs = 20;

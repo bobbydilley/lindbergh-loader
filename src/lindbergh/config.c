@@ -301,6 +301,7 @@ static int detectGame(uint32_t elf_crc)
         config.gameStatus = WORKING;
         config.gameDVP = "DVP-0029A";
         config.gameID = "SBNJ";
+        config.jvsAnalogueInBits = 8;
         return 0;
     }
     break;
@@ -538,6 +539,7 @@ int initConfig()
     config.gameDVP = "DVP-XXXX";
     config.gameType = SHOOTING;
     config.keymap = getDefaultKeymap();
+    config.jvsAnalogueInBits = 10;
     if (detectGame(config.crc32) != 0)
     {
         printf("Warning: Unsure what game with CRC 0x%X is. Please submit this new game to the GitHub repository: https://github.com/bobbydilley/lindbergh-loader/issues/new?title=Please+add+new+game+0x%X&body=I+tried+to+launch+the+following+game:\n", config.crc32, config.crc32);
